@@ -1,0 +1,38 @@
+# Character Memory Template
+# Initialize for new projects
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_characters: 30          # 最多追踪 30 个角色
+  max_minor_characters: 10    # 次要角色最多 10 个
+
+characters: []
+
+# Example structure (remove after initialization):
+# characters:
+#   - name: Zhang San
+#     aliases:
+#       - "The Seeker"
+#     traits:
+#       - Intense
+#       - Distrustful
+#       - Determined
+#     core_motivation: Uncover the truth
+#     arc_stage: Discovery
+#
+#     relationships:
+#       Li Si:
+#         type: antagonist
+#         dynamic: Former acquaintance, now enemy
+#         development: null
+#
+#     speech_pattern:
+#       tone: Low, controlled
+#       vocabulary: Simple, direct
+#       quirks:
+#         - Pauses before important statements
+#
+#     first_appearance: "001"
+#     last_updated: "001"

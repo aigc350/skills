@@ -1,0 +1,22 @@
+# Meta.yaml Schema
+# Records metadata for each exported chapter
+
+chapters:
+  - chapter_id: string        # 章节标识符（如："001"、"002"）
+    chapter_name: string      # 章节标题
+    create_time: datetime     # ISO 8601 时间戳
+    script_hash: string       # 剧本文件的 MD5 或 SHA256 hash
+    scenes_hash: string       # 场景文件的 MD5 或 SHA256 hash
+
+# Example:
+# chapters:
+#   - chapter_id: "001"
+#     chapter_name: "逃离"
+#     create_time: "2026-03-23T18:00:00Z"
+#     script_hash: "a1b2c3d4e5f6..."
+#     scenes_hash: "b2c3d4e5f6g7..."
+#   - chapter_id: "002"
+#     chapter_name: "城市"
+#     create_time: "2026-03-23T18:30:00Z"
+#     script_hash: "f6e5d4c3b2a1..."
+#     scenes_hash: "g7h8i9j0k1l2..."

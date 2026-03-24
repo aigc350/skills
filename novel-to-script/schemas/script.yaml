@@ -1,0 +1,112 @@
+# Script Output Schema
+# Validates output from script_writer and rewriter agents
+
+type: object
+required:
+  - episode
+  - scenes
+
+properties:
+  episode:
+    type: object
+    required:
+      - id
+      - title
+    properties:
+      id:
+        type: string
+        pattern: "^[A-Za-z0-9_-]+$"
+      title:
+        type: string
+        min_length: 1
+
+  scenes:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - scene_id
+        - scene_heading
+        - content
+      properties:
+        scene_id:
+          type: string
+          pattern: "^C[A-Za-z0-9_-]+-S[0-9]+$"
+          description: "场景ID，格式：C{chapter_id}-S{序号}，如 C001-S1、C001-S2"
+        scene_heading:
+          type: object
+          required:
+            - location
+            - type
+            - time
+          properties:
+            location:
+              type: string
+              min_length: 1
+            type:
+              type: string
+              enum: [INT, EXT, INT_EXT]
+            time:
+              type: string
+              # 支持中英文时间值
+              oneOf:
+                - enum: [Day, Night, Dawn, Dusk, Morning, Afternoon, Evening]
+                - enum: [白天, 夜晚, 黎明, 黄昏, 早晨, 下午, 傍晚]
+
+        content:
+          type: array
+          min_items: 1
+          items:
+            type: object
+            required:
+              - type
+              - text
+            properties:
+              type:
+                type: string
+                enum: [action, dialogue, parenthetical, transition]
+              text:
+                type: string
+                min_length: 1
+              character:
+                type: string
+                description: "Required for dialogue type"
+              extension:
+                type: string
+                enum: [V.O., O.S., CONT'D, PRE-LAP]
+                description: "Optional for dialogue type"
+
+  transitions:
+    type: array
+    description: "Scene transitions"
+    items:
+      type: string
+      enum: [CUT TO:, FADE OUT., DISSOLVE TO:, SMASH CUT TO:]
+
+# Content validation rules
+validation_rules:
+  dialogue_format:
+    description: "Dialogue must have character name and text"
+    rule: "content.type == 'dialogue' implies content.character exists"
+
+  scene_heading_format:
+    description: "Scene heading must follow INT./EXT. LOCATION - TIME"
+    rule: "scene_heading matches pattern"
+
+  no_internal_thoughts:
+    description: "Action lines should not contain internal thoughts"
+    forbidden_patterns:
+      - "thought"
+      - "wondered"
+      - "realized"
+      - "felt"
+
+on_invalid: retry
+max_retries: 3
+error_messages:
+  missing_scene_id: "场景ID格式必须为：C{chapter_id}-S{序号}，如 C001-S1、C001-S2"
+  missing_scene_heading: "Each scene must have a proper heading (INT./EXT. LOCATION - TIME)"
+  invalid_dialogue: "Dialogue must include character name and spoken text"
+  missing_content: "Each scene must have content (action or dialogue)"
+  internal_thought_detected: "Action lines should not contain internal thoughts - use visual descriptions"

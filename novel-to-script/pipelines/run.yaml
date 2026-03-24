@@ -1,0 +1,348 @@
+# Novel-to-Script Pipeline
+# 小说转剧本：场景提取 → 剧本写作 → 质量审查
+
+name: convert_chapter
+description: 将小说章节转换为剧本，通过场景提取、剧本写作和质量审查
+
+variables:
+  chapter_id: "${input.chapter_id}"
+  novel_id: "${config.current_novel_id}"
+  novel_source_dir: "novels/${novel_id}/novel/chapters"  # 小说章节目录
+  novel_dir: "novels/${novel_id}"
+  memory_dir: "novels/${novel_id}/script/memory"
+  runtime_dir: "novels/${novel_id}/script/runtime"
+  output_dir: "novels/${novel_id}/output/script"
+  script_hash: "${input.script_hash}"
+  scenes_hash: "${input.scenes_hash}"
+
+# ─────────────────────────────────────────────────────────────
+# 失败恢复策略（全局默认）
+# ─────────────────────────────────────────────────────────────
+failure_policy:
+  default:
+    retry: 2
+    on_fail:
+      - action: log_error
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "跳过章节：发生不可恢复错误"
+
+steps:
+  # ───────────────────────────────────────────────────────────
+  # STEP 0: Initialize (首次运行时自动执行)
+  # ───────────────────────────────────────────────────────────
+  - id: check_config
+    description: 检查 novel.config.md 是否存在
+    action: check_file
+    path: "novel.config.md"
+    on_missing: create_config
+
+  - id: create_config
+    description: 创建默认 novel.config.md
+    action: create_file
+    path: "novel.config.md"
+    content: |
+      ---
+      version: "1.0"
+      created: "${timestamp}"
+      updated: "${timestamp}"
+      ---
+
+      # 小说项目配置
+
+      ## 当前小说
+
+      current_novel_id: other_001
+
+      ## 小说列表
+
+      | novel_id | name | genre | status | created |
+      |----------|------|-------|--------|---------|
+      | other_001 | 小说名称 | 其他 | 连载中 | ${timestamp} |
+
+  - id: ensure_directories
+    description: 确保项目目录结构存在
+    action: ensure_dirs
+    dirs:
+      - "${novel_dir}/script/memory/novel"
+      - "${novel_dir}/script/memory/script"
+      - "${novel_dir}/script/memory/reviewer"
+      - "${novel_dir}/script/runtime"
+      - "${novel_dir}/output/script"
+
+  - id: init_memory_files
+    description: 如果记忆文件缺失，从模板初始化
+    action: init_templates
+    templates:
+      - source: "templates/memory/characters.yaml"
+        dest: "${memory_dir}/novel/characters.yaml"
+      - source: "templates/memory/plot_state.yaml"
+        dest: "${memory_dir}/novel/plot_state.yaml"
+      - source: "templates/memory/script_state.yaml"
+        dest: "${memory_dir}/script/script_state.yaml"
+      - source: "templates/memory/review_log.yaml"
+        dest: "${memory_dir}/reviewer/review_log.yaml"
+
+  - id: init_meta
+    description: 如果 meta.yaml 缺失则初始化
+    action: ensure_file
+    path: "${output_dir}/meta.yaml"
+    content: |
+      chapters: []
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 1: Detect new chapters
+  # ───────────────────────────────────────────────────────────
+  - id: detect_new
+    description: 检查未处理的章节
+    action: check_files
+    input:
+      - "${novel_source_dir}/*.md"
+      - "${output_dir}/*.md"
+    output: ${runtime_dir}/pending_chapters.yaml
+    on_result:
+      empty: exit
+      continue: next
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 2: Extract Scenes (先分析章节内容)
+  # ───────────────────────────────────────────────────────────
+  - id: extract_scenes
+    agent: scene_extractor
+    input:
+      - "${novel_source_dir}/${chapter_name}.md"
+      - "${memory_dir}/novel/characters.yaml"
+      - "${memory_dir}/novel/plot_state.yaml"
+    output: "${runtime_dir}/scenes_${chapter_name}.md"
+    schema: schemas/scenes.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "场景提取失败，已重试"
+        output: "${runtime_dir}/errors.log"
+      - action: fallback
+        use: "${novel_source_dir}/${chapter_name}.md"
+        message: "使用原始章节文本作为场景来源"
+      - action: continue
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 3: Update Novel Memory (基于场景提取结果更新)
+  # ───────────────────────────────────────────────────────────
+  - id: update_novel_memory
+    agent: memory_updater
+    task: update_novel
+    input:
+      - "${runtime_dir}/scenes_${chapter_name}.md"
+      - "${memory_dir}/novel/characters.yaml"
+      - "${memory_dir}/novel/plot_state.yaml"
+    output:
+      - "${memory_dir}/novel/characters.yaml"
+      - "${memory_dir}/novel/plot_state.yaml"
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "更新小说记忆失败"
+      - action: continue  # 非关键错误，使用现有记忆继续
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 4: Write Script (使用更新后的记忆)
+  # ───────────────────────────────────────────────────────────
+  - id: write_script
+    agent: script_writer
+    input:
+      - "${runtime_dir}/scenes_${chapter_name}.md"
+      - "${memory_dir}/novel/characters.yaml"
+      - "${memory_dir}/script/script_state.yaml"
+    output: "${runtime_dir}/script_v1_${chapter_name}.md"
+    schema: schemas/script.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "剧本生成失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少剧本"
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 5: Review
+  # ───────────────────────────────────────────────────────────
+  - id: review
+    agent: reviewer
+    input:
+      - "${runtime_dir}/script_v1_${chapter_name}.md"
+      - "${memory_dir}/novel/characters.yaml"
+      - "${memory_dir}/novel/plot_state.yaml"
+      - "${memory_dir}/script/script_state.yaml"
+    output: "${runtime_dir}/review_${chapter_name}.yaml"
+    schema: schemas/review.yaml
+    retry:
+      max: 2
+    on_fail:
+      # YAML 解析失败时，创建默认通过的 review
+      - action: create_default
+        output: "${runtime_dir}/review_${chapter_name}.yaml"
+        value:
+          chapter_id: "${chapter_id}"
+          total_score: 0.80
+          passed: false
+          summary: "审查失败，使用默认分数"
+      - action: log_error
+        message: "审查解析失败，使用默认分数"
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 6: Check Score & Branch
+  # ───────────────────────────────────────────────────────────
+  - id: check_score
+    condition: "${review.score} < 0.85"
+    on_true: rewrite
+    on_false: finalize
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 7: Rewrite (if score < 0.85)
+  # ───────────────────────────────────────────────────────────
+  - id: rewrite
+    agent: rewriter
+    input:
+      - "${runtime_dir}/script_v1_${chapter_name}.md"
+      - "${review.issues}"           # 只传递问题列表
+      - "${review.failed_categories}" # 只传递未通过类别
+      - "${memory_dir}/novel/characters.yaml"
+    output: "${runtime_dir}/script_v2_${chapter_name}.md"
+    schema: schemas/script.yaml
+    retry:
+      max: 3
+    on_fail:
+      - action: log_error
+        message: "重写失败，使用原始剧本"
+        output: "${memory_dir}/reviewer/review_log.yaml"
+      - action: fallback
+        use: "${runtime_dir}/script_v1_${chapter_name}.md"
+        save_as: "${runtime_dir}/script_v2_${chapter_name}.md"
+    next: review_v2
+
+  - id: review_v2
+    agent: reviewer
+    input:
+      - "${runtime_dir}/script_v2_${chapter_name}.md"
+      - "${memory_dir}/novel/characters.yaml"
+      - "${memory_dir}/novel/plot_state.yaml"
+      - "${memory_dir}/script/script_state.yaml"
+    output: "${runtime_dir}/review_v2_${chapter_name}.yaml"
+    schema: schemas/review.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: create_default
+        output: "${runtime_dir}/review_v2_${chapter_name}.yaml"
+        value:
+          total_score: 0.80
+          passed: false
+      - action: log_error
+        message: "审查 v2 解析失败"
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 8: 导出场景（所有分支执行前）
+  # ───────────────────────────────────────────────────────────
+  - id: export_scenes
+    action: copy
+    input: "${runtime_dir}/scenes_${chapter_name}.md"
+    output: "${output_dir}/scenes_${chapter_name}.md"
+
+  - id: compute_scenes_hash
+    action: compute_hash
+    input: "${output_dir}/scenes_${chapter_name}.md"
+    output: scenes_hash
+
+  - id: check_score_v2
+    condition: "${review_v2.score} < 0.85"
+    on_true: finalize_with_warning
+    on_false: finalize_v2
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 9: Finalize 分支（根据分数选择）
+  # ───────────────────────────────────────────────────────────
+  # Rewrite 后仍低分，使用 v1 并标记警告
+  - id: finalize_with_warning
+    action: copy
+    input: "${runtime_dir}/script_v1_${chapter_name}.md"
+    output: "${output_dir}/script_${chapter_name}.md"
+    post_action:
+      - action: append_note
+        file: "${output_dir}/script_${chapter_name}.md"
+        note: "<!-- 警告：重写后仍未达到质量阈值 -->"
+      - action: log_error
+        message: "章节 ${chapter_name} 最终质量分数较低"
+        output: "${memory_dir}/reviewer/review_log.yaml"
+
+  - id: finalize_v2
+    action: copy
+    input: "${runtime_dir}/script_v2_${chapter_name}.md"
+    output: "${output_dir}/script_${chapter_name}.md"
+
+  # 分支汇合点 - score >= 0.85
+  - id: finalize
+    action: copy
+    input: "${runtime_dir}/script_v1_${chapter_name}.md"
+    output: "${output_dir}/script_${chapter_name}.md"
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 10: Update Script Memory
+  # ───────────────────────────────────────────────────────────
+  - id: update_script_memory
+    agent: memory_updater
+    task: update_script
+    input:
+      - "${output_dir}/script_${chapter_name}.md"
+      - "${memory_dir}/script/script_state.yaml"
+    output: "${memory_dir}/script/script_state.yaml"
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "剧本记忆更新失败"
+      - action: continue  # 非关键错误
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 11: Update Reviewer Memory
+  # ───────────────────────────────────────────────────────────
+  - id: update_reviewer_memory
+    agent: memory_updater
+    task: update_reviewer
+    input:
+      - "${runtime_dir}/review_${chapter_name}.yaml"
+      - "${memory_dir}/reviewer/review_log.yaml"
+    output: "${memory_dir}/reviewer/review_log.yaml"
+    on_fail:
+      - action: continue  # 非关键错误
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 12: Update Meta YAML
+  # ───────────────────────────────────────────────────────────
+  - id: update_meta
+    action: update_meta_yaml
+    input:
+      - "${novel_source_dir}/${chapter_name}.md"
+      - "${output_dir}/script_${chapter_name}.md"
+    output: "${output_dir}/meta.yaml"
+    fields:
+      chapter_id: "${chapter_id}"
+      chapter_name: "${input.chapter_name}"
+      create_time: "${timestamp}"
+      script_hash: ${script_hash}
+      scenes_hash: ${scenes_hash}
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 13: Save Full Script
+  # ───────────────────────────────────────────────────────────
+  - id: save_output
+    action: merge
+    input:
+      - "${output_dir}/*.md"
+    output: "${output_dir}/full_script.md"
+    exclude:
+      - "meta.yaml"
+      - "scenes_*.md"
+    on_complete: log_success  # 记录成功日志

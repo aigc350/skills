@@ -1,0 +1,166 @@
+# Scene Breakdown Template
+
+## Scene {N}
+
+```yaml
+scenes:
+  chapter_id: "{chapter_id}"     # 章节ID
+  title: "{chapter_title}"       # 标题
+
+  genre: "short_drama"           # ⭐题材控制（short_drama | anime | film）
+
+  scenes:
+
+    - scene:
+        id: "C001-S1"           # 场景ID：C{chapter_id}-S{从1开始递增}
+
+        location:
+          name: "{location_name}"
+          type: "INT | EXT"
+
+        time: "白天 | 夜晚 | 黎明 | 黄昏 | 早晨 | 下午 | 傍晚"
+
+        tone: "{scene_tone}"     # 场景基调（压抑/紧张/冷静等）
+
+        characters:
+          - name: "{character_name}"
+            role: "主角 | 对手 | 配角"
+            emotion: "{current_emotional_state}"
+            first_appearance: true
+
+      # ======================
+      # 1️⃣ 内容层（剧情描述）
+      # ======================
+      content:
+        summary: "{场景发生了什么}"
+
+        key_actions:
+          - "{关键动作1}"
+          - "{关键动作2}"
+
+        emotional_beat: "{情绪变化：A → B}"
+
+        plot_significance: "{对剧情的作用}"
+
+      # ======================
+      # 2️⃣ 戏剧层（冲突驱动）
+      # ======================
+      drama:
+        scene_goal: "{场景目标}"
+
+        conflict: "{冲突点}"
+
+        stakes: "{失败后果}"
+
+      # ======================
+      # 3️⃣ 制作层（分镜输入核心）
+      # ======================
+      production:
+
+        visual_focus:
+          - "{视觉重点（人物/物件/细节）}"
+
+        audio:
+          bgm: "{背景音乐氛围}"
+
+          sfx:
+            - "{音效}"
+
+          silence:
+            - "{静默点}"
+
+        beats:
+          - "{节奏点1}"
+          - "{节奏点2}"
+          - "{节奏点3}"
+
+      # ======================
+      # 4️⃣ 扩展层（按题材启用 ⭐）
+      # ======================
+      extensions:
+
+        # ===== 🎭 短剧扩展 =====
+        short_drama:
+
+          pacing:
+            speed: "fast"
+            cut_density: "high"
+
+          hook_points:
+            - "{开头钩子}"
+            - "{结尾反转}"
+
+          conflict_focus:
+            type: "人物冲突"
+            intensity: "high"
+
+          dialogue_density: "high"   # 台词密度高
+
+          retention_design:
+            - "{停留点设计}"
+
+        # ===== 🎌 动漫扩展 =====
+        anime:
+
+          action_design:
+            choreography:
+              - "{动作分解1}"
+              - "{动作分解2}"
+
+            impact_frames:
+              - "{关键打击帧}"
+
+          vfx_design:
+            effects:
+              - "{特效}"
+              - "{能量波}"
+              - "{爆炸}"
+
+          world_rules:
+            physics: "{物理规则（可非现实）}"
+            power_system: "{力量体系}"
+
+          motion_style:
+            speed: "fast"
+            exaggeration: "high"
+
+          camera_dynamics:
+            - "{快速推拉镜头}"
+            - "{旋转镜头}"
+
+        # ===== 🎬 电影扩展 =====
+        film:
+
+          pacing:
+            rhythm: "slow"
+
+          cinematography:
+
+            composition:
+              - "{构图方式（对称/留白）}"
+
+            camera_movement:
+              - "static"
+              - "slow_push"
+
+          lighting_design:
+            style: "{光影风格}"
+
+          color_script:
+            palette: "{色彩体系}"
+
+          atmosphere:
+            - "{环境氛围（雨/雾/风）}"
+
+          subtext_layer:
+            - "{潜台词}"
+
+          silence_design:
+            - "{静默表达情绪}"
+
+---
+
+<!-- Repeat for each scene -->
+
+## Scene Count: {total}
+## Estimated Screen Time: {X-Y} minutes

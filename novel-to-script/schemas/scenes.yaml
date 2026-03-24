@@ -1,0 +1,102 @@
+# Scene Output Schema
+# 验证 scene_extractor agent 输出的场景分解
+
+type: object
+required:
+  - scenes
+  - metadata
+
+properties:
+  metadata:
+    type: object
+    required:
+      - chapter_id
+      - scene_count
+      - estimated_duration
+    properties:
+      chapter_id:
+        type: string
+        pattern: "^[A-Za-z0-9_-]+$"
+      scene_count:
+        type: integer
+        minimum: 1
+      estimated_duration:
+        type: string
+        pattern: "^[0-9]+-[0-9]+ 分钟$"
+
+  scenes:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - id
+        - location
+        - time
+        - characters
+        - summary
+        - key_actions
+        - emotional_beat
+      properties:
+        id:
+          type: string
+          pattern: "^C[A-Za-z0-9_-]+-S[0-9]+$"
+          description: "格式：C{chapter_id}-S{从1开始递增}，如 C001-S1、C001-S2"
+        location:
+          type: object
+          required:
+            - name
+            - type
+          properties:
+            name:
+              type: string
+              min_length: 1
+            type:
+              type: string
+              enum: [室内, 室外, 内外]
+        time:
+          type: string
+          oneOf:
+            - enum: [白天, 夜晚, 黎明, 黄昏, 早晨, 下午, 傍晚]
+            - enum: [Day, Night, Dawn, Dusk, Morning, Afternoon, Evening]
+        characters:
+          type: array
+          min_items: 1
+          items:
+            type: object
+            required:
+              - name
+              - role
+              - emotion
+            properties:
+              name:
+                type: string
+                min_length: 1
+              role:
+                type: string
+                oneOf:
+                  - enum: [主角, 对手, 配角]
+                  - enum: [protagonist, antagonist, supporting]
+              emotion:
+                type: string
+                min_length: 1
+        summary:
+          type: string
+          min_length: 10
+        key_actions:
+          type: array
+          min_items: 1
+          items:
+            type: string
+        emotional_beat:
+          type: string
+          pattern: ".+→.+"
+
+# Validation rules
+on_invalid: retry
+error_messages:
+  missing_scene: "每个场景必须有 id, location, time, characters, summary"
+  invalid_scene_id: "场景ID格式必须为：C{chapter_id}-S{序号}，如 C001-S1、C001-S2"
+  invalid_location_type: "地点类型必须是：室内、室外或内外"
+  missing_characters: "每个场景至少有一个角色"
+  invalid_time: "时间必须是：白天、夜晚、黎明、黄昏、早晨、下午或傍晚"

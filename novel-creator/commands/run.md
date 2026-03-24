@@ -50,7 +50,7 @@ Step 0: 初始化检查
 
 如果首次运行，创建以下目录结构：
 ```
-{小说ID}/
+novels/{novel_id}/novel/
 ├── state/
 │   ├── state.md
 │   ├── memory.md

@@ -115,9 +115,9 @@
 
 ### 5. 生成测试报告
 
-将测试结果写入 `novels/{小说ID}/system/test_report_{时间戳}.md`
+将测试结果写入 `novels/{novel_id}/novel/system/test_report_{时间戳}.md`
 
-同时更新 `novels/{小说ID}/system/test_log.md` 记录历史测试结果。
+同时更新 `novels/{novel_id}/novel/system/test_log.md` 记录历史测试结果。
 
 ---
 

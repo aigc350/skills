@@ -1,0 +1,52 @@
+# Plot State Memory Template
+# Initialize for new projects
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_timeline: 20            # 保留最近 20 章的时间线
+  max_active_mysteries: 5     # 最多追踪 5 个活跃谜题
+  max_open_loops: 10          # 最多追踪 10 个未闭合伏笔
+  max_character_states: 15    # 最多追踪 15 个角色状态
+
+current_arc: null
+arc_stage: null
+
+timeline: []
+
+active_mysteries: []
+
+open_loops: []
+
+character_states: {}
+
+# Example structure (remove after initialization):
+# current_arc: "The Discovery"
+# arc_stage: "Initial Revelation"
+#
+# timeline:
+#   - chapter: "001"
+#     events:
+#       - "Zhang San meets Li Si"
+#       - "Family connection revealed"
+#
+# active_mysteries:
+#   - id: M001
+#     question: "What happened to the parents?"
+#     introduced: "001"
+#     clues:
+#       - "Li Si in family photo"
+#
+# open_loops:
+#   - id: L001
+#     description: "Phone call at end"
+#     introduced: "001"
+#     expected_resolution: "002-003"
+#     status: pending
+#
+# character_states:
+#   Zhang San:
+#     location: "City streets"
+#     emotional_state: "Shocked"
+#     last_scene: "002"

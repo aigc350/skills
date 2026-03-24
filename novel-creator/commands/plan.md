@@ -14,7 +14,7 @@
 
 如果 `state/` 目录不存在，创建以下结构：
 ```
-{小说ID}/
+novels/{novel_id}/novel/
 ├── state/
 │   └── chapter_plan.md    ← plan 命令创建
 └── chapters/

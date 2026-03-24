@@ -25,7 +25,7 @@ description: "AI-powered novel writing system for long-form fiction (1000+ chapt
 |------|------|----------|
 | `init` | 初始化项目 | [commands/init.md](commands/init.md) |
 | `list` | 列出所有小说 | [commands/list.md](commands/list.md) |
-| `switch <ID>` | 切换当前小说 | [commands/switch.md](commands/switch.md) |
+| `switch <novel_id>` | 切换当前小说 | [commands/switch.md](commands/switch.md) |
 | `run [n]` | 生成 n 章小说 | [commands/run.md](commands/run.md) |
 | `status` | 查看状态 | [commands/status.md](commands/status.md) |
 | `plan` | 手动规划 | [commands/plan.md](commands/plan.md) |
@@ -71,30 +71,32 @@ description: "AI-powered novel writing system for long-form fiction (1000+ chapt
 
 ```
 project-root/
-├── novels/                    # 小说集合目录
-│   ├── xuanhuan_001/          # 小说ID（英文）作为目录名
-│   │   ├── canon/             # 固定设定（AI只读）- init 创建
-│   │   ├── state/             # 运行状态（AI动态更新）- run 创建
-│   │   ├── chapters/          # 小说正文 - run 创建
-│   │   └── system/            # 系统文件 - run 创建
-│   └── scifi_002/
-│       └── ...
-├── novel.config.md            # 小说项目配置
+├── novels/                       # 小说集合目录
+│   └── {novel_id}/              # 小说ID作为目录名
+│       ├── novel/               # 小说内容目录
+│       │   ├── canon/           # 固定设定（AI只读）- init 创建
+│       │   ├── state/           # 运行状态（AI动态更新）- run 创建
+│       │   ├── chapters/        # 小说正文 - run 创建
+│       │   └── system/          # 系统文件 - run 创建
+│       └── output/              # 导出目录 - export 创建
+│           └── novel/           # 导出的小说文件
+├── novel.config.md              # 小说项目配置
 └── .claude/skills/...
 ```
 
 > **目录创建时机**：
-> - `init` 命令：只创建 `canon/` 目录
-> - `plan` 命令：创建 `state/` 目录和 `chapter_plan.md`
-> - `run` 命令：首次运行时创建完整 `state/`、`chapters/`、`system/` 目录
+> - `init` 命令：只创建 `novel/canon/` 目录
+> - `plan` 命令：创建 `novel/state/` 目录和 `chapter_plan.md`
+> - `run` 命令：首次运行时创建完整 `novel/state/`、`novel/chapters/`、`novel/system/` 目录
+> - `export` 命令：创建 `output/novel/` 目录
 
 ### 路径解析规则
 
-1. 读取 `novel.config.md` 获取 `当前小说` 字段
-2. 当前小说路径为 `novels/{当前小说ID}/`
+1. 读取 `novel.config.md` 获取 `current_novel_id` 字段
+2. 当前小说路径为 `novels/{current_novel_id}/novel/`
 3. 如果 `novel.config.md` 不存在，使用默认路径 `novel/`（单小说模式）
 
-### 小说ID命名规范
+### novel_id 命名规范
 
 ```
 - 仅使用小写字母、数字、下划线
@@ -113,9 +115,43 @@ project-root/
 
 ---
 
+# 配置文件格式
+
+## novel.config.md
+
+**格式约束**：此文件格式固定，AI 生成时必须严格遵循，不可增减字段或改变结构。
+
+```yaml
+---
+version: "1.0"
+created: "YYYY-MM-DD"
+updated: "YYYY-MM-DD"
+---
+
+# 小说项目配置
+
+## 当前小说
+
+current_novel_id: {novel_id}
+
+## 小说列表
+
+| novel_id | name | genre | status | created |
+|----------|------|-------|--------|---------|
+| xuanhuan_001 | 小说名 | 玄幻 | 连载中 | 2026-03-20 |
+```
+
+**强制约束**：
+- frontmatter 只含 `version`、`created`、`updated` 三个字段
+- 正文只含 `## 当前小说` 和 `## 小说列表` 两个章节
+- 表格列固定：`novel_id`、`name`、`genre`、`status`、`created`
+- 不可添加额外字段、说明、注释
+
+---
+
 # 文件结构说明
 
-## canon/ - 固定设定（AI只读）
+## novel/canon/ - 固定设定（AI只读）
 
 | 文件 | 说明 |
 |------|------|
@@ -124,7 +160,7 @@ project-root/
 | `roles.md` | 角色设定 |
 | `outline.md` | 故事主线 |
 
-## state/ - 运行状态（AI动态更新）
+## novel/state/ - 运行状态（AI动态更新）
 
 | 文件 | 说明 |
 |------|------|
@@ -136,19 +172,28 @@ project-root/
 | `canon_ext.md` | 扩展设定（新角色/势力/地点） |
 | `checkpoint.md` | 运行检查点 |
 
-## chapters/ - 小说正文
+## novel/chapters/ - 小说正文
 
 | 目录/文件 | 说明 |
 |-----------|------|
 | `第{N}章_{标题}.md` | 章节文件 |
 | `.backup/` | 章节备份目录 |
 
-## system/ - 系统文件
+## novel/system/ - 系统文件
 
 | 文件 | 说明 |
 |------|------|
 | `run_log.md` | 运行日志 |
 | `error_log.md` | 异常日志 |
+
+## output/novel/ - 导出文件
+
+| 文件 | 说明 |
+|------|------|
+| `{书名}.md` | Markdown 格式全量导出 |
+| `{书名}.txt` | TXT 格式全量导出 |
+| `第{N}章_{标题}.md` | 增量导出章节文件 |
+| `export_manifest.json` | 导出清单 |
 
 ---
 
@@ -206,6 +251,12 @@ project-root/
 
 # 修订第 21 章
 /novel-creator revise 21
+
+# 导出小说
+/novel-creator export
+
+# 增量导出第 1-50 章
+/novel-creator export --start 1 --end 50
 
 # 执行自动化测试
 /novel-creator test

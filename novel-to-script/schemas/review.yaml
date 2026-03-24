@@ -1,0 +1,212 @@
+# Review Output Schema
+# Validates output from reviewer agent
+
+type: object
+required:
+  - chapter_id
+  - version
+  - timestamp
+  - scores
+  - total_score
+  - issues
+  - failed_categories
+  - recommendation
+
+properties:
+  chapter_id:
+    type: string
+    pattern: "^[0-9]{3}$"
+
+  version:
+    type: integer
+    minimum: 1
+
+  timestamp:
+    type: string
+    format: "iso8601"
+
+  # 结构化分数
+  scores:
+    type: object
+    required:
+      - character_consistency
+      - scene_continuity
+      - plot_accuracy
+      - format_compliance
+    properties:
+      character_consistency:
+        type: object
+        required:
+          - score
+          - weight
+          - passed
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            const: 0.30
+          passed:
+            type: boolean
+
+      scene_continuity:
+        type: object
+        required:
+          - score
+          - weight
+          - passed
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            const: 0.25
+          passed:
+            type: boolean
+
+      plot_accuracy:
+        type: object
+        required:
+          - score
+          - weight
+          - passed
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            const: 0.25
+          passed:
+            type: boolean
+
+      format_compliance:
+        type: object
+        required:
+          - score
+          - weight
+          - passed
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            const: 0.20
+          passed:
+            type: boolean
+
+  total_score:
+    type: number
+    minimum: 0
+    maximum: 1
+    description: "Weighted average of all scores"
+
+  # 问题列表（传递给 rewrite）
+  issues:
+    type: array
+    description: "Specific issues to fix"
+    items:
+      type: object
+      required:
+        - id
+        - type
+        - category
+        - severity
+        - location
+        - description
+        - suggestion
+      properties:
+        id:
+          type: string
+          pattern: "^ISS-[0-9]{3}$"
+        type:
+          type: string
+          enum:
+            - character_inconsistency
+            - continuity_error
+            - plot_deviation
+            - weak_emotional_beat
+            - format_error
+            - pacing_issue
+        category:
+          type: string
+          enum:
+            - character_consistency
+            - scene_continuity
+            - plot_accuracy
+            - format_compliance
+        severity:
+          type: string
+          enum: [high, medium, low]
+        location:
+          type: string
+          description: "Scene and line reference"
+        description:
+          type: string
+          min_length: 10
+        suggestion:
+          type: string
+          description: "How to fix this issue"
+
+  # 未通过的类别（rewrite 重点）
+  failed_categories:
+    type: array
+    description: "Categories that need fixing"
+    items:
+      type: string
+      enum:
+        - character_consistency
+        - scene_continuity
+        - plot_accuracy
+        - format_compliance
+
+  # 决策建议
+  recommendation:
+    type: object
+    required:
+      - action
+    properties:
+      action:
+        type: string
+        enum: [pass, rewrite]
+      focus:
+        type: array
+        description: "Categories to focus on for rewrite"
+        items:
+          type: string
+      preserve:
+        type: array
+        description: "Categories that are already good"
+        items:
+          type: string
+
+# Score calculation
+score_calculation: |
+  total_score =
+    character_consistency.score * 0.30 +
+    scene_continuity.score * 0.25 +
+    plot_accuracy.score * 0.25 +
+    format_compliance.score * 0.20
+
+  passed = total_score >= 0.85
+
+# Validation rules
+validation_rules:
+  issue_category_match: "Issue category must match one of score categories"
+  failed_categories_match: "Failed categories must have passed=false"
+  recommendation_consistency: "If action=rewrite, focus must match failed_categories"
+
+on_invalid: retry
+max_retries: 2
+error_messages:
+  invalid_score: "Each score must be between 0 and 1"
+  missing_category: "All four score categories are required"
+  issue_without_category: "Each issue must have a valid category"
+  failed_category_not_marked: "Failed categories must have passed=false in scores"

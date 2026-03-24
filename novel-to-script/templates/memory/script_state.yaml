@@ -1,0 +1,60 @@
+# Script State Memory Template
+# Initialize for new projects
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_continuity_notes: 10    # 保留最近 10 条连续性提示
+  max_pending_hooks: 5        # 保留未解决的 5 个悬念
+  max_characters_tracked: 10  # 追踪最多 10 个角色位置
+
+last_scene:
+  episode: null
+  scene_number: null
+  location:
+    name: null
+    type: null
+  time: null
+  weather: null
+
+character_positions: {}
+
+pacing:
+  current_rhythm: null
+  episode_duration_estimate: null
+
+continuity_notes: []
+
+pending_hooks: []
+
+# Example structure (remove after initialization):
+# last_scene:
+#   episode: "001"
+#   scene_number: 2
+#   location:
+#     name: "City Street"
+#     type: EXT
+#   time: Night
+#   weather: Rain
+#
+# character_positions:
+#   Zhang San:
+#     last_location: "City Street (EXT)"
+#     last_seen: "Scene 2, Episode 001"
+#     direction: "Walking into rain"
+#     emotional_state: "Determined"
+#
+# pacing:
+#   current_rhythm: "Tense, building"
+#   episode_duration_estimate: "4 minutes"
+#
+# continuity_notes:
+#   - "Phone call needs follow-up"
+#   - "Rain continues if same night"
+#
+# pending_hooks:
+#   - type: "Phone call"
+#     setup: "Episode 001, Scene 2"
+#     expected_payoff: "Episode 002"
+#     status: "Unresolved"

@@ -1,0 +1,48 @@
+# Review Log Memory Template
+# Initialize for new projects
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_history: 20             # 保留最近 20 条审查记录
+  max_recurring_issues: 5     # 保留最常见的 5 个问题
+  max_quality_trend: 10       # 保留最近 10 集的质量趋势
+
+history: []
+
+patterns:
+  recurring_issues: []
+  quality_trend: []
+
+# Example structure (remove after initialization):
+# history:
+#   - episode: "001"
+#     version: 1
+#     timestamp: "2026-03-22T15:30:00Z"
+#     score: 0.82
+#     passed: false
+#     issues:
+#       - type: format_error
+#         severity: low
+#         description: "Missing CONT'D"
+#         location: "Scene 1, page 3"
+#
+#   - episode: "001"
+#     version: 2
+#     timestamp: "2026-03-22T15:45:00Z"
+#     score: 0.88
+#     passed: true
+#     issues: []
+#
+# patterns:
+#   recurring_issues:
+#     - type: "format_error"
+#       frequency: 2
+#       last_occurrence: "001-v1"
+#       recommendation: "Add format checklist"
+#
+#   quality_trend:
+#     - episode: "001"
+#       versions: [0.82, 0.88]
+#       improvement: "+0.06"
