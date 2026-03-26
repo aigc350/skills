@@ -14,7 +14,7 @@ Extract structured scenes from novel prose for screenplay adaptation.
 - 小说记忆 (`characters.yaml`, `plot_state.yaml`)
 
 ## Outputs
-- `runtime/scenes_{chapter_id}.md`
+- `runtime/scenes_{chapter_name}.md`
 
 ## Task
 
@@ -51,7 +51,7 @@ Extract structured scenes from novel prose for screenplay adaptation.
 
 ## 输出格式
 
-参考模板：[templates/scene.yaml](../templates/scene.yaml)
+严格按照模板：[templates/scene.yaml](../templates/scene.yaml)
 
 ---
 

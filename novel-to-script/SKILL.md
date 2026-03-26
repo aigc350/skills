@@ -11,6 +11,50 @@ description: "Convert novel chapters to screenplays with three-layer memory syst
 
 ```
 /novel-to-script run    # 执行转换（首次运行自动初始化）
+/novel-to-script run 3  # 处理指定数量章节
+```
+
+---
+
+## 参数说明
+
+Pipeline 执行时自动从文件名解析以下参数：
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `chapter_id` | 章节序号，从文件名提取的数字 | `"1"`, `"2"`, `"10"` |
+| `chapter_name` | 章节文件名（不含扩展名），用于文件路径 | `"第1章_逃离"`, `"第2章_我不会变成他们"` |
+
+**解析逻辑**（在 `detect_new` 步骤中执行）：
+
+使用正则 `第(\d+)章_(.+)\.md` 从文件名提取：
+- `$1` → `chapter_id`（章节序号）
+- 文件名去掉扩展名 → `chapter_name`
+
+**用途说明**：
+
+| 参数 | 用途 |
+|------|------|
+| `chapter_id` | 场景ID生成（`C1-S1`）、排序索引、跨章节引用 |
+| `chapter_name` | 定位源文件、生成输出文件名、日志显示 |
+
+**提取示例**：
+
+| 文件名 | chapter_id | chapter_name |
+|--------|------------|--------------|
+| `第1章_逃离.md` | `"1"` | `"第1章_逃离"` |
+| `第2章_我不会变成他们.md` | `"2"` | `"第2章_我不会变成他们"` |
+| `第10章_沸腾.md` | `"10"` | `"第10章_沸腾"` |
+
+**生成的文件路径**：
+
+```
+runtime/scenes_第1章_逃离.md
+runtime/script_v1_第1章_逃离.md
+output/script_第1章_逃离.md
+
+# 场景ID
+C1-S1, C1-S2, C1-S3...
 ```
 
 ---
@@ -145,10 +189,10 @@ novels/{novel_id}/
 | 6 | check_score | - | 分支判断 |
 | 7 | rewrite | rewriter | 重写（如需） |
 | 8 | export_scenes | - | 导出场景文件到 output |
-| 9 | finalize | - | 输出最终版本（script_${chapter_id}.md） |
+| 9 | finalize | - | 输出最终版本（script_${chapter_name}.md） |
 | 10 | update_script_memory | memory_updater | 更新场景层记忆 |
 | 11 | update_reviewer_memory | memory_updater | 更新质量层记忆 |
-| 12 | update_meta | - | 更新 meta.yaml（含 script_hash/scenes_hash） |
+| 12 | update_meta | - | 更新 meta.yaml（含 chapter_id/chapter_name） |
 | 13 | save_output | - | 合并完整剧本 |
 
 ---

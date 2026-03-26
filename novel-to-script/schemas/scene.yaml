@@ -1,0 +1,427 @@
+# ======================
+# 场景输出 Schema (Scene Output Schema)
+# ======================
+# 验证 scene_extractor agent 输出的场景分解
+# 格式以 templates/scene.yaml 为准
+
+_meta:
+  enums:
+
+    # ======================
+    # 场景标题枚举
+    # ======================
+    location_type:               # 场景类型
+      INT: "室内"
+      EXT: "室外"
+      INT_EXT: "内外混合"
+      VIRTUAL: "虚拟空间"
+
+    time:                        # 时间
+      DAY: "白天"
+      NIGHT: "夜晚"
+      DAWN: "黎明"
+      DUSK: "黄昏"
+
+    # ======================
+    # 角色枚举
+    # ======================
+    role:                        # 角色类型
+      protagonist: "主角"
+      antagonist: "对手"
+      supporting: "配角"
+      extra: "群演"
+
+    # ======================
+    # 冲突枚举
+    # ======================
+    conflict_type:               # 冲突类型
+      character: "人物冲突"
+      situational: "环境冲突"
+      internal: "内心冲突"
+      mystery: "悬疑冲突"
+      other: "其他冲突"
+
+    # ======================
+    # 情感枚举
+    # ======================
+    emotion_type:                # 情感类型
+      calm: "平静"
+      anxiety: "不安"
+      anger: "愤怒"
+      fear: "恐惧"
+      sadness: "悲伤"
+      other: "其他情绪"
+
+    # ======================
+    # 风险等级枚举
+    # ======================
+    stakes_level:                # 风险等级
+      low: "低"
+      medium: "中"
+      high: "高"
+
+    # ======================
+    # 节奏枚举
+    # ======================
+    pacing:                      # 节奏速度
+      slow: "慢"
+      medium: "中"
+      fast: "快"
+
+    # ======================
+    # 分镜优先级枚举
+    # ======================
+    shot_priority:               # 分镜优先级
+      emotion: "情绪优先"
+      action: "动作优先"
+      dialogue: "对话优先"
+      atmosphere: "氛围优先"
+
+    # ======================
+    # 镜头类型枚举
+    # ======================
+    shot_type:                   # 镜头类型
+      WS: "全景"
+      MS: "中景"
+      CU: "近景"
+      ECU: "特写"
+      OTS: "过肩"
+      POV: "主观"
+
+    # ======================
+    # 镜头运动枚举
+    # ======================
+    camera_movement:             # 镜头运动
+      static: "静止"
+      pan: "横移"
+      tilt: "俯仰"
+      dolly_in: "推近"
+      dolly_out: "拉远"
+      handheld: "手持"
+
+# ======================
+# Schema 主体
+# ======================
+type: object
+required:
+  - scenes                       # 场景列表
+  - metadata                     # 元数据
+
+properties:
+
+  metadata:
+    type: object
+    required:
+      - chapter_id               # 章节ID
+      - scene_count              # 场景数量
+      - estimated_duration       # 预估时长
+    properties:
+      chapter_id:
+        type: string
+        pattern: "^C[0-9]+$"
+        description: "章节ID，格式：C{数字}，如 C1, C2, C10"
+      scene_count:
+        type: integer
+        minimum: 1
+        description: "场景数量"
+      estimated_duration:
+        type: string
+        pattern: "^[0-9]+-[0-9]+ 分钟$"
+        description: "预估时长，格式：{min}-{max} 分钟"
+
+  scenes:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - scene_id               # 场景ID
+        - location               # 地点
+        - time                   # 时间
+        - characters             # 角色列表
+        - content                # 内容层
+        - drama                  # 戏剧层
+        - production             # 制作层
+
+      properties:
+
+        # ======================
+        # 基础信息
+        # ======================
+        scene_id:
+          type: string
+          pattern: "^C[0-9]+-S[0-9]+$"
+          description: "场景ID，格式：C{chapter_id}-S{序号}，如 C1-S1, C1-S2"
+
+        location:
+          type: object
+          required:
+            - name               # 地点名称
+            - type               # 场景类型
+          properties:
+            name:
+              type: string
+              min_length: 1
+              description: "地点名称（中文可读）"
+            type:
+              type: string
+              enum: [INT, EXT, INT_EXT, VIRTUAL]
+              description: "场景类型（枚举见 _meta.enums.location_type）"
+
+        time:
+          type: string
+          enum: [DAY, NIGHT, DAWN, DUSK]
+          description: "时间（枚举见 _meta.enums.time）"
+
+        characters:
+          type: array
+          min_items: 1
+          items:
+            type: object
+            required:
+              - name             # 角色名称
+              - role             # 角色类型
+              - emotion          # 情感状态
+            properties:
+              name:
+                type: string
+                min_length: 1
+                description: "角色名称"
+              role:
+                type: string
+                enum: [protagonist, antagonist, supporting, extra]
+                description: "角色类型（枚举见 _meta.enums.role）"
+              emotion:
+                type: object
+                required:
+                  - type         # 情感类型
+                  - label        # 情感标签
+                properties:
+                  type:
+                    type: string
+                    enum: [calm, anxiety, anger, fear, sadness, other]
+                    description: "情感类型（枚举见 _meta.enums.emotion_type）"
+                  label:
+                    type: string
+                    min_length: 1
+                    description: "情感标签"
+                  raw:
+                    type: string
+                    description: "原始描述（可选）"
+              first_appearance:
+                type: boolean
+                description: "是否首次出场"
+
+        # ======================
+        # 内容层
+        # ======================
+        content:
+          type: object
+          required:
+            - summary            # 概要
+            - key_actions        # 关键动作
+            - emotional_beat     # 情绪变化
+          properties:
+            summary:
+              type: string
+              min_length: 10
+              description: "场景概要"
+
+            key_actions:
+              type: array
+              min_items: 1
+              items:
+                type: string
+              description: "关键动作列表"
+
+            emotional_beat:
+              type: object
+              required:
+                - start          # 起始情绪
+                - end            # 结束情绪
+              properties:
+                start:
+                  type: object
+                  required:
+                    - type
+                    - label
+                  properties:
+                    type:
+                      type: string
+                      enum: [calm, anxiety, anger, fear, sadness, other]
+                      description: "情感类型（枚举见 _meta.enums.emotion_type）"
+                    label:
+                      type: string
+                      description: "情感标签"
+                    raw:
+                      type: string
+                      description: "原始描述（可选）"
+                end:
+                  type: object
+                  required:
+                    - type
+                    - label
+                  properties:
+                    type:
+                      type: string
+                      enum: [calm, anxiety, anger, fear, sadness, other]
+                      description: "情感类型（枚举见 _meta.enums.emotion_type）"
+                    label:
+                      type: string
+                      description: "情感标签"
+                    raw:
+                      type: string
+                      description: "原始描述（可选）"
+
+            plot_significance:
+              type: string
+              description: "剧情意义（可选）"
+
+        # ======================
+        # 戏剧层
+        # ======================
+        drama:
+          type: object
+          required:
+            - scene_goal         # 场景目标
+            - conflict           # 冲突设置
+          properties:
+            scene_goal:
+              type: string
+              min_length: 1
+              description: "场景目标"
+
+            conflict:
+              type: object
+              required:
+                - type           # 冲突类型
+                - label          # 冲突标签
+              properties:
+                type:
+                  type: string
+                  enum: [character, situational, internal, mystery, other]
+                  description: "冲突类型（枚举见 _meta.enums.conflict_type）"
+                label:
+                  type: string
+                  description: "冲突标签"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
+
+            stakes:
+              type: object
+              properties:
+                level:
+                  type: string
+                  enum: [low, medium, high]
+                  description: "风险等级（枚举见 _meta.enums.stakes_level）"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
+
+            tone:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: "基调标签"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
+
+        # ======================
+        # 制作层
+        # ======================
+        production:
+          type: object
+          required:
+            - visual_focus       # 视觉焦点
+            - audio              # 音频设置
+            - beats              # 节拍点
+            - shot_hint          # 分镜提示
+          properties:
+            visual_focus:
+              type: array
+              items:
+                type: string
+              description: "视觉焦点列表"
+
+            audio:
+              type: object
+              properties:
+                bgm:
+                  type: string
+                  description: "背景音乐"
+                sfx:
+                  type: array
+                  items:
+                    type: string
+                  description: "音效列表"
+                silence:
+                  type: array
+                  items:
+                    type: string
+                  description: "静默时刻列表"
+
+            beats:
+              type: array
+              items:
+                type: string
+              description: "节拍点列表"
+
+            pacing:
+              type: object
+              properties:
+                speed:
+                  type: string
+                  enum: [slow, medium, fast]
+                  description: "节奏速度（枚举见 _meta.enums.pacing）"
+
+            shot_hint:
+              type: object
+              required:
+                - priority       # 分镜优先级
+                - suggested_shots  # 建议镜头
+              properties:
+                priority:
+                  type: string
+                  enum: [emotion, action, dialogue, atmosphere]
+                  description: "分镜优先级（枚举见 _meta.enums.shot_priority）"
+                suggested_shots:
+                  type: array
+                  items:
+                    type: string
+                    enum: [WS, MS, CU, ECU, OTS, POV]
+                  description: "建议镜头（枚举见 _meta.enums.shot_type）"
+
+        # ======================
+        # 扩展层（可选）
+        # ======================
+        extensions:
+          type: object
+          description: "扩展层（可选）"
+          properties:
+            format:
+              type: object
+              description: "格式扩展"
+            style:
+              type: object
+              description: "风格扩展"
+
+# ======================
+# 验证规则
+# ======================
+on_invalid: retry
+max_retries: 3
+error_messages:
+  missing_scene_id: "场景ID格式必须为：C{chapter_id}-S{序号}，如 C1-S1, C1-S2"
+  missing_location: "每个场景必须有 location (name, type)"
+  invalid_location_type: "场景类型必须是：INT, EXT, INT_EXT 或 VIRTUAL"
+  missing_characters: "每个场景至少有一个角色"
+  invalid_time: "时间必须是：DAY, NIGHT, DAWN 或 DUSK"
+  invalid_role: "角色类型必须是：protagonist, antagonist, supporting 或 extra"
+  invalid_emotion_type: "情感类型必须是：calm, anxiety, anger, fear, sadness 或 other"
+  invalid_conflict_type: "冲突类型必须是：character, situational, internal, mystery 或 other"
+  invalid_stakes_level: "风险等级必须是：low, medium 或 high"
+  invalid_shot_priority: "分镜优先级必须是：emotion, action, dialogue 或 atmosphere"
+  invalid_shot_type: "镜头类型必须是：WS, MS, CU, ECU, OTS 或 POV"

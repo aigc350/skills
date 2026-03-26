@@ -1,18 +1,52 @@
-# Scene Output Schema
+# ======================
+# 场景输出 Schema (Scene Output Schema)
+# ======================
 # 验证 scene_extractor agent 输出的场景分解
 
+_meta:
+  enums:
+
+    # ======================
+    # 场景标题枚举
+    # ======================
+    location_type:                # 场景类型
+      INT: "室内"
+      EXT: "室外"
+      INT_EXT: "内外混合"
+
+    time:                         # 时间
+      DAY: "白天"
+      NIGHT: "夜晚"
+      DAWN: "黎明"
+      DUSK: "黄昏"
+      MORNING: "早晨"
+      AFTERNOON: "下午"
+      EVENING: "傍晚"
+
+    # ======================
+    # 角色枚举
+    # ======================
+    role:                         # 角色类型
+      protagonist: "主角"
+      antagonist: "对手"
+      supporting: "配角"
+
+# ======================
+# Schema 主体
+# ======================
 type: object
 required:
-  - scenes
-  - metadata
+  - scenes                        # 场景列表
+  - metadata                      # 元数据
 
 properties:
+  # 元数据
   metadata:
     type: object
     required:
-      - chapter_id
-      - scene_count
-      - estimated_duration
+      - chapter_id                # 章节ID
+      - scene_count               # 场景数量
+      - estimated_duration        # 预估时长
     properties:
       chapter_id:
         type: string
@@ -24,50 +58,58 @@ properties:
         type: string
         pattern: "^[0-9]+-[0-9]+ 分钟$"
 
+  # 场景列表
   scenes:
     type: array
     min_items: 1
     items:
       type: object
       required:
-        - id
-        - location
-        - time
-        - characters
-        - summary
-        - key_actions
-        - emotional_beat
+        - id                      # 场景ID
+        - location                # 地点
+        - time                    # 时间
+        - characters              # 角色列表
+        - summary                 # 概要
+        - key_actions             # 关键动作
+        - emotional_beat          # 情绪变化
       properties:
+        # 场景ID
         id:
           type: string
           pattern: "^C[A-Za-z0-9_-]+-S[0-9]+$"
           description: "格式：C{chapter_id}-S{从1开始递增}，如 C001-S1、C001-S2"
+
+        # 地点
         location:
           type: object
           required:
-            - name
-            - type
+            - name                # 地点名称
+            - type                # 场景类型
           properties:
             name:
               type: string
               min_length: 1
             type:
               type: string
-              enum: [室内, 室外, 内外]
+              enum: [室内, 室外, 内外]  # 场景类型（枚举见 _meta.enums.location_type）
+
+        # 时间
         time:
           type: string
           oneOf:
-            - enum: [白天, 夜晚, 黎明, 黄昏, 早晨, 下午, 傍晚]
+            - enum: [白天, 夜晚, 黎明, 黄昏, 早晨, 下午, 傍晚]  # 时间（枚举见 _meta.enums.time）
             - enum: [Day, Night, Dawn, Dusk, Morning, Afternoon, Evening]
+
+        # 角色列表
         characters:
           type: array
           min_items: 1
           items:
             type: object
             required:
-              - name
-              - role
-              - emotion
+              - name              # 角色名称
+              - role              # 角色类型
+              - emotion           # 情绪
             properties:
               name:
                 type: string
@@ -75,24 +117,32 @@ properties:
               role:
                 type: string
                 oneOf:
-                  - enum: [主角, 对手, 配角]
+                  - enum: [主角, 对手, 配角]  # 角色类型（枚举见 _meta.enums.role）
                   - enum: [protagonist, antagonist, supporting]
               emotion:
                 type: string
                 min_length: 1
+
+        # 概要
         summary:
           type: string
           min_length: 10
+
+        # 关键动作
         key_actions:
           type: array
           min_items: 1
           items:
             type: string
+
+        # 情绪变化
         emotional_beat:
           type: string
           pattern: ".+→.+"
 
-# Validation rules
+# ======================
+# 验证规则
+# ======================
 on_invalid: retry
 error_messages:
   missing_scene: "每个场景必须有 id, location, time, characters, summary"

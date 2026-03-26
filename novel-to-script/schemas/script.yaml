@@ -1,112 +1,286 @@
-# Script Output Schema
-# Validates output from script_writer and rewriter agents
+# ======================
+# 剧本输出 Schema (Script Output Schema)
+# ======================
+# 验证 script_writer 和 rewriter agents 输出
+# 格式以 templates/script.yaml 为准
 
+_meta:
+  enums:
+
+    # ======================
+    # 格式枚举
+    # ======================
+    format:                       # 格式类型
+      short_drama: "短剧（快节奏/强钩子）"
+      film: "电影（镜头语言/节奏稳定）"
+      series: "剧集（中节奏/连续叙事）"
+
+    # ======================
+    # 风格枚举
+    # ======================
+    style:                        # 风格类型
+      realism: "现实主义（真实/克制）"
+      anime: "动漫风（夸张/强化表现）"
+      stylized: "风格化（艺术化表达）"
+      noir: "黑色电影（压抑/高对比）"
+      fantasy: "奇幻（超自然/非现实规则）"
+      other: "其他风格（未定义）"
+
+    # ======================
+    # 场景标题枚举
+    # ======================
+    location_type:                # 场景类型
+      INT: "室内"
+      EXT: "室外"
+      INT_EXT: "内外混合"
+      VIRTUAL: "虚拟空间"
+
+    time:                         # 时间
+      DAY: "白天"
+      NIGHT: "夜晚"
+      DAWN: "黎明"
+      DUSK: "黄昏"
+
+    # ======================
+    # 冲突枚举
+    # ======================
+    conflict_type:                # 冲突类型
+      character: "人物冲突"
+      situational: "环境冲突"
+      internal: "内心冲突"
+      mystery: "悬疑冲突"
+      other: "其他冲突"
+
+    # ======================
+    # 情感枚举
+    # ======================
+    emotion_type:                 # 情感类型
+      calm: "平静"
+      anxiety: "不安"
+      anger: "愤怒"
+      fear: "恐惧"
+      sadness: "悲伤"
+      other: "其他情绪"
+
+    # ======================
+    # 风险等级枚举
+    # ======================
+    stakes_level:                 # 风险等级
+      low: "低"
+      medium: "中"
+      high: "高"
+
+    # ======================
+    # 表达焦点枚举
+    # ======================
+    direction_focus:              # 表达焦点
+      emotion: "情绪"
+      action: "动作"
+      dialogue: "对话"
+      atmosphere: "氛围"
+
+# ======================
+# Schema 主体
+# ======================
 type: object
 required:
-  - episode
-  - scenes
+  - script                       # 剧本主体
 
 properties:
-  episode:
+
+  script:
     type: object
     required:
-      - id
-      - title
+      - chapter_id               # 章节ID
+      - title                    # 章节标题
+      - format                   # 格式
+      - style                    # 风格
+      - scenes                   # 场景列表
+
     properties:
-      id:
+
+      chapter_id:
         type: string
-        pattern: "^[A-Za-z0-9_-]+$"
+        pattern: "^C[0-9]+$"
+        description: "章节ID，格式：C{数字}，如 C1, C2, C10"
+
       title:
         type: string
         min_length: 1
+        description: "章节标题"
 
-  scenes:
-    type: array
-    min_items: 1
-    items:
-      type: object
-      required:
-        - scene_id
-        - scene_heading
-        - content
-      properties:
-        scene_id:
-          type: string
-          pattern: "^C[A-Za-z0-9_-]+-S[0-9]+$"
-          description: "场景ID，格式：C{chapter_id}-S{序号}，如 C001-S1、C001-S2"
-        scene_heading:
+      format:
+        type: string
+        enum: [short_drama, film, series]
+        description: "格式（枚举见 _meta.enums.format）"
+
+      style:
+        type: string
+        enum: [realism, anime, stylized, noir, fantasy, other]
+        description: "风格（枚举见 _meta.enums.style）"
+
+      scenes:
+        type: array
+        min_items: 1
+        items:
           type: object
           required:
-            - location
-            - type
-            - time
+            - scene_id            # 场景ID
+            - heading             # 场景标题
+
           properties:
-            location:
+
+            # ======================
+            # 场景ID
+            # ======================
+            scene_id:
               type: string
-              min_length: 1
-            type:
+              pattern: "^C[0-9]+-S[0-9]+$"
+              description: "场景ID，格式：C{chapter_id}-S{序号}，如 C1-S1, C1-S2"
+
+            # ======================
+            # 场景标题
+            # ======================
+            heading:
+              type: object
+              required:
+                - location        # 地点名称
+                - type            # 场景类型
+                - time            # 时间
+              properties:
+                location:
+                  type: string
+                  min_length: 1
+                  description: "地点名称（中文可读）"
+                type:
+                  type: string
+                  enum: [INT, EXT, INT_EXT, VIRTUAL]
+                  description: "场景类型（枚举见 _meta.enums.location_type）"
+                time:
+                  type: string
+                  enum: [DAY, NIGHT, DAWN, DUSK]
+                  description: "时间（枚举见 _meta.enums.time）"
+
+            # ======================
+            # 内容层
+            # ======================
+            action:
               type: string
-              enum: [INT, EXT, INT_EXT]
-            time:
+              description: "主要视觉动作（核心驱动）"
+
+            dialogue:
+              type: array
+              description: "对话列表"
+              items:
+                type: object
+                required:
+                  - character     # 角色名称
+                  - line          # 台词内容
+                properties:
+                  character:
+                    type: string
+                    description: "角色名称"
+                  line:
+                    type: string
+                    description: "台词内容"
+
+            continuation:
               type: string
-              # 支持中英文时间值
-              oneOf:
-                - enum: [Day, Night, Dawn, Dusk, Morning, Afternoon, Evening]
-                - enum: [白天, 夜晚, 黎明, 黄昏, 早晨, 下午, 傍晚]
+              description: "补充动作/内心戏"
 
-        content:
-          type: array
-          min_items: 1
-          items:
-            type: object
-            required:
-              - type
-              - text
-            properties:
-              type:
-                type: string
-                enum: [action, dialogue, parenthetical, transition]
-              text:
-                type: string
-                min_length: 1
-              character:
-                type: string
-                description: "Required for dialogue type"
-              extension:
-                type: string
-                enum: [V.O., O.S., CONT'D, PRE-LAP]
-                description: "Optional for dialogue type"
+            ending:
+              type: string
+              description: "场景结尾（建议带钩子）"
 
-  transitions:
-    type: array
-    description: "Scene transitions"
-    items:
-      type: string
-      enum: [CUT TO:, FADE OUT., DISSOLVE TO:, SMASH CUT TO:]
+            # ======================
+            # 自动归类结构
+            # ======================
+            emotion:
+              type: object
+              description: "情感归类"
+              required:
+                - type            # 情感类型
+                - label           # 情感标签
+              properties:
+                type:
+                  type: string
+                  enum: [calm, anxiety, anger, fear, sadness, other]
+                  description: "情感类型（枚举见 _meta.enums.emotion_type）"
+                label:
+                  type: string
+                  description: "情感标签"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
 
-# Content validation rules
-validation_rules:
-  dialogue_format:
-    description: "Dialogue must have character name and text"
-    rule: "content.type == 'dialogue' implies content.character exists"
+            conflict:
+              type: object
+              description: "冲突归类"
+              required:
+                - type            # 冲突类型
+                - label           # 冲突标签
+              properties:
+                type:
+                  type: string
+                  enum: [character, situational, internal, mystery, other]
+                  description: "冲突类型（枚举见 _meta.enums.conflict_type）"
+                label:
+                  type: string
+                  description: "冲突标签"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
 
-  scene_heading_format:
-    description: "Scene heading must follow INT./EXT. LOCATION - TIME"
-    rule: "scene_heading matches pattern"
+            tone:
+              type: object
+              description: "基调"
+              properties:
+                label:
+                  type: string
+                  description: "基调标签"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
 
-  no_internal_thoughts:
-    description: "Action lines should not contain internal thoughts"
-    forbidden_patterns:
-      - "thought"
-      - "wondered"
-      - "realized"
-      - "felt"
+            stakes:
+              type: object
+              description: "风险/赌注"
+              properties:
+                level:
+                  type: string
+                  enum: [low, medium, high]
+                  description: "风险等级（枚举见 _meta.enums.stakes_level）"
+                raw:
+                  type: string
+                  description: "原始描述（可选）"
 
+            # ======================
+            # 表达引导
+            # ======================
+            direction:
+              type: object
+              description: "表达引导"
+              properties:
+                focus:
+                  type: string
+                  enum: [emotion, action, dialogue, atmosphere]
+                  description: "表达焦点（枚举见 _meta.enums.direction_focus）"
+
+# ======================
+# 验证规则
+# ======================
 on_invalid: retry
 max_retries: 3
 error_messages:
-  missing_scene_id: "场景ID格式必须为：C{chapter_id}-S{序号}，如 C001-S1、C001-S2"
-  missing_scene_heading: "Each scene must have a proper heading (INT./EXT. LOCATION - TIME)"
-  invalid_dialogue: "Dialogue must include character name and spoken text"
-  missing_content: "Each scene must have content (action or dialogue)"
-  internal_thought_detected: "Action lines should not contain internal thoughts - use visual descriptions"
+  missing_chapter_id: "必须提供 chapter_id，格式：C{数字}，如 C1, C2"
+  missing_title: "必须提供标题"
+  invalid_format: "format 必须是：short_drama, film 或 series"
+  invalid_style: "style 必须是：realism, anime, stylized, noir, fantasy 或 other"
+  missing_scene_id: "场景ID格式必须为：C{chapter_id}-S{序号}，如 C1-S1, C1-S2"
+  missing_heading: "每个场景必须有 heading (location, type, time)"
+  invalid_location_type: "场景类型必须是：INT, EXT, INT_EXT 或 VIRTUAL"
+  invalid_time: "时间必须是：DAY, NIGHT, DAWN 或 DUSK"
+  invalid_emotion_type: "情感类型必须是：calm, anxiety, anger, fear, sadness 或 other"
+  invalid_conflict_type: "冲突类型必须是：character, situational, internal, mystery 或 other"
+  invalid_stakes_level: "风险等级必须是：low, medium 或 high"
+  invalid_direction_focus: "表达焦点必须是：emotion, action, dialogue 或 atmosphere"

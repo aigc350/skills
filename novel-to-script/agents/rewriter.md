@@ -16,7 +16,7 @@ Fix specific screenplay issues identified by reviewer.
 - 小说记忆 (`characters.yaml`)
 
 ## Outputs
-- `runtime/script_v2_{chapter_id}.md`
+- `runtime/script_v2_{chapter_name}.md`
 
 ## Task
 

@@ -10,12 +10,12 @@ Generate properly formatted screenplay from scene breakdown.
 将场景数据转换为剧本格式，包含对话、动作描写和角色指示。通过剧本记忆维护与前几集的连续性。
 
 ## Inputs
-- 场景数据 (`runtime/scenes_{chapter_id}.md`)
+- 场景数据 (`runtime/scenes_{chapter_name}.md`)
 - 小说记忆 (`characters.yaml`)
 - 剧本记忆 (`script_state.yaml`)
 
 ## Outputs
-- `runtime/script_v1_{chapter_id}.md` (重写时为 `script_v2_{chapter_id}.md`)
+- `runtime/script_v1_{chapter_name}.md` (重写时为 `script_v2_{chapter_name}.md`)
 
 ## Task
 
@@ -25,9 +25,9 @@ Generate properly formatted screenplay from scene breakdown.
 
 ---
 
-## 格式参考
+## 输出格式
 
-参考模板：[templates/script.yaml](../templates/script.yaml)
+严格按照模板：[templates/script.yaml](../templates/script.yaml)
 
 ---
 

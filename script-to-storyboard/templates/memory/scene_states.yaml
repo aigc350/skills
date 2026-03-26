@@ -1,0 +1,60 @@
+# Scene States Memory Template
+# Initialize for new projects
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_scenes_tracked: 50      # 保留最近 50 个场景状态
+  max_character_states: 20    # 每个角色保留 20 个状态快照
+  max_location_states: 20    # 每个地点保留 20 个状态
+
+last_processed:
+  chapter_id: null
+  timestamp: null
+
+scene_history: []
+
+character_states: {}
+
+location_states: {}
+
+visual_consistency:
+  global_tone: null
+  lighting_notes: []
+  color_notes: []
+
+# Example structure (remove after initialization):
+# last_processed:
+#   chapter_id: "001"
+#   timestamp: "2026-03-24T10:00:00Z"
+#
+# scene_history:
+#   - scene_id: "S1"
+#     chapter_id: "001"
+#     location: "仓库"
+#     time: "夜晚"
+#     weather: null
+#     characters: ["张三"]
+#     shot_count: 5
+#
+# character_states:
+#   张三:
+#     - chapter_id: "001"
+#       scene_id: "S1"
+#       position: "仓库门口"
+#       emotion: "警觉"
+#       appearance: "皮夹克，手电筒"
+#
+# location_states:
+#   仓库:
+#     - chapter_id: "001"
+#       scene_id: "S1"
+#       setup: "黑暗，门半开，手电筒光束"
+#
+# visual_consistency:
+#   global_tone: "悬疑"
+#   lighting_notes:
+#     - "大部分场景使用暗调"
+#   color_notes:
+#     - "冷色调为主"

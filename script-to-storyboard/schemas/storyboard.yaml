@@ -1,0 +1,99 @@
+# Storyboard Schema
+# 验证 storyboarder agent 输出的分镜脚本
+
+type: object
+required:
+  - chapter_id
+  - scenes
+  - metadata
+
+properties:
+  chapter_id:
+    type: string
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  metadata:
+    type: object
+    required:
+      - total_shots
+      - total_duration
+    properties:
+      total_shots:
+        type: integer
+        minimum: 1
+      total_duration:
+        type: string
+        pattern: "^[0-9]+-[0-9]+ 秒$"
+
+  scenes:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - scene_id
+        - location
+        - shots
+      properties:
+        scene_id:
+          type: string
+          pattern: "^([0-9]+|S[0-9]+)$"
+        location:
+          type: string
+        time:
+          type: string
+        shots:
+          type: array
+          min_items: 1
+          items:
+            type: object
+            required:
+              - shot
+              - visual_description
+            properties:
+              shot:
+                type: object
+                required:
+                  - id
+                  - type
+                  - angle
+                  - movement
+                  - duration
+                properties:
+                  id:
+                    type: integer
+                    minimum: 1
+                  scene_id:
+                    type: string
+                    pattern: "^S[0-9]+$"
+                  type:
+                    type: string
+                    enum: [ELS, LS, WS, MLS, MS, MCU, CU, ECU, 2S, OTS]
+                  angle:
+                    type: string
+                    enum: [eye_level, high, low, tilted, overhead, dutch]
+                  movement:
+                    type: string
+                    enum: [static, pan, tilt, dolly_in, dolly_out, track, crane, zoom, handheld]
+                  duration:
+                    type: string
+                    pattern: "^[0-9]+s$"
+              visual_description:
+                type: string
+                min_length: 5
+              dialogue:
+                type: string
+              sfx:
+                type: string
+              notes:
+                type: string
+
+# Validation rules
+on_invalid: retry
+error_messages:
+  missing_shot_id: "每个镜头必须有唯一的 shot.id"
+  invalid_shot_type: "景别必须是：ELS、LS、WS、MLS、MS、MCU、CU、ECU、2S、OTS"
+  invalid_angle: "角度必须是：eye_level、high、low、tilted、overhead、dutch"
+  invalid_movement: "运动必须是：static、pan、tilt、dolly_in、dolly_out、track、crane、zoom、handheld"
+  invalid_duration: "时长格式必须为 Xs，如 3s、5s"
+  missing_visual_description: "每个镜头必须有 visual_description"

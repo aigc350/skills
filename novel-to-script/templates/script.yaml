@@ -1,113 +1,166 @@
-# Script Output Template
-# 用于 script_writer agent 输出的剧本格式
+# ======================
+# 剧本模板 v1 (Script Template v1)
+# ======================
+# 用于生成剧本的 YAML 模板
+# 包含场景标题、动作、对话、情感归类等结构
 
+_meta:
+  enums:
+
+    # ======================
+    # 格式枚举
+    # ======================
+    format:                       # 格式类型
+      short_drama: "短剧（快节奏/强钩子）"
+      film: "电影（镜头语言/节奏稳定）"
+      series: "剧集（中节奏/连续叙事）"
+
+    # ======================
+    # 风格枚举
+    # ======================
+    style:                        # 风格类型
+      realism: "现实主义（真实/克制）"
+      anime: "动漫风（夸张/强化表现）"
+      stylized: "风格化（艺术化表达）"
+      noir: "黑色电影（压抑/高对比）"
+      fantasy: "奇幻（超自然/非现实规则）"
+      other: "其他风格（未定义）"
+
+    # ======================
+    # 场景标题枚举
+    # ======================
+    location_type:                # 场景类型
+      INT: "室内"
+      EXT: "室外"
+      INT_EXT: "内外混合"
+      VIRTUAL: "虚拟空间"
+
+    time:                         # 时间
+      DAY: "白天"
+      NIGHT: "夜晚"
+      DAWN: "黎明"
+      DUSK: "黄昏"
+
+    # ======================
+    # 角色枚举
+    # ======================
+    role:                         # 角色类型
+      protagonist: "主角"
+      antagonist: "对手"
+      supporting: "配角"
+      extra: "群演"
+
+    # ======================
+    # 冲突枚举
+    # ======================
+    conflict_type:                # 冲突类型
+      character: "人物冲突"
+      situational: "环境冲突"
+      internal: "内心冲突"
+      mystery: "悬疑冲突"
+      other: "其他冲突（未定义）"
+
+    # ======================
+    # 情感枚举
+    # ======================
+    emotion_type:                 # 情感类型
+      calm: "平静"
+      anxiety: "不安"
+      anger: "愤怒"
+      fear: "恐惧"
+      sadness: "悲伤"
+      other: "其他情绪（未定义）"
+
+    # ======================
+    # 风险等级枚举
+    # ======================
+    stakes_level:                 # 风险等级
+      low: "低"
+      medium: "中"
+      high: "高"
+
+    # ======================
+    # 表达焦点枚举
+    # ======================
+    direction_focus:              # 表达焦点
+      emotion: "情绪"
+      action: "动作"
+      dialogue: "对话"
+      atmosphere: "氛围"
+
+# ======================
+# 剧本主体
+# ======================
 script:
-  chapter_id: "{chapter_id}"        # 章节ID（如：C1）
-  title: "{chapter_title}"          # 章节标题
+  chapter_id: "C1"              # 章节ID
+  title: "茶馆疑云"                # 章节标题
 
-  genre: "short_drama"              # 当前题材（short_drama | anime | film）
+  format: "short_drama"           # 格式（枚举见 _meta.enums.format）
+  style: "realism"                # 风格（枚举见 _meta.enums.style）
 
   scenes:
 
-    - scene_id: "C{chapter_id}-S{序号}"  # 场景ID（如：C001-S1、C001-S2）
+    # ----------------------
+    # 场景 1
+    # ----------------------
+    - scene_id: "C1-S1"         # 场景ID，唯一标识
 
+      # 场景标题
       heading:
-        location: "{location_name}"   # 地点（如：茶馆）
-        type: "室内 | 室外 | 内外"    # INT/EXT/INT_EXT
-        time: "白天 | 夜晚 | 黎明 | 黄昏 | 早晨 | 下午 | 傍晚"  # 时间
-
-      action: |                      # 主要视觉动作（通用描述）
-        {Main visual action description}
-
-      dialogue:                     # 对话
-        - character: "{character_name}"
-          line: "{dialogue_line}"
-
-      continuation: |               # 补充（内心/过渡，可选）
-        {Continuation of action or inner monologue}
-
-      ending: |                     # 场景结尾（收束/转折/钩子）
-        {Scene ending}
+        location: "茶馆"           # 地点名称（中文可读）
+        type: "INT"               # 场景类型（枚举见 _meta.enums.location_type）
+        time: "DAY"               # 时间（枚举见 _meta.enums.time）
 
       # ======================
-      # ⭐ 扩展层（按 genre 使用）
+      # 内容层
       # ======================
-      extensions:
 
-        # ===== 🎭 短剧专用 =====
-        short_drama:
+      # 主要视觉动作
+      action: |
+        主角推开茶馆门，空气异常安静。
 
-          pacing:
-            speed: "fast"           # 节奏：快
-            cut_density: "high"     # 剪辑密度：高
+      # 对话列表
+      dialogue:
+        - character: "主角"        # 角色名称
+          line: "这里不对劲……"     # 台词内容
 
-          hooks:
-            start_hook: "{开头3秒钩子}"   # 吸引用户
-            end_hook: "{结尾反转/悬念}"   # 提升完播率
+      # 补充动作/内心戏
+      continuation: |
+        他缓慢走入，发现所有人都在看他。
 
-          conflict:
-            type: "人物冲突 | 情境冲突"
-            intensity: "low | medium | high"
+      # 场景结尾
+      ending: |
+        一个陌生人站起，缓缓向他走来。
 
-          dialogue_style:
-            style: "sharp"          # 台词风格：锋利/直接
-            subtext: false          # 是否有潜台词（短剧一般少）
+      # ======================
+      # 自动归类结构
+      # ======================
 
-          retention_points:
-            - "{停留点1}"
-            - "{停留点2}"
+      # 情感归类
+      emotion:
+        type: "anxiety"           # 情感类型（枚举见 _meta.enums.emotion_type）
+        label: "压抑不安"          # 情感标签
+        raw: "空气凝固，让人感到莫名紧张"  # 原始描述
 
-        # ===== 🎌 动漫专用 =====
-        anime:
+      # 冲突归类
+      conflict:
+        type: "situational"       # 冲突类型（枚举见 _meta.enums.conflict_type）
+        label: "环境压迫"          # 冲突标签
+        raw: "茶馆中所有人盯着主角，形成无形压力"  # 原始描述
 
-          action_sequence:          # 动作拆解（关键）
-            - step: "{动作1}"
-            - step: "{动作2}"
-            - step: "{动作3}"
+      # 基调
+      tone:
+        label: "压抑"              # 基调标签
+        raw: "整个空间安静得不自然，没有人说话"  # 原始描述
 
-          vfx:                      # 特效（核心）
-            - "{能量效果}"
-            - "{环境变化}"
-            - "{光影变化}"
+      # 风险/赌注
+      stakes:
+        level: "high"             # 风险等级（枚举见 _meta.enums.stakes_level）
+        raw: "主角可能陷入危险甚至无法脱身"  # 原始描述
 
-          exaggeration:
-            level: "low | medium | high"   # 夸张程度
+      # ======================
+      # 表达引导
+      # ======================
 
-          power_system:
-            type: "{力量体系}"            # 如：灵力 / 魔法
-            state: "{当前状态}"
-
-          camera_emphasis:
-            - "{镜头强调点}"
-
-          emotion_style:
-            type: "热血 | 压抑 | 爆发"
-            intensity: "high"
-
-        # ===== 🎬 电影专用 =====
-        film:
-
-          pacing:
-            rhythm: "slow | medium | fast"   # 节奏控制
-
-          visual_metaphor:
-            - "{隐喻元素（如：雨/镜子）}"
-
-          subtext:
-            - "{潜台词}"
-
-          silence_usage:
-            - "{静默段落}"
-
-          camera_style:
-            movement: "static | slow_push | handheld"
-            composition: "{构图风格}"
-
-          lighting:
-            style: "{光影风格}"
-
-          color_palette:
-            tone: "{整体色调}"
-
-          realism_level:
-            level: "high"
+      direction:
+        focus: "emotion"          # 表达焦点（枚举见 _meta.enums.direction_focus）

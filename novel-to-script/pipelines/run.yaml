@@ -5,15 +5,21 @@ name: convert_chapter
 description: 将小说章节转换为剧本，通过场景提取、剧本写作和质量审查
 
 variables:
-  chapter_id: "${input.chapter_id}"
+  # ─────────────────────────────────────────
+  # 章节标识（从 detect_new 步骤获取）
+  # ─────────────────────────────────────────
+  chapter_id: "${detect_new.chapter_id}"      # 章节序号（如 "1", "2", "10"）
+  chapter_name: "${detect_new.chapter_name}"  # 章节文件名（如 "第1章_逃离"）
+
+  # ─────────────────────────────────────────
+  # 项目路径
+  # ─────────────────────────────────────────
   novel_id: "${config.current_novel_id}"
-  novel_source_dir: "novels/${novel_id}/novel/chapters"  # 小说章节目录
+  novel_source_dir: "novels/${novel_id}/output/novel"  # 小说章节目录
   novel_dir: "novels/${novel_id}"
   memory_dir: "novels/${novel_id}/script/memory"
   runtime_dir: "novels/${novel_id}/script/runtime"
   output_dir: "novels/${novel_id}/output/script"
-  script_hash: "${input.script_hash}"
-  scenes_hash: "${input.scenes_hash}"
 
 # ─────────────────────────────────────────────────────────────
 # 失败恢复策略（全局默认）
@@ -91,15 +97,22 @@ steps:
       chapters: []
 
   # ───────────────────────────────────────────────────────────
-  # STEP 1: Detect new chapters
+  # STEP 1: Detect new chapters & Parse chapter info
   # ───────────────────────────────────────────────────────────
   - id: detect_new
-    description: 检查未处理的章节
+    description: 检查未处理的章节并解析章节信息
     action: check_files
     input:
       - "${novel_source_dir}/*.md"
       - "${output_dir}/*.md"
     output: ${runtime_dir}/pending_chapters.yaml
+    # 从文件名解析章节信息
+    # 文件名格式：第{N}章_{title}.md
+    parse:
+      source_pattern: "第(\\d+)章_(.+)\\.md"
+      extract:
+        chapter_id: "$1"              # 章节序号（如 "1", "2", "10"）
+        chapter_name: "${filename}"    # 完整文件名（如 "第1章_逃离"）
     on_result:
       empty: exit
       continue: next
@@ -114,7 +127,7 @@ steps:
       - "${memory_dir}/novel/characters.yaml"
       - "${memory_dir}/novel/plot_state.yaml"
     output: "${runtime_dir}/scenes_${chapter_name}.md"
-    schema: schemas/scenes.yaml
+    schema: schemas/scene.yaml
     retry:
       max: 2
     on_fail:
@@ -329,7 +342,7 @@ steps:
     output: "${output_dir}/meta.yaml"
     fields:
       chapter_id: "${chapter_id}"
-      chapter_name: "${input.chapter_name}"
+      chapter_name: "${chapter_name}"
       create_time: "${timestamp}"
       script_hash: ${script_hash}
       scenes_hash: ${scenes_hash}

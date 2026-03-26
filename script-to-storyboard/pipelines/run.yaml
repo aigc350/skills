@@ -1,0 +1,322 @@
+# Script-to-Storyboard Pipeline
+# 剧本转分镜：导演分析 → 场景拆解 → 分镜设计 → 质量审查
+
+name: convert_script_to_storyboard
+description: 将剧本转换为分镜脚本，通过导演分析、场景拆解、分镜设计和质量审查
+
+variables:
+  chapter_name: "${input.chapter_name}"
+  novel_id: "${config.current_novel_id}"
+  script_source_dir: "novels/${novel_id}/output/script"
+  storyboard_dir: "novels/${novel_id}/storyboard"
+  memory_dir: "novels/${novel_id}/storyboard/memory"
+  runtime_dir: "novels/${novel_id}/storyboard/runtime"
+  output_dir: "novels/${novel_id}/output/storyboard"
+
+# ─────────────────────────────────────────────────────────────
+# 失败恢复策略（全局默认）
+# ─────────────────────────────────────────────────────────────
+failure_policy:
+  default:
+    retry: 2
+    on_fail:
+      - action: log_error
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "跳过章节：发生不可恢复错误"
+
+steps:
+  # ═══════════════════════════════════════════════════════════
+  # STEP 0: 初始化 (Initialize)
+  # ═══════════════════════════════════════════════════════════
+  - id: check_config
+    description: 检查 novel.config.md 是否存在
+    action: check_file
+    path: "novel.config.md"
+    on_missing: create_config
+
+  - id: create_config
+    description: 创建默认配置（如果需要）
+    action: create_file
+    path: "novel.config.md"
+    content: |
+      ---
+      version: "1.0"
+      created: "${timestamp}"
+      updated: "${timestamp}"
+      ---
+
+      # 项目配置
+
+      current_novel_id: other_001
+
+  - id: ensure_directories
+    description: 确保项目目录结构存在
+    action: ensure_dirs
+    dirs:
+      - "${storyboard_dir}/memory"
+      - "${storyboard_dir}/runtime"
+      - "${output_dir}"
+
+  - id: init_memory_files
+    description: 如果记忆文件缺失，从模板初始化
+    action: init_templates
+    templates:
+      - source: "templates/memory/scene_states.yaml"
+        dest: "${memory_dir}/scene_states.yaml"
+      - source: "templates/memory/review_log.yaml"
+        dest: "${memory_dir}/review_log.yaml"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 1: 检测新剧本 (Detect New Scripts)
+  # ═══════════════════════════════════════════════════════════
+  - id: detect_new
+    description: 检查未处理的剧本
+    action: check_files
+    input:
+      - "${script_source_dir}/script_*.md"
+      - "${output_dir}/*/overview.md"
+    output: ${runtime_dir}/pending_scripts.yaml
+    on_result:
+      empty: exit
+      continue: next
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 2: 导演分析 (Director Analysis)
+  # ═══════════════════════════════════════════════════════════
+  - id: analyze_script
+    agent: director
+    input:
+      - "${script_source_dir}/script_${chapter_name}.md"
+    output: "${runtime_dir}/directors_notes_${chapter_name}.md"
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "导演分析失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少导演阐述"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 3: 场景拆解 (Scene Breakdown)
+  # ═══════════════════════════════════════════════════════════
+  - id: break_scenes
+    agent: scene_breakdown
+    input:
+      - "${script_source_dir}/script_${chapter_name}.md"
+      - "${script_source_dir}/scenes_${chapter_name}.md"
+      - "${runtime_dir}/directors_notes_${chapter_name}.md"
+      - "${memory_dir}/scene_states.yaml"
+    output: "${runtime_dir}/scene_breakdown_${chapter_name}.yaml"
+    schema: schemas/scene_breakdown.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "场景拆解失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少场景拆分"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 4: 分镜生成 (Generate Storyboard)
+  # ═══════════════════════════════════════════════════════════
+  - id: generate_storyboard
+    agent: storyboarder
+    input:
+      - "${runtime_dir}/scene_breakdown_${chapter_name}.yaml"
+      - "${runtime_dir}/directors_notes_${chapter_name}.md"
+      - "${memory_dir}/scene_states.yaml"
+    output: "${runtime_dir}/storyboard_${chapter_name}.md"
+    schema: schemas/storyboard.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "分镜生成失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少分镜脚本"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 5: 质量审查 (Review)
+  # ═══════════════════════════════════════════════════════════
+  - id: review
+    agent: reviewer
+    input:
+      - "${runtime_dir}/storyboard_${chapter_name}.md"
+      - "${runtime_dir}/directors_notes_${chapter_name}.md"
+      - "${runtime_dir}/scene_breakdown_${chapter_name}.yaml"
+      - "${memory_dir}/scene_states.yaml"
+    output: "${runtime_dir}/review_${chapter_name}.yaml"
+    schema: schemas/review.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: create_default
+        output: "${runtime_dir}/review_${chapter_name}.yaml"
+        value:
+          chapter_id: "${chapter_name}"
+          total_score: 0.80
+          passed: false
+          summary: "审查失败，使用默认分数"
+      - action: log_error
+        message: "审查解析失败，使用默认分数"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 6: 分数检查 (Check Score & Branch)
+  # ═══════════════════════════════════════════════════════════
+  - id: check_score
+    condition: "${review.total_score} < 0.85"
+    on_true: rewrite
+    on_false: finalize
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 7: 分镜重写 (Rewrite)
+  # ═══════════════════════════════════════════════════════════
+  - id: rewrite
+    agent: storyboarder
+    task: revise
+    input:
+      - "${runtime_dir}/storyboard_${chapter_name}.md"
+      - "${runtime_dir}/review_${chapter_name}.yaml"
+      - "${runtime_dir}/directors_notes_${chapter_name}.md"
+    output: "${runtime_dir}/storyboard_v2_${chapter_name}.md"
+    schema: schemas/storyboard.yaml
+    retry:
+      max: 3
+    on_fail:
+      - action: log_error
+        message: "重写失败，使用原始分镜"
+        output: "${runtime_dir}/errors.log"
+      - action: fallback
+        use: "${runtime_dir}/storyboard_${chapter_name}.md"
+        save_as: "${runtime_dir}/storyboard_v2_${chapter_name}.md"
+    next: review_v2
+
+  - id: review_v2
+    agent: reviewer
+    input:
+      - "${runtime_dir}/storyboard_v2_${chapter_name}.md"
+      - "${runtime_dir}/directors_notes_${chapter_name}.md"
+      - "${runtime_dir}/scene_breakdown_${chapter_name}.yaml"
+      - "${memory_dir}/scene_states.yaml"
+    output: "${runtime_dir}/review_v2_${chapter_name}.yaml"
+    schema: schemas/review.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: create_default
+        output: "${runtime_dir}/review_v2_${chapter_name}.yaml"
+        value:
+          total_score: 0.80
+          passed: false
+      - action: log_error
+        message: "审查 v2 解析失败"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 8: 导出定稿 (Export & Finalize)
+  # ═══════════════════════════════════════════════════════════
+  - id: export_director_notes
+    action: copy
+    input: "${runtime_dir}/directors_notes_${chapter_name}.md"
+    output: "${output_dir}/${chapter_name}/directors_notes.md"
+
+  - id: export_scene_breakdown
+    action: copy
+    input: "${runtime_dir}/scene_breakdown_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/scene_breakdown.yaml"
+
+  - id: check_score_v2
+    condition: "${review_v2.total_score} < 0.85"
+    on_true: finalize_with_warning
+    on_false: finalize_v2
+
+  - id: finalize_with_warning
+    action: copy
+    input: "${runtime_dir}/storyboard_${chapter_name}.md"
+    output: "${output_dir}/${chapter_name}/storyboard.md"
+    post_action:
+      - action: append_note
+        file: "${output_dir}/${chapter_name}/storyboard.md"
+        note: "<!-- 警告：重写后仍未达到质量阈值 -->"
+      - action: log_error
+        message: "章节 ${chapter_name} 最终质量分数较低"
+        output: "${memory_dir}/review_log.yaml"
+
+  - id: finalize_v2
+    action: copy
+    input: "${runtime_dir}/storyboard_v2_${chapter_name}.md"
+    output: "${output_dir}/${chapter_name}/storyboard.md"
+
+  - id: finalize
+    action: copy
+    input: "${runtime_dir}/storyboard_${chapter_name}.md"
+    output: "${output_dir}/${chapter_name}/storyboard.md"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 9: 生成概览 (Create Overview)
+  # ═══════════════════════════════════════════════════════════
+  - id: create_overview
+    action: create_file
+    path: "${output_dir}/${chapter_name}/overview.md"
+    content: |
+      # 分镜概览 - ${chapter_name}
+
+      ## 基本信息
+
+      | 项目 | 值 |
+      |------|-----|
+      | 章节ID | ${chapter_name} |
+      | 处理时间 | ${timestamp} |
+
+      ## 统计
+
+      - 场景数量：{scene_count}
+      - 镜头数量：{shot_count}
+      - 总时长：{total_duration}
+
+      ## 质量
+
+      - 审查分数：{review_score}
+      - 状态：{passed ? "通过" : "未通过"}
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 10: 更新记忆 (Update Memory)
+  # ═══════════════════════════════════════════════════════════
+  - id: update_scene_states
+    agent: memory_updater
+    task: update_scene_states
+    input:
+      - "${runtime_dir}/scene_breakdown_${chapter_name}.yaml"
+      - "${runtime_dir}/storyboard_${chapter_name}.md"
+      - "${memory_dir}/scene_states.yaml"
+    output: "${memory_dir}/scene_states.yaml"
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "场景状态更新失败"
+      - action: continue
+
+  - id: update_review_log
+    agent: memory_updater
+    task: update_review_log
+    input:
+      - "${runtime_dir}/review_${chapter_name}.yaml"
+      - "${memory_dir}/review_log.yaml"
+    output: "${memory_dir}/review_log.yaml"
+    on_fail:
+      - action: continue
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 11: 合并输出 (Save Full Storyboard)
+  # ═══════════════════════════════════════════════════════════
+  - id: save_output
+    action: merge
+    input:
+      - "${output_dir}/${chapter_name}/*.md"
+      - "${output_dir}/${chapter_name}/*.yaml"
+    output: "${output_dir}/${chapter_name}/full_storyboard.md"
+    on_complete: log_success

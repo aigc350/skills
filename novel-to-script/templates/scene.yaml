@@ -1,166 +1,258 @@
-# Scene Breakdown Template
+# ======================
+# 场景模板 (Scene Template)
+# ======================
+# 用于提取场景的 YAML 模板
+# 包含地点、时间、角色、内容层、戏剧层、制作层等结构
 
-## Scene {N}
+_meta:
+  enums:
 
-```yaml
+    # ======================
+    # 场景标题枚举
+    # ======================
+    location_type:               # 场景类型
+      INT: "室内"
+      EXT: "室外"
+      INT_EXT: "内外混合"
+      VIRTUAL: "虚拟空间"
+
+    time:                        # 时间
+      DAY: "白天"
+      NIGHT: "夜晚"
+      DAWN: "黎明"
+      DUSK: "黄昏"
+
+    # ======================
+    # 角色枚举
+    # ======================
+    role:                        # 角色类型
+      protagonist: "主角"
+      antagonist: "对手"
+      supporting: "配角"
+      extra: "群演"
+
+    # ======================
+    # 冲突枚举
+    # ======================
+    conflict_type:               # 冲突类型
+      character: "人物冲突"
+      situational: "环境冲突"
+      internal: "内心冲突"
+      mystery: "悬疑冲突"
+      other: "其他冲突"
+
+    # ======================
+    # 情感枚举
+    # ======================
+    emotion_type:                # 情感类型
+      calm: "平静"
+      anxiety: "不安"
+      anger: "愤怒"
+      fear: "恐惧"
+      sadness: "悲伤"
+      other: "其他情绪"
+
+    # ======================
+    # 风险等级枚举
+    # ======================
+    stakes_level:                # 风险等级
+      low: "低"
+      medium: "中"
+      high: "高"
+
+    # ======================
+    # 节奏枚举
+    # ======================
+    pacing:                      # 节奏速度
+      slow: "慢"
+      medium: "中"
+      fast: "快"
+
+    # ======================
+    # 分镜优先级枚举
+    # ======================
+    shot_priority:               # 分镜优先级
+      emotion: "情绪优先"
+      action: "动作优先"
+      dialogue: "对话优先"
+      atmosphere: "氛围优先"
+
+    # ======================
+    # 镜头类型枚举
+    # ======================
+    shot_type:                   # 镜头类型
+      WS: "全景"
+      MS: "中景"
+      CU: "近景"
+      ECU: "特写"
+      OTS: "过肩"
+      POV: "主观"
+
+    # ======================
+    # 镜头运动枚举
+    # ======================
+    camera_movement:             # 镜头运动
+      static: "静止"
+      pan: "横移"
+      tilt: "俯仰"
+      dolly_in: "推近"
+      dolly_out: "拉远"
+      handheld: "手持"
+
+# ======================
+# 场景主体
+# ======================
 scenes:
-  chapter_id: "{chapter_id}"     # 章节ID
-  title: "{chapter_title}"       # 标题
+  chapter_id: "C1"             # 章节ID
+  title: "茶馆疑云"               # 章节标题
 
-  genre: "short_drama"           # ⭐题材控制（short_drama | anime | film）
+  format: "short_drama"          # 格式（枚举见 _meta.enums.format）
+  style: "realism"               # 风格（枚举见 _meta.enums.style）
 
   scenes:
 
-    - scene:
-        id: "C001-S1"           # 场景ID：C{chapter_id}-S{从1开始递增}
-
-        location:
-          name: "{location_name}"
-          type: "INT | EXT"
-
-        time: "白天 | 夜晚 | 黎明 | 黄昏 | 早晨 | 下午 | 傍晚"
-
-        tone: "{scene_tone}"     # 场景基调（压抑/紧张/冷静等）
-
-        characters:
-          - name: "{character_name}"
-            role: "主角 | 对手 | 配角"
-            emotion: "{current_emotional_state}"
-            first_appearance: true
+    # ----------------------
+    # 场景 1
+    # ----------------------
+    - scene_id: "C1-S1"        # 场景ID，唯一标识
 
       # ======================
-      # 1️⃣ 内容层（剧情描述）
+      # 基础信息
       # ======================
+
+      location:
+        name: "茶馆"              # 地点名称（中文可读）
+        type: "INT"              # 场景类型（枚举见 _meta.enums.location_type）
+
+      time: "DAY"                # 时间（枚举见 _meta.enums.time）
+
+      characters:
+        - name: "主角"            # 角色名称
+          role: "protagonist"    # 角色类型（枚举见 _meta.enums.role）
+          emotion:               # 情感状态
+            type: "anxiety"      # 情感类型（枚举见 _meta.enums.emotion_type）
+            label: "警惕不安"     # 情感标签
+            raw: "他感觉到不对劲，神经紧绷"  # 原始描述
+          first_appearance: true # 是否首次出场
+
+      # ======================
+      # 内容结构层
+      # ======================
+
       content:
-        summary: "{场景发生了什么}"
 
-        key_actions:
-          - "{关键动作1}"
-          - "{关键动作2}"
+        summary: "主角进入异常安静的茶馆，察觉到潜在危险"
 
-        emotional_beat: "{情绪变化：A → B}"
+        key_actions:             # 关键动作
+          - "推门进入"
+          - "观察四周"
+          - "停下脚步"
 
-        plot_significance: "{对剧情的作用}"
+        emotional_beat:          # 情绪变化
+          start:                 # 起始情绪
+            type: "calm"         # 情感类型（枚举见 _meta.enums.emotion_type）
+            label: "平静"         # 情感标签
+            raw: "刚进入时尚未察觉异常"  # 原始描述
+          end:                   # 结束情绪
+            type: "anxiety"      # 情感类型（枚举见 _meta.enums.emotion_type）
+            label: "紧张"         # 情感标签
+            raw: "逐渐意识到环境不对劲"  # 原始描述
+
+        plot_significance: "建立压抑氛围，引出冲突"  # 剧情意义
 
       # ======================
-      # 2️⃣ 戏剧层（冲突驱动）
+      # 戏剧层
       # ======================
+
       drama:
-        scene_goal: "{场景目标}"
 
-        conflict: "{冲突点}"
+        scene_goal: "营造不安与压迫感"  # 场景目标
 
-        stakes: "{失败后果}"
+        conflict:                # 冲突设置
+          type: "situational"    # 冲突类型（枚举见 _meta.enums.conflict_type）
+          label: "环境压迫"       # 冲突标签
+          raw: "茶馆中所有人盯着主角，形成无形压力"  # 原始描述
+
+        stakes:                  # 风险/赌注
+          level: "high"          # 风险等级（枚举见 _meta.enums.stakes_level）
+          raw: "主角可能陷入危险甚至无法脱身"  # 原始描述
+
+        tone:                    # 基调
+          label: "压抑"           # 基调标签
+          raw: "空气凝固般安静，没有人说话"  # 原始描述
 
       # ======================
-      # 3️⃣ 制作层（分镜输入核心）
+      # 制作层（分镜输入核心）
       # ======================
+
       production:
 
-        visual_focus:
-          - "{视觉重点（人物/物件/细节）}"
+        visual_focus:            # 视觉焦点
+          - "主角表情变化"
+          - "周围人的凝视"
+          - "空间压迫感"
 
-        audio:
-          bgm: "{背景音乐氛围}"
+        audio:                   # 音频设置
+          bgm: "低沉紧张氛围"     # 背景音乐
+          sfx:                   # 音效
+            - "木门吱呀声"
+            - "脚步声"
+          silence:               # 静默时刻
+            - "短暂静默"
 
-          sfx:
-            - "{音效}"
+        beats:                   # 节拍点
+          - "进入"
+          - "观察"
+          - "异常感增强"
+          - "陌生人起身"
 
-          silence:
-            - "{静默点}"
+        pacing:
+          speed: "fast"          # 节奏速度（枚举见 _meta.enums.pacing）
 
-        beats:
-          - "{节奏点1}"
-          - "{节奏点2}"
-          - "{节奏点3}"
+        shot_hint:               # 分镜提示
+          priority: "emotion"    # 分镜优先级（枚举见 _meta.enums.shot_priority）
+          suggested_shots:       # 建议镜头（枚举见 _meta.enums.shot_type）
+            - "CU"
+            - "MS"
+            - "OTS"
 
       # ======================
-      # 4️⃣ 扩展层（按题材启用 ⭐）
+      # 扩展层（分离 format / style）
       # ======================
+
       extensions:
 
-        # ===== 🎭 短剧扩展 =====
-        short_drama:
+        format:                  # 格式扩展
 
-          pacing:
-            speed: "fast"
-            cut_density: "high"
+          short_drama:
+            cut_density: "high"  # 剪切密度
+            hook_points:         # 钩子点
+              - "茶馆异常安静"
+              - "陌生人突然站起"
 
-          hook_points:
-            - "{开头钩子}"
-            - "{结尾反转}"
+          film:
+            pacing:
+              speed: "slow"      # 节奏速度（枚举见 _meta.enums.pacing）
+            cinematography:      # 摄影
+              camera_movement:   # 镜头运动（枚举见 _meta.enums.camera_movement）
+                - "static"
+                - "dolly_in"
 
-          conflict_focus:
-            type: "人物冲突"
-            intensity: "high"
+        style:                   # 风格扩展
 
-          dialogue_density: "high"   # 台词密度高
+          realism:
+            lighting:
+              style: "自然光"     # 灯光风格
+            performance:
+              acting: "克制"      # 表演风格
 
-          retention_design:
-            - "{停留点设计}"
+          noir:
+            lighting:
+              style: "高对比阴影"  # 灯光风格
+            tone:
+              label: "压抑"       # 基调
 
-        # ===== 🎌 动漫扩展 =====
-        anime:
-
-          action_design:
-            choreography:
-              - "{动作分解1}"
-              - "{动作分解2}"
-
-            impact_frames:
-              - "{关键打击帧}"
-
-          vfx_design:
-            effects:
-              - "{特效}"
-              - "{能量波}"
-              - "{爆炸}"
-
-          world_rules:
-            physics: "{物理规则（可非现实）}"
-            power_system: "{力量体系}"
-
-          motion_style:
-            speed: "fast"
-            exaggeration: "high"
-
-          camera_dynamics:
-            - "{快速推拉镜头}"
-            - "{旋转镜头}"
-
-        # ===== 🎬 电影扩展 =====
-        film:
-
-          pacing:
-            rhythm: "slow"
-
-          cinematography:
-
-            composition:
-              - "{构图方式（对称/留白）}"
-
-            camera_movement:
-              - "static"
-              - "slow_push"
-
-          lighting_design:
-            style: "{光影风格}"
-
-          color_script:
-            palette: "{色彩体系}"
-
-          atmosphere:
-            - "{环境氛围（雨/雾/风）}"
-
-          subtext_layer:
-            - "{潜台词}"
-
-          silence_design:
-            - "{静默表达情绪}"
-
----
-
-<!-- Repeat for each scene -->
-
-## Scene Count: {total}
-## Estimated Screen Time: {X-Y} minutes
+          anime:
+            exaggeration: "high" # 夸张程度
+            vfx:                 # 视觉特效
+              - "气氛压迫感视觉化"
