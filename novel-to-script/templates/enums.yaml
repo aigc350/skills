@@ -1,0 +1,128 @@
+# ======================
+# 枚举定义与填写规则
+# ======================
+#
+# 枚举字段填写规则：
+# - `type`: 使用枚举 key（如 anxiety, internal, slow）
+# - `label`: **必须等于枚举定义的中文值**（如 "不安", "内心冲突", "慢"）
+# - `raw`: AI 可根据实际内容自定义描述
+# - **例外**: 当 `type: "other"` 时，`label` 由 AI 自定义
+#
+# 示例：
+# | type      | 正确 label  | 错误 label   |
+# |-----------|-------------|--------------|
+# | anxiety   | 不安        | 焦躁不安 ❌  |
+# | internal  | 内心冲突    | 内心挣扎 ❌  |
+# | slow      | 慢          | 缓慢 ❌      |
+# | other     | (AI自定义)  | -            |
+
+_meta:
+  enums:
+
+    # ======================
+    # 🎬 项目基础
+    # ======================
+
+    format:
+      short_drama: "短剧（快节奏/强钩子）"
+      film: "电影（镜头语言/节奏稳定）"
+      series: "剧集（连续叙事）"
+
+    style:
+      realism: "现实主义（真实/克制）"
+      anime: "动漫风（夸张/强化表现）"
+      stylized: "风格化（艺术表达）"
+      noir: "黑色电影（高对比/压抑）"
+      fantasy: "奇幻（非现实规则）"
+      other: "其他风格"
+
+    # ======================
+    # 📍 场景基础
+    # ======================
+
+    location_type:
+      INT: "室内"
+      EXT: "室外"
+      INT_EXT: "内外混合"
+      VIRTUAL: "虚拟空间"
+
+    time:
+      DAY: "白天"
+      NIGHT: "夜晚"
+      DAWN: "黎明"
+      DUSK: "黄昏"
+
+    # ======================
+    # 👥 人物
+    # ======================
+
+    role:
+      protagonist: "主角"
+      antagonist: "对手"
+      supporting: "配角"
+      extra: "群演"
+
+    # ======================
+    # ⚔️ 戏剧语义（支持扩展）
+    # ======================
+
+    conflict_type:
+      character: "人物冲突"
+      situational: "环境冲突"
+      internal: "内心冲突"
+      mystery: "悬疑冲突"
+      other: "其他冲突"
+
+    emotion_type:
+      calm: "平静"
+      anxiety: "不安"
+      anger: "愤怒"
+      fear: "恐惧"
+      sadness: "悲伤"
+      other: "其他情绪"
+
+    stakes_level:
+      low: "低"
+      medium: "中"
+      high: "高"
+
+    # ======================
+    # 🎬 制作控制（不扩展）
+    # ======================
+
+    pacing:
+      slow: "慢"
+      medium: "中"
+      fast: "快"
+
+    shot_priority:
+      emotion: "情绪优先"
+      action: "动作优先"
+      dialogue: "对话优先"
+      atmosphere: "氛围优先"
+
+    shot_type:
+      WS: "全景"
+      MS: "中景"
+      CU: "近景"
+      ECU: "特写"
+      OTS: "过肩"
+      POV: "主观"
+
+    camera_movement:
+      static: "静止"
+      pan: "横移"
+      tilt: "俯仰"
+      dolly_in: "推近"
+      dolly_out: "拉远"
+      handheld: "手持"
+
+    # ======================
+    # 🎯 表达引导（script 专用，但 scene 可复用）
+    # ======================
+
+    direction_focus:
+      emotion: "情绪"
+      action: "动作"
+      dialogue: "对话"
+      atmosphere: "氛围"

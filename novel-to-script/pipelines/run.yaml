@@ -104,7 +104,7 @@ steps:
     action: check_files
     input:
       - "${novel_source_dir}/*.md"
-      - "${output_dir}/*.md"
+      - "${output_dir}/*.yaml"
     output: ${runtime_dir}/pending_chapters.yaml
     # 从文件名解析章节信息
     # 文件名格式：第{N}章_{title}.md
@@ -126,7 +126,7 @@ steps:
       - "${novel_source_dir}/${chapter_name}.md"
       - "${memory_dir}/novel/characters.yaml"
       - "${memory_dir}/novel/plot_state.yaml"
-    output: "${runtime_dir}/scenes_${chapter_name}.md"
+    output: "${runtime_dir}/scenes_${chapter_name}.yaml"
     schema: schemas/scene.yaml
     retry:
       max: 2
@@ -146,7 +146,7 @@ steps:
     agent: memory_updater
     task: update_novel
     input:
-      - "${runtime_dir}/scenes_${chapter_name}.md"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
       - "${memory_dir}/novel/characters.yaml"
       - "${memory_dir}/novel/plot_state.yaml"
     output:
@@ -165,10 +165,10 @@ steps:
   - id: write_script
     agent: script_writer
     input:
-      - "${runtime_dir}/scenes_${chapter_name}.md"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
       - "${memory_dir}/novel/characters.yaml"
       - "${memory_dir}/script/script_state.yaml"
-    output: "${runtime_dir}/script_v1_${chapter_name}.md"
+    output: "${runtime_dir}/script_v1_${chapter_name}.yaml"
     schema: schemas/script.yaml
     retry:
       max: 2
@@ -185,7 +185,8 @@ steps:
   - id: review
     agent: reviewer
     input:
-      - "${runtime_dir}/script_v1_${chapter_name}.md"
+      - "${runtime_dir}/script_v1_${chapter_name}.yaml"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
       - "${memory_dir}/novel/characters.yaml"
       - "${memory_dir}/novel/plot_state.yaml"
       - "${memory_dir}/script/script_state.yaml"
@@ -219,11 +220,12 @@ steps:
   - id: rewrite
     agent: rewriter
     input:
-      - "${runtime_dir}/script_v1_${chapter_name}.md"
+      - "${runtime_dir}/script_v1_${chapter_name}.yaml"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
       - "${review.issues}"           # 只传递问题列表
       - "${review.failed_categories}" # 只传递未通过类别
       - "${memory_dir}/novel/characters.yaml"
-    output: "${runtime_dir}/script_v2_${chapter_name}.md"
+    output: "${runtime_dir}/script_v2_${chapter_name}.yaml"
     schema: schemas/script.yaml
     retry:
       max: 3
@@ -232,14 +234,15 @@ steps:
         message: "重写失败，使用原始剧本"
         output: "${memory_dir}/reviewer/review_log.yaml"
       - action: fallback
-        use: "${runtime_dir}/script_v1_${chapter_name}.md"
-        save_as: "${runtime_dir}/script_v2_${chapter_name}.md"
+        use: "${runtime_dir}/script_v1_${chapter_name}.yaml"
+        save_as: "${runtime_dir}/script_v2_${chapter_name}.yaml"
     next: review_v2
 
   - id: review_v2
     agent: reviewer
     input:
-      - "${runtime_dir}/script_v2_${chapter_name}.md"
+      - "${runtime_dir}/script_v2_${chapter_name}.yaml"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
       - "${memory_dir}/novel/characters.yaml"
       - "${memory_dir}/novel/plot_state.yaml"
       - "${memory_dir}/script/script_state.yaml"
@@ -261,13 +264,18 @@ steps:
   # ───────────────────────────────────────────────────────────
   - id: export_scenes
     action: copy
-    input: "${runtime_dir}/scenes_${chapter_name}.md"
-    output: "${output_dir}/scenes_${chapter_name}.md"
+    input: "${runtime_dir}/scenes_${chapter_name}.yaml"
+    output: "${output_dir}/scenes_${chapter_name}.yaml"
 
   - id: compute_scenes_hash
     action: compute_hash
-    input: "${output_dir}/scenes_${chapter_name}.md"
+    input: "${output_dir}/scenes_${chapter_name}.yaml"
     output: scenes_hash
+
+  - id: compute_script_hash
+    action: compute_hash
+    input: "${output_dir}/script_${chapter_name}.yaml"
+    output: script_hash
 
   - id: check_score_v2
     condition: "${review_v2.score} < 0.85"
@@ -280,26 +288,26 @@ steps:
   # Rewrite 后仍低分，使用 v1 并标记警告
   - id: finalize_with_warning
     action: copy
-    input: "${runtime_dir}/script_v1_${chapter_name}.md"
-    output: "${output_dir}/script_${chapter_name}.md"
+    input: "${runtime_dir}/script_v1_${chapter_name}.yaml"
+    output: "${output_dir}/script_${chapter_name}.yaml"
     post_action:
       - action: append_note
-        file: "${output_dir}/script_${chapter_name}.md"
-        note: "<!-- 警告：重写后仍未达到质量阈值 -->"
+        file: "${output_dir}/script_${chapter_name}.yaml"
+        note: "# 警告：重写后仍未达到质量阈值"
       - action: log_error
         message: "章节 ${chapter_name} 最终质量分数较低"
         output: "${memory_dir}/reviewer/review_log.yaml"
 
   - id: finalize_v2
     action: copy
-    input: "${runtime_dir}/script_v2_${chapter_name}.md"
-    output: "${output_dir}/script_${chapter_name}.md"
+    input: "${runtime_dir}/script_v2_${chapter_name}.yaml"
+    output: "${output_dir}/script_${chapter_name}.yaml"
 
   # 分支汇合点 - score >= 0.85
   - id: finalize
     action: copy
-    input: "${runtime_dir}/script_v1_${chapter_name}.md"
-    output: "${output_dir}/script_${chapter_name}.md"
+    input: "${runtime_dir}/script_v1_${chapter_name}.yaml"
+    output: "${output_dir}/script_${chapter_name}.yaml"
 
   # ───────────────────────────────────────────────────────────
   # STEP 10: Update Script Memory
@@ -308,7 +316,7 @@ steps:
     agent: memory_updater
     task: update_script
     input:
-      - "${output_dir}/script_${chapter_name}.md"
+      - "${output_dir}/script_${chapter_name}.yaml"
       - "${memory_dir}/script/script_state.yaml"
     output: "${memory_dir}/script/script_state.yaml"
     retry:
@@ -338,7 +346,7 @@ steps:
     action: update_meta_yaml
     input:
       - "${novel_source_dir}/${chapter_name}.md"
-      - "${output_dir}/script_${chapter_name}.md"
+      - "${output_dir}/script_${chapter_name}.yaml"
     output: "${output_dir}/meta.yaml"
     fields:
       chapter_id: "${chapter_id}"
@@ -348,14 +356,14 @@ steps:
       scenes_hash: ${scenes_hash}
 
   # ───────────────────────────────────────────────────────────
-  # STEP 13: Save Full Script
+  # STEP 13: Save Full Script (可选)
   # ───────────────────────────────────────────────────────────
   - id: save_output
     action: merge
     input:
-      - "${output_dir}/*.md"
-    output: "${output_dir}/full_script.md"
+      - "${output_dir}/*.yaml"
+    output: "${output_dir}/full_script.yaml"
     exclude:
       - "meta.yaml"
-      - "scenes_*.md"
+      - "scenes_*.yaml"
     on_complete: log_success  # 记录成功日志

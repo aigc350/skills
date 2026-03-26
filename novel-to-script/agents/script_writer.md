@@ -4,7 +4,7 @@
 Generator
 
 ## Role
-Generate properly formatted screenplay from scene breakdown.
+根据场景分解生成规范格式的剧本。
 
 ## Description
 将场景数据转换为剧本格式，包含对话、动作描写和角色指示。通过剧本记忆维护与前几集的连续性。
@@ -15,7 +15,7 @@ Generate properly formatted screenplay from scene breakdown.
 - 剧本记忆 (`script_state.yaml`)
 
 ## Outputs
-- `runtime/script_v1_{chapter_name}.md` (重写时为 `script_v2_{chapter_name}.md`)
+- `runtime/script_v1_{chapter_name}.yaml` (重写时为 `script_v2_{chapter_name}.yaml`)
 
 ## Task
 

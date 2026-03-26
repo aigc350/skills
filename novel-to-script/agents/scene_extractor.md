@@ -4,7 +4,7 @@
 Generator
 
 ## Role
-Extract structured scenes from novel prose for screenplay adaptation.
+从小说文本提取结构化场景，用于剧本改编。
 
 ## Description
 将小说文本分解为独立的、可拍摄的场景，并附带结构化元数据。**不写对话**——只提取场景信息。
@@ -14,7 +14,7 @@ Extract structured scenes from novel prose for screenplay adaptation.
 - 小说记忆 (`characters.yaml`, `plot_state.yaml`)
 
 ## Outputs
-- `runtime/scenes_{chapter_name}.md`
+- `runtime/scenes_{chapter_name}.yaml`
 
 ## Task
 

@@ -1,98 +1,19 @@
 # ======================
-# 剧本模板 v1 (Script Template v1)
+# 剧本模板 (Script Template)
 # ======================
 # 用于生成剧本的 YAML 模板
 # 包含场景标题、动作、对话、情感归类等结构
+#
+# 枚举填写规则见：enums.yaml
 
 _meta:
-  enums:
-
-    # ======================
-    # 格式枚举
-    # ======================
-    format:                       # 格式类型
-      short_drama: "短剧（快节奏/强钩子）"
-      film: "电影（镜头语言/节奏稳定）"
-      series: "剧集（中节奏/连续叙事）"
-
-    # ======================
-    # 风格枚举
-    # ======================
-    style:                        # 风格类型
-      realism: "现实主义（真实/克制）"
-      anime: "动漫风（夸张/强化表现）"
-      stylized: "风格化（艺术化表达）"
-      noir: "黑色电影（压抑/高对比）"
-      fantasy: "奇幻（超自然/非现实规则）"
-      other: "其他风格（未定义）"
-
-    # ======================
-    # 场景标题枚举
-    # ======================
-    location_type:                # 场景类型
-      INT: "室内"
-      EXT: "室外"
-      INT_EXT: "内外混合"
-      VIRTUAL: "虚拟空间"
-
-    time:                         # 时间
-      DAY: "白天"
-      NIGHT: "夜晚"
-      DAWN: "黎明"
-      DUSK: "黄昏"
-
-    # ======================
-    # 角色枚举
-    # ======================
-    role:                         # 角色类型
-      protagonist: "主角"
-      antagonist: "对手"
-      supporting: "配角"
-      extra: "群演"
-
-    # ======================
-    # 冲突枚举
-    # ======================
-    conflict_type:                # 冲突类型
-      character: "人物冲突"
-      situational: "环境冲突"
-      internal: "内心冲突"
-      mystery: "悬疑冲突"
-      other: "其他冲突（未定义）"
-
-    # ======================
-    # 情感枚举
-    # ======================
-    emotion_type:                 # 情感类型
-      calm: "平静"
-      anxiety: "不安"
-      anger: "愤怒"
-      fear: "恐惧"
-      sadness: "悲伤"
-      other: "其他情绪（未定义）"
-
-    # ======================
-    # 风险等级枚举
-    # ======================
-    stakes_level:                 # 风险等级
-      low: "低"
-      medium: "中"
-      high: "高"
-
-    # ======================
-    # 表达焦点枚举
-    # ======================
-    direction_focus:              # 表达焦点
-      emotion: "情绪"
-      action: "动作"
-      dialogue: "对话"
-      atmosphere: "氛围"
+  enums_ref: "./enums.yaml"
 
 # ======================
 # 剧本主体
 # ======================
 script:
-  chapter_id: "C1"              # 章节ID
+  chapter_id: "1"              # 章节ID
   title: "茶馆疑云"                # 章节标题
 
   format: "short_drama"           # 格式（枚举见 _meta.enums.format）
@@ -139,13 +60,13 @@ script:
       # 情感归类
       emotion:
         type: "anxiety"           # 情感类型（枚举见 _meta.enums.emotion_type）
-        label: "压抑不安"          # 情感标签
+        label: "不安"             # 情感标签（必须等于枚举定义）
         raw: "空气凝固，让人感到莫名紧张"  # 原始描述
 
       # 冲突归类
       conflict:
         type: "situational"       # 冲突类型（枚举见 _meta.enums.conflict_type）
-        label: "环境压迫"          # 冲突标签
+        label: "环境冲突"         # 冲突标签（必须等于枚举定义）
         raw: "茶馆中所有人盯着主角，形成无形压力"  # 原始描述
 
       # 基调

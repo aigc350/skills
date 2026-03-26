@@ -1,0 +1,43 @@
+# Novel-to-Script Export Pipeline
+# 将 YAML 格式的剧本和场景导出为 Markdown 格式（同目录）
+
+name: export
+description: 将 YAML 格式的剧本和场景导出为 Markdown 格式
+
+variables:
+  novel_id: "${config.current_novel_id}"
+  output_dir: "novels/${novel_id}/output/script"
+
+steps:
+  # ───────────────────────────────────────────────────────────
+  # STEP 1: 导出所有剧本为 Markdown
+  # ───────────────────────────────────────────────────────────
+  - id: export_scripts
+    action: convert_yaml_to_md
+    input: "${output_dir}/script_*.yaml"
+    output: "${output_dir}"
+    template: "templates/export/script_md.yaml"
+    on_fail:
+      - action: log_error
+        message: "剧本导出失败"
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 2: 导出所有场景为 Markdown
+  # ───────────────────────────────────────────────────────────
+  - id: export_scenes
+    action: convert_yaml_to_md
+    input: "${output_dir}/scenes_*.yaml"
+    output: "${output_dir}"
+    template: "templates/export/scene_md.yaml"
+    on_fail:
+      - action: log_error
+        message: "场景导出失败"
+
+  # ───────────────────────────────────────────────────────────
+  # STEP 3: 合并完整剧本
+  # ───────────────────────────────────────────────────────────
+  - id: merge_full_script
+    action: merge
+    input: "${output_dir}/script_*.md"
+    output: "${output_dir}/full_script.md"
+    on_complete: log_success

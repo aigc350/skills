@@ -3,107 +3,17 @@
 # ======================
 # 用于提取场景的 YAML 模板
 # 包含地点、时间、角色、内容层、戏剧层、制作层等结构
+#
+# 枚举填写规则见：enums.yaml
 
 _meta:
-  enums:
-
-    # ======================
-    # 场景标题枚举
-    # ======================
-    location_type:               # 场景类型
-      INT: "室内"
-      EXT: "室外"
-      INT_EXT: "内外混合"
-      VIRTUAL: "虚拟空间"
-
-    time:                        # 时间
-      DAY: "白天"
-      NIGHT: "夜晚"
-      DAWN: "黎明"
-      DUSK: "黄昏"
-
-    # ======================
-    # 角色枚举
-    # ======================
-    role:                        # 角色类型
-      protagonist: "主角"
-      antagonist: "对手"
-      supporting: "配角"
-      extra: "群演"
-
-    # ======================
-    # 冲突枚举
-    # ======================
-    conflict_type:               # 冲突类型
-      character: "人物冲突"
-      situational: "环境冲突"
-      internal: "内心冲突"
-      mystery: "悬疑冲突"
-      other: "其他冲突"
-
-    # ======================
-    # 情感枚举
-    # ======================
-    emotion_type:                # 情感类型
-      calm: "平静"
-      anxiety: "不安"
-      anger: "愤怒"
-      fear: "恐惧"
-      sadness: "悲伤"
-      other: "其他情绪"
-
-    # ======================
-    # 风险等级枚举
-    # ======================
-    stakes_level:                # 风险等级
-      low: "低"
-      medium: "中"
-      high: "高"
-
-    # ======================
-    # 节奏枚举
-    # ======================
-    pacing:                      # 节奏速度
-      slow: "慢"
-      medium: "中"
-      fast: "快"
-
-    # ======================
-    # 分镜优先级枚举
-    # ======================
-    shot_priority:               # 分镜优先级
-      emotion: "情绪优先"
-      action: "动作优先"
-      dialogue: "对话优先"
-      atmosphere: "氛围优先"
-
-    # ======================
-    # 镜头类型枚举
-    # ======================
-    shot_type:                   # 镜头类型
-      WS: "全景"
-      MS: "中景"
-      CU: "近景"
-      ECU: "特写"
-      OTS: "过肩"
-      POV: "主观"
-
-    # ======================
-    # 镜头运动枚举
-    # ======================
-    camera_movement:             # 镜头运动
-      static: "静止"
-      pan: "横移"
-      tilt: "俯仰"
-      dolly_in: "推近"
-      dolly_out: "拉远"
-      handheld: "手持"
+  enums_ref: "./enums.yaml"
 
 # ======================
 # 场景主体
 # ======================
 scenes:
-  chapter_id: "C1"             # 章节ID
+  chapter_id: "1"             # 章节ID
   title: "茶馆疑云"               # 章节标题
 
   format: "short_drama"          # 格式（枚举见 _meta.enums.format）
@@ -131,7 +41,7 @@ scenes:
           role: "protagonist"    # 角色类型（枚举见 _meta.enums.role）
           emotion:               # 情感状态
             type: "anxiety"      # 情感类型（枚举见 _meta.enums.emotion_type）
-            label: "警惕不安"     # 情感标签
+            label: "不安"        # 情感标签（必须等于枚举定义）
             raw: "他感觉到不对劲，神经紧绷"  # 原始描述
           first_appearance: true # 是否首次出场
 
@@ -155,7 +65,7 @@ scenes:
             raw: "刚进入时尚未察觉异常"  # 原始描述
           end:                   # 结束情绪
             type: "anxiety"      # 情感类型（枚举见 _meta.enums.emotion_type）
-            label: "紧张"         # 情感标签
+            label: "不安"         # 情感标签（必须等于枚举定义）
             raw: "逐渐意识到环境不对劲"  # 原始描述
 
         plot_significance: "建立压抑氛围，引出冲突"  # 剧情意义
@@ -170,7 +80,7 @@ scenes:
 
         conflict:                # 冲突设置
           type: "situational"    # 冲突类型（枚举见 _meta.enums.conflict_type）
-          label: "环境压迫"       # 冲突标签
+          label: "环境冲突"     # 冲突标签（必须等于枚举定义）
           raw: "茶馆中所有人盯着主角，形成无形压力"  # 原始描述
 
         stakes:                  # 风险/赌注

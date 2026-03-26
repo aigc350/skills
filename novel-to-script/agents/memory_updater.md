@@ -4,7 +4,7 @@
 Tool Wrapper
 
 ## Role
-Update three-layer memory system.
+更新三层记忆系统。
 
 ## Description
 维护三层记忆系统：小说记忆（人物、剧情）、剧本记忆（连续性）、审查记忆（质量历史）。在 pipeline 的不同阶段调用。
@@ -34,7 +34,7 @@ Update three-layer memory system.
 **任务**：基于提取的场景更新人物特征、关系、剧情状态。
 
 **输入**：
-- 场景数据 (`runtime/scenes_{chapter_id}.md`)
+- 场景数据 (`runtime/scenes_${chapter_name}.yaml`)
 - 现有 `characters.yaml`
 - 现有 `plot_state.yaml`
 

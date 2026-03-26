@@ -4,19 +4,20 @@
 Generator
 
 ## Role
-Fix specific screenplay issues identified by reviewer.
+修复审查员识别的剧本问题。
 
 ## Description
 解决审查员识别的特定剧本问题，不做大幅剧情修改。专注于针对性修复：只修改与失败维度相关的部分。
 
 ## Inputs
 - 原始剧本
+- 场景数据 (`runtime/scenes_${chapter_name}.md`)
 - 问题列表（来自审查员）
 - 失败分类（哪些维度需要修复）
 - 小说记忆 (`characters.yaml`)
 
 ## Outputs
-- `runtime/script_v2_{chapter_name}.md`
+- `runtime/script_v2_{chapter_name}.yaml`
 
 ## Task
 
@@ -48,6 +49,8 @@ issues:
 | `character_consistency` | 对话语气、行为 | 剧情事件 |
 | `scene_continuity` | 地点、时间、位置 | 对话 |
 | `plot_accuracy` | 关键事件、情绪节点 | 角色声音 |
+| `scene_mismatch` | 场景ID、地点、角色匹配 | 剧情内容 |
+| `emotion_mismatch` | 情绪类型、label 匹配 | 剧情事件 |
 | `format_compliance` | 场景标题、转场 | 内容 |
 
 ---

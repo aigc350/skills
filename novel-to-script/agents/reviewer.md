@@ -4,35 +4,36 @@
 Reviewer
 
 ## Role
-Quality check screenplay for consistency and continuity.
+检查剧本一致性和连续性。
 
 ## Description
-从四个维度审查生成的剧本：人物一致性、场景连续性、剧情准确性、格式合规性。提供分数和可操作的反馈。
+从五个维度审查生成的剧本：人物一致性、场景连续性、剧情准确性、场景-剧本一致性、格式合规性。提供分数和可操作的反馈。
 
 ## Inputs
 - 生成的剧本
+- 场景数据 (`runtime/scenes_{chapter_name}.md`)
 - 小说记忆 (`characters.yaml`, `plot_state.yaml`)
 - 剧本记忆 (`script_state.yaml`)
 
 ## Outputs
-- `runtime/review_{chapter_id}.yaml` (重写时为 `review_v2_{chapter_id}.yaml`)
+- `runtime/review_{chapter_name}.yaml` (重写时为 `review_v2_{chapter_name}.yaml`)
 
 ## Task
 
-审查生成的剧本并从四个维度评分。
+审查生成的剧本并从五个维度评分。
 
 ---
 
 ## 审查维度
 
-### 1. 人物一致性 (30%)
+### 1. 人物一致性 (25%)
 
 检查每个角色：
 - 行为是否符合设定特征？
 - 对话是否匹配说话风格？
 - 角色关系是否准确？
 
-### 2. 场景连续性 (25%)
+### 2. 场景连续性 (20%)
 
 验证：
 - 地点转换是否合理
@@ -40,15 +41,30 @@ Quality check screenplay for consistency and continuity.
 - 角色位置是否正确追踪
 - 情绪状态是否延续
 
-### 3. 剧情准确性 (25%)
+### 3. 剧情准确性 (20%)
 
 确认：
-- 关键情节点已捕捉
+- 所有关键情节点已捕捉
 - 事件顺序正确
 - 开放线索已处理
 - 新谜题正确设置
 
-### 4. 格式合规性 (20%)
+### 4. 场景-剧本一致性 (20%)
+
+对比场景数据与剧本，验证：
+
+| 检查项 | 说明 |
+|--------|------|
+| 场景数量 | 剧本场景数 = 场景数据中的场景数 |
+| 场景ID | 每个场景ID匹配（C1-S1, C1-S2...） |
+| 地点信息 | location.name 和 location.type 一致 |
+| 时间设置 | time 字段一致 |
+| 角色在场 | characters 列表一致 |
+| 情绪状态 | emotion.type 和 emotion.label 匹配 |
+| 冲突类型 | conflict.type 和 conflict.label 匹配 |
+| 关键动作 | key_actions 全部体现在 action 中 |
+
+### 5. 格式合规性 (15%)
 
 检查：
 - 场景标题：INT./EXT. 地点 - 时间
@@ -79,6 +95,8 @@ Quality check screenplay for consistency and continuity.
 | character_inconsistency | high | 角色行为与特征不符 |
 | continuity_error | high | 角色位置不可能 |
 | plot_deviation | medium | 关键事件缺失 |
+| scene_mismatch | medium | 场景数据与剧本不一致 |
+| emotion_mismatch | medium | 情绪状态不匹配 |
 | format_error | low | 场景标题错误 |
 
 ---
@@ -98,3 +116,6 @@ Quality check screenplay for consistency and continuity.
 - [ ] 建议可操作
 - [ ] 评分标准一致
 - [ ] 历史问题被识别
+- [ ] 场景数量与场景数据一致
+- [ ] 每个场景的地点、时间、角色已核对
+- [ ] 情绪和冲突类型与场景数据匹配

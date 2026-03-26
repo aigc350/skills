@@ -12,6 +12,7 @@ description: "Convert novel chapters to screenplays with three-layer memory syst
 ```
 /novel-to-script run    # 执行转换（首次运行自动初始化）
 /novel-to-script run 3  # 处理指定数量章节
+/novel-to-script export # 导出 Markdown 格式
 ```
 
 ---
@@ -49,9 +50,19 @@ Pipeline 执行时自动从文件名解析以下参数：
 **生成的文件路径**：
 
 ```
-runtime/scenes_第1章_逃离.md
-runtime/script_v1_第1章_逃离.md
-output/script_第1章_逃离.md
+# 运行时输出（YAML 格式）
+runtime/scenes_第1章_逃离.yaml
+runtime/script_v1_第1章_逃离.yaml
+runtime/review_第1章_逃离.yaml
+runtime/meta_第1章_逃离.yaml
+
+# 最终输出（YAML 格式）
+output/script/scenes_第1章_逃离.yaml
+output/script/script_第1章_逃离.yaml
+
+# export 命令导出（Markdown 格式）
+output/export/script_第1章_逃离.md
+output/export/scenes_第1章_逃离.md
 
 # 场景ID
 C1-S1, C1-S2, C1-S3...
@@ -67,7 +78,7 @@ C1-S1, C1-S2, C1-S3...
 
 读取 `novel.config.md` 获取：
 - `current_novel_id` - 当前小说ID
-- `novel_source_dir` - 小说源目录（默认：`novels/{novel_id}/novel/chapters`）
+- `novel_source_dir` - 小说源目录（默认：`novels/{novel_id}/output/novel`）
 
 ### Step 2: 初始化目录
 
@@ -103,14 +114,15 @@ novels/{novel_id}/
 1. **extract_scenes** - 调用 scene_extractor agent 提取场景
 2. **update_novel_memory** - 调用 memory_updater 更新小说记忆
 3. **write_script** - 调用 script_writer agent 生成剧本
-4. **review** - 调用 reviewer agent 质量审查
+4. **review** - 调用 reviewer agent 质量审查（五个维度）
 5. **rewrite** - 如需要，调用 rewriter agent 重写
 6. **export_scenes** - 导出场景文件到 output 目录
-7. **finalize** - 复制最终版本到 output 目录
-8. **update_script_memory** - 调用 memory_updater 更新剧本记忆
-9. **update_reviewer_memory** - 调用 memory_updater 更新审查记忆
-10. **update_meta** - 更新 meta.yaml（包含 script_hash 和 scenes_hash）
-11. **save_output** - 合并完整剧本
+7. **compute_hash** - 计算场景和剧本的哈希值
+8. **finalize** - 复制最终版本到 output 目录
+9. **update_script_memory** - 调用 memory_updater 更新剧本记忆
+10. **update_reviewer_memory** - 调用 memory_updater 更新审查记忆
+11. **update_meta** - 更新 meta.yaml（包含 script_hash 和 scenes_hash）
+12. **save_output** - 合并完整剧本
 
 ### Step 6: 输出结果
 
@@ -138,7 +150,7 @@ novels/{novel_id}/
 |-------|------|------|
 | scene_extractor | Generator | 提取场景，输出结构化数据 |
 | script_writer | Generator | 生成剧本，保持连续性 |
-| reviewer | Reviewer | 质量检查，四维度评分 |
+| reviewer | Reviewer | 质量检查，五维度评分 |
 | rewriter | Generator | 修正问题，不改变剧情 |
 | memory_updater | Tool Wrapper | 更新三层记忆 |
 
@@ -167,10 +179,36 @@ novels/{novel_id}/
 
 1. **不直接生成剧本** - 必须先提取场景
 2. **Memory 持续更新** - 不可重建
-3. **输出必须结构化** - Markdown + YAML
-4. **Reviewer 可回写** - 闭环质量控制
-5. **连载增量处理** - 不全量重跑
-6. **记忆更新后置** - 先分析章节，再更新记忆
+3. **输出优先 YAML** - 运行时和最终输出使用 YAML 格式
+4. **导出使用 Markdown** - 仅在 export 时生成 .md 文件
+5. **Reviewer 可回写** - 闭环质量控制
+6. **连载增量处理** - 不全量重跑
+7. **记忆更新后置** - 先分析章节，再更新记忆
+
+---
+
+## export 命令
+
+执行 `/novel-to-script export` 将 YAML 格式转换为 Markdown：
+
+```
+/novel-to-script export           # 导出所有章节
+/novel-to-script export 第1章_逃离 # 导出指定章节
+```
+
+### 输出目录
+
+```
+novels/{novel_id}/
+└── output/script/              # 同一目录，不同格式
+    ├── scenes_第1章_逃离.yaml   # YAML 格式（run 生成）
+    ├── scenes_第1章_逃离.md     # Markdown 格式（export 生成）
+    ├── script_第1章_逃离.yaml
+    ├── script_第1章_逃离.md
+    ├── full_script.yaml
+    ├── full_script.md
+    └── meta.yaml
+```
 
 ---
 
@@ -185,15 +223,16 @@ novels/{novel_id}/
 | 2 | extract_scenes | scene_extractor | 先分析章节内容 |
 | 3 | update_novel_memory | memory_updater | 基于场景提取更新记忆 |
 | 4 | write_script | script_writer | 使用更新后的记忆写剧本 |
-| 5 | review | reviewer | 审查质量 |
+| 5 | review | reviewer | 审查质量（五维度） |
 | 6 | check_score | - | 分支判断 |
 | 7 | rewrite | rewriter | 重写（如需） |
 | 8 | export_scenes | - | 导出场景文件到 output |
-| 9 | finalize | - | 输出最终版本（script_${chapter_name}.md） |
-| 10 | update_script_memory | memory_updater | 更新场景层记忆 |
-| 11 | update_reviewer_memory | memory_updater | 更新质量层记忆 |
-| 12 | update_meta | - | 更新 meta.yaml（含 chapter_id/chapter_name） |
-| 13 | save_output | - | 合并完整剧本 |
+| 9 | compute_hash | - | 计算场景和剧本哈希 |
+| 10 | finalize | - | 输出最终版本 |
+| 11 | update_script_memory | memory_updater | 更新场景层记忆 |
+| 12 | update_reviewer_memory | memory_updater | 更新质量层记忆 |
+| 13 | update_meta | - | 更新 meta.yaml |
+| 14 | save_output | - | 合并完整剧本 |
 
 ---
 
