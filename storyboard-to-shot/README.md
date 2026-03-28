@@ -1,4 +1,4 @@
-# storyboard-to-visual
+# storyboard-to-shot
 
 将分镜脚本转换为标准化视觉资产（shot_spec + characters + scenes），建立 AI 可执行的视觉标准层。
 
@@ -9,7 +9,7 @@
 ```
 novel → script → storyboard
                       ↓
-         storyboard-to-visual（本模块）
+         storyboard-to-shot（本模块）
                       ↓
         shot_spec + visual assets
                       ↓
@@ -28,19 +28,19 @@ novel → script → storyboard
 
 ```bash
 # 执行转换
-/storyboard-to-visual run
+/storyboard-to-shot run
 
 # 查看状态
-/storyboard-to-visual status
+/storyboard-to-shot status
 
 # 导出结果
-/storyboard-to-visual export
+/storyboard-to-shot export
 ```
 
 ## 目录结构
 
 ```
-storyboard-to-visual/
+storyboard-to-shot/
 ├── SKILL.md                    # 入口
 ├── README.md                   # 本文档
 │

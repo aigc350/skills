@@ -1,23 +1,23 @@
 ---
-name: storyboard-to-visual
+name: storyboard-to-shot
 description: "Convert storyboard to shot specifications and visual assets. Use when user wants to generate shot_spec, visual character/scene definitions, or visual development packages from storyboards. Commands: run/status/export."
 ---
 
-# storyboard-to-visual
+# storyboard-to-shot
 
 将分镜脚本转换为标准化视觉资产（shot_spec + characters + scenes），建立 AI 可执行的视觉标准层。
 
 ## 快速开始
 
 ```
-/storyboard-to-visual run    # 执行转换（首次运行自动初始化）
+/storyboard-to-shot run    # 执行转换（首次运行自动初始化）
 ```
 
 ---
 
 ## run 命令
 
-执行 `/storyboard-to-visual run` 时，按以下步骤执行：
+执行 `/storyboard-to-shot run` 时，按以下步骤执行：
 
 ### Step 1: 读取配置
 
