@@ -1,0 +1,165 @@
+# Scene Library Reference - 场景模板参考
+# 包含常见场景类型模板
+
+scene_library:
+
+  # 豪华室内场景
+  luxury_indoor:
+    type: "indoor"
+    scale: "large"
+    environment:
+      type: "luxury_venue"
+      description: "grand venue with elegant decorations"
+    lighting:
+      type: "warm_chandelier"
+      color_temperature: "warm"
+      description: "warm ambient light from chandeliers"
+    props:
+      - "round_table"
+      - "crystal_decorations"
+      - "velvet_curtains"
+      - "chandelier"
+    atmosphere:
+      keywords: ["luxury", "formal", "high_society"]
+    visual_keywords:
+      - "gold_accents"
+      - "elegant"
+      - "festive"
+
+  # 咖啡厅场景
+  cafe_indoor:
+    type: "indoor"
+    scale: "medium"
+    environment:
+      type: "cafe"
+      description: "modern coffee shop with warm lighting"
+    lighting:
+      type: "warm_ambient"
+      color_temperature: "warm"
+      description: "soft warm lighting from table lamps"
+    props:
+      - "coffee_cup"
+      - "wooden_table"
+      - "bookshelf"
+      - "window_seat"
+    atmosphere:
+      keywords: ["cozy", "intimate", "modern"]
+    visual_keywords:
+      - "warm_tones"
+      - "soft_shadows"
+      - "relaxed"
+
+  # 城市街道夜景
+  city_street_night:
+    type: "outdoor"
+    scale: "urban"
+    environment:
+      type: "city_street"
+      description: "night city street with neon lights"
+    lighting:
+      type: "neon"
+      color_temperature: "mixed"
+      description: "colorful neon signs, car headlights"
+    props:
+      - "neon_signs"
+      - "cars"
+      - "street_lamp"
+      - "puddles"
+    atmosphere:
+      keywords: ["urban", "mysterious", "energetic"]
+    visual_keywords:
+      - "high_contrast"
+      - "colorful_reflections"
+      - "dynamic"
+
+  # 仓库/废弃场景
+  warehouse_indoor:
+    type: "indoor"
+    scale: "large"
+    environment:
+      type: "abandoned_warehouse"
+      description: "dark abandoned warehouse with high ceilings"
+    lighting:
+      type: "dim_ambient"
+      color_temperature: "cool"
+      description: "minimal light from broken windows"
+    props:
+      - "wooden_crates"
+      - "metal_pillars"
+      - "broken_windows"
+      - "dust_particles"
+    atmosphere:
+      keywords: ["abandoned", "dangerous", "tense"]
+    visual_keywords:
+      - "dark_shadows"
+      - "high_contrast"
+      - "moody"
+
+  # 传统住宅
+  traditional_residence:
+    type: "indoor"
+    scale: "medium"
+    environment:
+      type: "traditional_chinese"
+      description: "traditional Chinese style residence"
+    lighting:
+      type: "natural_daylight"
+      color_temperature: "neutral"
+      description: "soft natural light through paper windows"
+    props:
+      - "wooden_furniture"
+      - "antique_decorations"
+      - "paper_lanterns"
+      - "bamboo"
+    atmosphere:
+      keywords: ["traditional", "serene", "nostalgic"]
+    visual_keywords:
+      - "soft_light"
+      - "natural_materials"
+      - "peaceful"
+
+  # 办公室场景
+  office_indoor:
+    type: "indoor"
+    scale: "medium"
+    environment:
+      type: "modern_office"
+      description: "modern corporate office"
+    lighting:
+      type: "fluorescent"
+      color_temperature: "neutral"
+      description: "bright fluorescent office lighting"
+    props:
+      - "desk"
+      - "computer"
+      - "office_chair"
+      - "filing_cabinet"
+    atmosphere:
+      keywords: ["professional", "corporate", "busy"]
+    visual_keywords:
+      - "clean"
+      - "organized"
+      - "professional"
+
+  # 医院场景
+  hospital_indoor:
+    type: "indoor"
+    scale: "medium"
+    environment:
+      type: "hospital"
+      description: "modern hospital interior"
+    lighting:
+      type: "clinical"
+      color_temperature: "cool"
+      description: "bright clinical lighting"
+    props:
+      - "hospital_bed"
+      - "medical_equipment"
+      - "white_walls"
+      - "curtain"
+    atmosphere:
+      keywords: ["clinical", "sterile", "tense"]
+    visual_keywords:
+      - "sterile"
+      - "bright"
+      - "clinical"

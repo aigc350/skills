@@ -1,0 +1,92 @@
+# Character Standard - 角色标准模板
+# 用于建立角色视觉身份
+
+characters:
+
+  - character_id: "shen_yan"
+    base:
+      gender: "male"
+      age_range: "25-30"
+    face_id: "face_shenyan_v1"
+    default_outfit: "shenyan_suit_v1"
+    traits:
+      - "calm"
+      - "dominant"
+      - "mysterious"
+    outfits:
+      - outfit_id: "shenyan_suit_v1"
+        type: "formal"
+        color: "black"
+        description: "black formal suit, slightly worn"
+      - outfit_id: "shenyan_casual_v1"
+        type: "casual"
+        color: "dark_gray"
+        description: "dark gray hoodie, simple design"
+    visual_keywords:
+      - "low_key_lighting"
+      - "sharp_features"
+      - "intense_gaze"
+
+  - character_id: "wen_wan"
+    base:
+      gender: "female"
+      age_range: "23-28"
+    face_id: "face_wenwan_v1"
+    default_outfit: "wenwan_dress_v1"
+    traits:
+      - "cold"
+      - "elegant"
+      - "controlled"
+    outfits:
+      - outfit_id: "wenwan_dress_v1"
+        type: "formal_dress"
+        color: "white"
+        description: "white evening dress, diamond necklace"
+      - outfit_id: "wenwan_casual_v1"
+        type: "casual"
+        color: "light"
+        description: "light blouse, dark skirt"
+    visual_keywords:
+      - "high_society"
+      - "refined"
+      - "distant"
+
+  - character_id: "wang_shao"
+    base:
+      gender: "male"
+      age_range: "28-35"
+    face_id: "face_wangshao_v1"
+    default_outfit: "wangshao_suit_v1"
+    traits:
+      - "arrogant"
+      - "crude"
+      - "bullying"
+    outfits:
+      - outfit_id: "wangshao_suit_v1"
+        type: "formal"
+        color: "flashy"
+        description: "flashy suit, gold watch, excessive accessories"
+    visual_keywords:
+      - "over_the_top"
+      - "loud"
+      - "unctuous"
+
+  - character_id: "chen_guanjia"
+    base:
+      gender: "male"
+      age_range: "50-60"
+    face_id: "face_chen_v1"
+    default_outfit: "chen_suit_v1"
+    traits:
+      - "loyal"
+      - "respectful"
+      - "experienced"
+    outfits:
+      - outfit_id: "chen_suit_v1"
+        type: "formal"
+        color: "black"
+        description: "black suit, white shirt, tie"
+    visual_keywords:
+      - "professional"
+      - "dignified"
+      - "reserved"

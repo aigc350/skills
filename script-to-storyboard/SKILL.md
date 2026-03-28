@@ -48,7 +48,7 @@ novels/{novel_id}/
 
 ### Step 4: 检测新剧本
 
-扫描 `script_source_dir` 中的 `.md` 文件，与 `output/storyboard/` 中已处理的对比，找出未处理的剧本。
+扫描 `script_source_dir` 中的 `.yaml` 文件，与 `output/storyboard/` 中已处理的对比，找出未处理的剧本。
 
 ### Step 5: 执行转换 Pipeline
 

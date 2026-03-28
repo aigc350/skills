@@ -1,0 +1,93 @@
+# Expression Map - 表情标准库（外在表现）
+# 说明：expression 是角色外在可见的表情/神态，是视觉层面的描述
+#       对应的内在情绪由 emotion 字段标注（引用 visual_intent.yaml#/emotion）
+
+expression_map:
+
+  # 基础表情
+  neutral_face:
+    description: "no visible emotion, relaxed muscles"
+    emotion: "calm"
+    intensity: "low"
+
+  subtle_smirk:
+    description: "slight upward curve of lips, almost imperceptible"
+    emotion: "confidence"
+    intensity: "low"
+
+  cold_smile:
+    description: "emotionless smile, eyes unchanged"
+    emotion: "dominance"
+    intensity: "medium"
+
+  broad_smile:
+    description: "wide smile showing teeth"
+    emotion: "joy"
+    intensity: "high"
+
+  # 情绪表情
+  anger_suppressed:
+    description: "tight jaw, controlled breathing"
+    emotion: "tension"
+    intensity: "medium"
+
+  anger_expressed:
+    description: "furrowed brow, clenched fists"
+    emotion: "rage"
+    intensity: "high"
+
+  fear:
+    description: "widened eyes, pale complexion"
+    emotion: "terror"
+    intensity: "high"
+
+  anxiety:
+    description: "narrowed eyes, restless gaze"
+    emotion: "worry"
+    intensity: "medium"
+
+  # 复杂表情
+  shock:
+    description: "eyes widened, mouth slightly open"
+    emotion: "surprise"
+    intensity: "high"
+
+  disbelief:
+    description: "eyes narrowed, head slightly tilted"
+    emotion: "doubt"
+    intensity: "medium"
+
+  contempt:
+    description: "one corner of mouth raised, eyes half-closed"
+    emotion: "disdain"
+    intensity: "medium"
+
+  sadness:
+    description: "drooping eyelids, downturned lips"
+    emotion: "grief"
+    intensity: "medium"
+
+  # 角色特定表情
+  shen_yan_calm:
+    description: "deeply calm, slight inward curve of lips"
+    emotion: "composure"
+    intensity: "low"
+    character_id: "shen_yan"
+
+  wen_wan_cold:
+    description: "freezing cold, eyes like ice"
+    emotion: "rejection"
+    intensity: "high"
+    character_id: "wen_wan"
+
+  wang_shao_arrogant:
+    description: "smug expression, raised chin"
+    emotion: "arrogance"
+    intensity: "high"
+    character_id: "wang_shao"
+
+  chen_respectful:
+    description: "slight bow, modest expression"
+    emotion: "respect"
+    intensity: "medium"
+    character_id: "chen_guanjia"

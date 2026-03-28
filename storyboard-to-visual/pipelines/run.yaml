@@ -1,0 +1,355 @@
+# Storyboard-to-Visual Pipeline
+# 分镜转视觉资产：shot_spec + characters + scenes + consistency
+
+name: convert_storyboard_to_visual
+description: 将分镜脚本转换为结构化 shot_spec 和标准化视觉资产，通过镜头编译、角色解析、场景解析、连续性检查和质量审查
+
+variables:
+  chapter_name: "${input.chapter_name}"
+  novel_id: "${config.current_novel_id}"
+  storyboard_source_dir: "novels/${novel_id}/output/storyboard"
+  visual_dir: "novels/${novel_id}/visual"
+  memory_dir: "novels/${novel_id}/visual/memory"
+  runtime_dir: "novels/${novel_id}/visual/runtime"
+  output_dir: "novels/${novel_id}/output/visual"
+
+# ─────────────────────────────────────────────────────────────
+# 失败恢复策略（全局默认）
+# ─────────────────────────────────────────────────────────────
+failure_policy:
+  default:
+    retry: 2
+    on_fail:
+      - action: log_error
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "跳过章节：发生不可恢复错误"
+
+steps:
+  # ═══════════════════════════════════════════════════════════
+  # STEP 0: 初始化 (Initialize)
+  # ═══════════════════════════════════════════════════════════
+  - id: check_config
+    description: 检查 novel.config.md 是否存在
+    action: check_file
+    path: "novel.config.md"
+    on_missing: create_config
+
+  - id: create_config
+    description: 创建默认配置（如果需要）
+    action: create_file
+    path: "novel.config.md"
+    content: |
+      ---
+      version: "1.0"
+      created: "${timestamp}"
+      updated: "${timestamp}"
+      ---
+
+      # 项目配置
+
+      current_novel_id: other_001
+
+  - id: ensure_directories
+    description: 确保项目目录结构存在
+    action: ensure_dirs
+    dirs:
+      - "${visual_dir}/memory"
+      - "${visual_dir}/runtime"
+      - "${output_dir}"
+
+  - id: init_memory_files
+    description: 如果记忆文件缺失，从模板初始化
+    action: init_templates
+    templates:
+      - source: "templates/memory/character_states.yaml"
+        dest: "${memory_dir}/character_states.yaml"
+      - source: "templates/memory/review_log.yaml"
+        dest: "${memory_dir}/review_log.yaml"
+
+  - id: init_standard_library
+    description: 加载标准库（expression_map, character, scene）
+    action: load_files
+    files:
+      - "standard/expression_map.yaml"
+      - "standard/character.yaml"
+      - "standard/scene.yaml"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 1: 检测新分镜 (Detect New Storyboards)
+  # ═══════════════════════════════════════════════════════════
+  - id: detect_new
+    description: 检查未处理的分镜
+    action: check_files
+    input:
+      - "${storyboard_source_dir}/*/storyboard.md"
+      - "${output_dir}/*/shots/shot_spec.yaml"
+    output: ${runtime_dir}/pending_storyboards.yaml
+    on_result:
+      empty: exit
+      continue: next
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 2: 镜头编译 (Shot Compilation)
+  # ═══════════════════════════════════════════════════════════
+  - id: compile_shots
+    agent: shot_compiler
+    input:
+      - "${storyboard_source_dir}/${chapter_name}/storyboard.md"
+      - "${storyboard_source_dir}/${chapter_name}/scene_breakdown.yaml"
+      - "${storyboard_source_dir}/${chapter_name}/directors_notes.md"
+      - "standard/expression_map.yaml"
+    output: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+    schema: schemas/shot_spec.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "镜头编译失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少 shot_spec"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 3: 角色解析 (Character Resolution)
+  # ═══════════════════════════════════════════════════════════
+  - id: resolve_characters
+    agent: character_resolver
+    input:
+      - "${storyboard_source_dir}/${chapter_name}/storyboard.md"
+      - "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+      - "standard/character.yaml"
+      - "${memory_dir}/character_states.yaml"
+    output: "${runtime_dir}/characters_${chapter_name}.yaml"
+    schema: schemas/character_visual.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "角色解析失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少角色视觉定义"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 4: 场景解析 (Scene Resolution)
+  # ═══════════════════════════════════════════════════════════
+  - id: resolve_scenes
+    agent: scene_resolver
+    input:
+      - "${storyboard_source_dir}/${chapter_name}/storyboard.md"
+      - "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+      - "standard/scene.yaml"
+      - "${memory_dir}/scene_states.yaml"
+    output: "${runtime_dir}/scenes_${chapter_name}.yaml"
+    schema: schemas/scene_visual.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "场景解析失败"
+        output: "${runtime_dir}/errors.log"
+      - action: skip_chapter
+        message: "无法继续：缺少场景视觉定义"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 5: 连续性检查 (Continuity Check)
+  # ═══════════════════════════════════════════════════════════
+  - id: check_consistency
+    agent: continuity_engine
+    input:
+      - "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+      - "${runtime_dir}/characters_${chapter_name}.yaml"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
+      - "schemas/consistency.yaml"
+    output: "${runtime_dir}/consistency_${chapter_name}.yaml"
+    schema: schemas/consistency.yaml
+    retry:
+      max: 2
+    on_fail:
+      - action: create_default
+        output: "${runtime_dir}/consistency_${chapter_name}.yaml"
+        value:
+          chapter_id: "${chapter_name}"
+          status: "warning"
+          score: 0.80
+          summary: "连续性检查失败，使用默认分数"
+          passed: false
+      - action: log_error
+        message: "连续性检查失败"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 6: 质量审查 (Review)
+  # ═══════════════════════════════════════════════════════════
+  - id: review
+    agent: reviewer
+    input:
+      - "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+      - "${runtime_dir}/characters_${chapter_name}.yaml"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
+      - "${runtime_dir}/consistency_${chapter_name}.yaml"
+      - "${storyboard_source_dir}/${chapter_name}/directors_notes.md"
+    output: "${runtime_dir}/review_${chapter_name}.yaml"
+    retry:
+      max: 2
+    on_fail:
+      - action: create_default
+        output: "${runtime_dir}/review_${chapter_name}.yaml"
+        value:
+          chapter_id: "${chapter_name}"
+          total_score: 0.80
+          passed: false
+          summary: "审查失败，使用默认分数"
+      - action: log_error
+        message: "审查解析失败，使用默认分数"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 7: 分数检查 (Check Score & Branch)
+  # ═══════════════════════════════════════════════════════════
+  - id: check_score
+    condition: "${review.total_score} < 0.85"
+    on_true: revise
+    on_false: export
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 8: 重写 (Revise)
+  # ═══════════════════════════════════════════════════════════
+  - id: revise
+    agent: shot_compiler
+    task: revise
+    input:
+      - "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+      - "${runtime_dir}/review_${chapter_name}.yaml"
+      - "${runtime_dir}/consistency_${chapter_name}.yaml"
+    output: "${runtime_dir}/shot_spec_v2_${chapter_name}.yaml"
+    retry:
+      max: 3
+    on_fail:
+      - action: log_error
+        message: "重写失败，使用原始 shot_spec"
+        output: "${runtime_dir}/errors.log"
+      - action: fallback
+        use: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+        save_as: "${runtime_dir}/shot_spec_v2_${chapter_name}.yaml"
+    next: review_v2
+
+  - id: review_v2
+    agent: reviewer
+    input:
+      - "${runtime_dir}/shot_spec_v2_${chapter_name}.yaml"
+      - "${runtime_dir}/characters_${chapter_name}.yaml"
+      - "${runtime_dir}/scenes_${chapter_name}.yaml"
+      - "${runtime_dir}/consistency_${chapter_name}.yaml"
+      - "${storyboard_source_dir}/${chapter_name}/directors_notes.md"
+    output: "${runtime_dir}/review_v2_${chapter_name}.yaml"
+    retry:
+      max: 2
+    on_fail:
+      - action: create_default
+        output: "${runtime_dir}/review_v2_${chapter_name}.yaml"
+        value:
+          total_score: 0.80
+          passed: false
+      - action: log_error
+        message: "审查 v2 解析失败"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 9: 导出文件 (Export)
+  # ═══════════════════════════════════════════════════════════
+  - id: export_shot_spec
+    action: copy
+    input: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+
+  - id: export_characters
+    action: copy
+    input: "${runtime_dir}/characters_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/visual/characters.yaml"
+
+  - id: export_scenes
+    action: copy
+    input: "${runtime_dir}/scenes_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/visual/scenes.yaml"
+
+  - id: export_consistency
+    action: copy
+    input: "${runtime_dir}/consistency_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/meta/consistency.yaml"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 10: 最终判定 (Final Decision)
+  # ═══════════════════════════════════════════════════════════
+  - id: check_score_v2
+    condition: "${review_v2.total_score} < 0.85"
+    on_true: finalize_with_warning
+    on_false: finalize_v2
+
+  - id: finalize_with_warning
+    action: copy
+    input: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+    post_action:
+      - action: append_note
+        file: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+        note: "# 警告：重写后仍未达到质量阈值"
+      - action: log_error
+        message: "章节 ${chapter_name} 最终质量分数较低"
+        output: "${memory_dir}/review_log.yaml"
+
+  - id: finalize_v2
+    action: copy
+    input: "${runtime_dir}/shot_spec_v2_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+
+  - id: export
+    action: copy
+    input: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
+    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 11: 更新记忆 (Update Memory)
+  # ═══════════════════════════════════════════════════════════
+  - id: update_character_states
+    agent: memory_updater
+    task: update_character_states
+    input:
+      - "${runtime_dir}/characters_${chapter_name}.yaml"
+      - "${memory_dir}/character_states.yaml"
+    output: "${memory_dir}/character_states.yaml"
+    retry:
+      max: 2
+    on_fail:
+      - action: log_error
+        message: "角色状态更新失败"
+      - action: continue
+
+  - id: update_review_log
+    agent: memory_updater
+    task: update_review_log
+    input:
+      - "${runtime_dir}/review_${chapter_name}.yaml"
+      - "${memory_dir}/review_log.yaml"
+    output: "${memory_dir}/review_log.yaml"
+    on_fail:
+      - action: continue
+
+  # ═══════════════════════════════════════════════════════════
+  # STEP 12: 合并输出 (Save Full Visual Package)
+  # ═══════════════════════════════════════════════════════════
+  - id: save_output
+    action: merge
+    input:
+      - "${output_dir}/${chapter_name}/*.yaml"
+      - "${output_dir}/${chapter_name}/*.md"
+    output: "${output_dir}/${chapter_name}/full_visual.yaml"
+    on_complete: log_success
+
+  - id: update_full_visual
+    action: append
+    input: "${output_dir}/${chapter_name}/full_visual.yaml"
+    content: |
+      # Full Visual Package - ${chapter_name}
+      chapter_id: ${chapter_name}
+      processed_at: ${timestamp}
+      score: ${review.total_score}
+      passed: ${review.passed}

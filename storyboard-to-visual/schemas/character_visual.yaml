@@ -1,0 +1,116 @@
+# Character Visual Schema
+# 验证 character_resolver agent 输出的角色视觉定义
+
+type: object
+required:
+  - chapter_id
+  - characters
+  - metadata
+
+properties:
+  chapter_id:
+    type: string
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  metadata:
+    type: object
+    properties:
+      total_characters:
+        type: integer
+        minimum: 1
+      characters_with_changes:
+        type: array
+        items:
+          type: string
+        description: "有状态变化的角色列表"
+
+  characters:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - character_id
+        - appearances
+      properties:
+        character_id:
+          type: string
+          description: "角色ID"
+        face_id:
+          type: string
+          description: "面部识别ID（来自 character.yaml）"
+        default_outfit:
+          type: string
+          description: "默认服装ID"
+        appearances:
+          type: array
+          min_items: 1
+          items:
+            type: object
+            required:
+              - shot_id
+              - outfit_id
+              - expression
+            properties:
+              shot_id:
+                type: string
+                pattern: "^C[0-9]+-S[0-9]+-shot[0-9]+$"
+              outfit_id:
+                type: string
+              hair:
+                type: string
+              accessories:
+                type: array
+                items:
+                  type: string
+              expression:
+                type: string
+                description: "表情（来自 expression_map）"
+              emotion:
+                type: string
+                description: "情绪关键词"
+              changed_from:
+                type: string
+                description: "从哪个状态变化而来"
+              changes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    element:
+                      type: string
+                      enum: [outfit, hair, accessories, expression]
+                    from:
+                      type: string
+                    to:
+                      type: string
+        continuity:
+          type: object
+          properties:
+            outfit_consistent:
+              type: boolean
+            hair_consistent:
+              type: boolean
+            accessories_added:
+              type: array
+              items:
+                type: string
+            accessories_removed:
+              type: array
+              items:
+                type: string
+        visual_keywords:
+          type: array
+          items:
+            type: string
+          description: "视觉关键词（来自 character.yaml）"
+
+# Validation rules
+on_invalid: retry
+error_messages:
+  missing_character_id: "每个角色必须有 character_id"
+  missing_appearances: "每个角色至少有一个 appearance"
+  missing_shot_id: "每个 appearance 必须有 shot_id"
+  missing_outfit_id: "每个 appearance 必须有 outfit_id"
+  missing_expression: "每个 appearance 必须有 expression"
+  invalid_outfit_id: "outfit_id 必须是已定义的服装ID"

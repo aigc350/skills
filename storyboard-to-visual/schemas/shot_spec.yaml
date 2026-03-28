@@ -1,0 +1,242 @@
+# Shot Spec Schema
+# 验证 shot_compiler agent 输出的 shot_spec
+
+type: object
+required:
+  - chapter_id
+  - shots
+  - metadata
+
+properties:
+  chapter_id:
+    type: string
+    description: "章节标识"
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  metadata:
+    type: object
+    required:
+      - total_shots
+      - total_duration
+      - characters
+      - locations
+    properties:
+      total_shots:
+        type: integer
+        minimum: 1
+      total_duration:
+        type: string
+        description: "总时长，格式：X-Y 秒"
+        pattern: "^[0-9]+-[0-9]+ 秒$"
+      characters:
+        type: array
+        items:
+          type: string
+        description: "出现的角色ID列表"
+      locations:
+        type: array
+        items:
+          type: string
+        description: "出现的场景ID列表"
+
+  shots:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - shot_id
+        - camera
+        - subject
+        - appearance
+        - environment
+        - continuity
+        - intent
+        - visual_intent
+      properties:
+        shot_id:
+          type: string
+          pattern: "^C[0-9]+-S[0-9]+-shot[0-9]+$"
+          description: "镜头ID，格式：C{chapter}-S{scene}-shot{n}"
+        camera:
+          type: object
+          properties:
+            lens:
+              type: string
+              enum: [24mm, 35mm, 50mm, 85mm, 135mm]
+            # 可选扩展（未来）
+            aperture:
+              type: string
+              enum: [f1.4, f2.0, f2.8, f4, f8]
+            focus:
+              type: string
+              enum: [shallow, deep]
+        subject:
+          type: object
+          required:
+            - type
+          properties:
+            type:
+              $ref: "../standard/enum.yaml#/subject_type"
+              description: "主体类型"
+          oneOf:
+            - properties:
+                type:
+                  const: character
+                character_id:
+                  type: string
+                  description: "角色ID"
+                face_id:
+                  type: string
+                  description: "面部识别ID（来自 character.yaml）"
+                expression:
+                  $ref: "../standard/expression_map.yaml#/expression_map"
+                  description: "表情（来自 expression_map）"
+                gaze:
+                  $ref: "../standard/visual_intent.yaml#/gaze"
+                  description: "视线方向"
+                pose:
+                  $ref: "../standard/enum.yaml#/pose"
+                  description: "姿态"
+              required: [type, character_id, face_id, expression]
+
+            - properties:
+                type:
+                  const: environment
+
+            - properties:
+                type:
+                  const: crowd
+                crowd_id:
+                  type: string
+                  description: "人群ID"
+              required: [type, crowd_id]
+        appearance:
+          type: object
+          nullable: true          
+          properties:
+            outfit_id:
+              type: string
+              description: "服装ID"
+            hair:
+              type: string
+            accessories:
+              type: array
+              items:
+                type: string
+        environment:
+          oneOf:
+            - type: "null"
+            - type: object
+              required:
+                - location_id
+              properties:
+                location_id:
+                  type: string
+                  description: "场景ID"
+                props:
+                  type: array
+                  items:
+                    type: string
+        continuity:
+          type: object
+          properties:
+            previous_shot:
+              type: string
+              description: "前一个镜头的 shot_id"
+            maintain:
+              type: array
+              items:
+                $ref: "../standard/enum.yaml#/continuity_maintain"
+              description: "保持一致的元素"
+            changes:
+              type: array
+              items:
+                type: object
+                properties:
+                  element:
+                    $ref: "../standard/enum.yaml#/continuity_change_element"
+                    description: "变化元素"
+                  from: string
+                  to: string
+        intent:
+          type: object
+          properties:
+            narrative_function:
+              $ref: "../standard/visual_intent.yaml#/narrative_function"
+              description: "叙事功能"
+            emphasis:
+              type: string
+        visual_intent:
+          type: object
+          required:
+            - shot_type
+            - composition
+            - camera_angle
+          properties:
+            shot_type:
+              $ref: "../standard/visual_intent.yaml#/shot_type"
+              description: "镜头类型"
+            composition:
+              $ref: "../standard/visual_intent.yaml#/composition"
+              description: "构图类型"
+            camera_angle:
+              $ref: "../standard/visual_intent.yaml#/camera_angle"
+              description: "机位角度"
+            camera_movement:
+              $ref: "../standard/visual_intent.yaml#/camera_movement"
+              description: "镜头运动"
+            style:
+              $ref: "../standard/visual_intent.yaml#/style"
+              description: "视觉风格"
+            lighting:
+              $ref: "../standard/visual_intent.yaml#/lighting"
+              description: "光照类型"
+            atmosphere:
+              $ref: "../standard/visual_intent.yaml#/atmosphere"
+              description: "氛围"
+            emotion:
+              $ref: "../standard/visual_intent.yaml#/emotion"
+              description: "情绪"
+        generation:
+          type: object
+          nullable: true
+          properties:
+            seed:
+              type: integer
+            consistency_mode:
+              $ref: "../standard/enum.yaml#/generation_style"
+              description: "生成模式"
+
+# Validation rules
+on_invalid: retry
+error_messages:
+  missing_chapter_id: "必须有 chapter_id"
+  missing_metadata: "必须有 metadata"
+  missing_total_shots: "metadata 必须包含 total_shots"
+  missing_total_duration: "metadata 必须包含 total_duration"
+  missing_characters: "metadata 必须包含 characters"
+  missing_locations: "metadata 必须包含 locations"
+  missing_shots: "必须有 shots 数组"
+  missing_shot_id: "每个镜头必须有唯一的 shot_id"
+  missing_camera: "每个镜头必须有 camera"
+  missing_subject: "每个镜头必须有 subject"
+  missing_type_in_subject: "subject 必须有 type"
+  invalid_subject_structure: "subject 必须符合 type 对应结构"
+  missing_character_id: "subject.type=character 时必须有 character_id"
+  missing_face_id: "subject.type=character 时必须有 face_id"
+  missing_expression: "subject.type=character 时必须有 expression"
+  missing_crowd_id: "subject.type=crowd 时必须有 crowd_id"
+  missing_appearance: "人物镜头必须有 appearance"
+  missing_outfit_id: "appearance 必须有 outfit_id"
+  missing_environment: "场景镜头必须有 environment"
+  invalid_environment: "environment 必须是 null 或包含 location_id 的对象"
+  missing_location_id: "environment 必须有 location_id"
+  missing_continuity: "每个镜头必须有 continuity"
+  missing_intent: "每个镜头必须有 intent"
+  missing_narrative_function: "intent 必须有 narrative_function"
+  missing_visual_intent: "每个镜头必须有 visual_intent"
+  missing_visual_intent_composition: "visual_intent 必须包含 composition"
+  missing_visual_intent_style: "visual_intent 必须包含 style"
+  missing_atmosphere: "scene appearance 必须有 atmosphere"
+  missing_emotion: "scene appearance 必须有 emotion"

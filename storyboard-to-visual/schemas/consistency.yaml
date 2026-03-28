@@ -1,0 +1,243 @@
+# Consistency Schema
+# 验证 continuity_engine 输出的跨镜头一致性报告
+
+type: object
+required:
+  - chapter_id
+  - status
+  - score
+  - checks
+
+properties:
+  chapter_id:
+    type: string
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  status:
+    type: string
+    enum: [consistent, warning, error]
+    description: "整体一致性状态"
+
+  score:
+    type: number
+    minimum: 0
+    maximum: 1
+    description: "一致性分数（0-1）"
+
+  summary:
+    type: string
+    description: "一致性摘要"
+
+  checks:
+    type: object
+    required:
+      - character_consistency
+      - scene_consistency
+      - camera_consistency
+      - narrative_consistency
+      - format_compliance
+    properties:
+      character_consistency:
+        type: object
+        required:
+          - score
+          - passed
+          - issues
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            default: 0.25
+          passed:
+            type: boolean
+          issues:
+            type: array
+            items:
+              type: object
+              properties:
+                shot_id:
+                  type: string
+                character_id:
+                  type: string
+                issue:
+                  type: string
+                  enum: [outfit_changed, outfit_conflict, expression_jump, accessory_missing, hair_changed]
+                detail:
+                  type: string
+                severity:
+                  type: string
+                  enum: [warning, error]
+                resolved:
+                  type: boolean
+
+      scene_consistency:
+        type: object
+        required:
+          - score
+          - passed
+          - issues
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            default: 0.25
+          passed:
+            type: boolean
+          issues:
+            type: array
+            items:
+              type: object
+              properties:
+                shot_id:
+                  type: string
+                location_id:
+                  type: string
+                issue:
+                  type: string
+                  enum: [lighting_changed, props_added, props_removed, atmosphere_shift, location_conflict]
+                detail:
+                  type: string
+                severity:
+                  type: string
+                  enum: [warning, error]
+                resolved:
+                  type: boolean
+
+      camera_consistency:
+        type: object
+        required:
+          - score
+          - passed
+          - issues
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            default: 0.20
+          passed:
+            type: boolean
+          issues:
+            type: array
+            items:
+              type: object
+              properties:
+                shot_id:
+                  type: string
+                issue:
+                  type: string
+                  enum: [shot_size_jump, angle_inconsistent, movement_conflict]
+                detail:
+                  type: string
+                severity:
+                  type: string
+                  enum: [warning, error]
+                resolved:
+                  type: boolean
+
+      narrative_consistency:
+        type: object
+        required:
+          - score
+          - passed
+          - issues
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            default: 0.15
+          passed:
+            type: boolean
+          issues:
+            type: array
+            items:
+              type: object
+              properties:
+                shot_id:
+                  type: string
+                issue:
+                  type: string
+                  enum: [timeline_gap, spatial_inconsistency, emotion_arc_broken]
+                detail:
+                  type: string
+                severity:
+                  type: string
+                  enum: [warning, error]
+                resolved:
+                  type: boolean
+
+      format_compliance:
+        type: object
+        required:
+          - score
+          - passed
+          - issues
+        properties:
+          score:
+            type: number
+            minimum: 0
+            maximum: 1
+          weight:
+            type: number
+            default: 0.15
+          passed:
+            type: boolean
+          issues:
+            type: array
+            items:
+              type: object
+              properties:
+                shot_id:
+                  type: string
+                field:
+                  type: string
+                issue:
+                  type: string
+                  enum: [missing_required, invalid_enum, invalid_pattern, type_mismatch]
+                detail:
+                  type: string
+                severity:
+                  type: string
+                  enum: [warning, error]
+                resolved:
+                  type: boolean
+
+  total_weighted_score:
+    type: number
+    minimum: 0
+    maximum: 1
+
+  passed:
+    type: boolean
+    description: "是否通过质量阈值（>= 0.85）"
+
+  issues_summary:
+    type: object
+    properties:
+      total_issues:
+        type: integer
+      warnings:
+        type: integer
+      errors:
+        type: integer
+      unresolved:
+        type: integer
+
+# Validation rules
+on_invalid: reject
+error_messages:
+  missing_chapter_id: "缺少 chapter_id"
+  invalid_status: "status 必须是 consistent、warning 或 error"
+  score_below_threshold: "一致性分数必须 >= 0.85 才能通过"
+  missing_required_check: "缺少必需的一致性检查维度"

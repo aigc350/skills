@@ -1,0 +1,138 @@
+# Scene Visual Schema
+# 验证 scene_resolver agent 输出的场景视觉定义
+
+type: object
+required:
+  - chapter_id
+  - scenes
+  - metadata
+
+properties:
+  chapter_id:
+    type: string
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  metadata:
+    type: object
+    properties:
+      total_locations:
+        type: integer
+        minimum: 1
+      locations_with_changes:
+        type: array
+        items:
+          type: string
+        description: "有状态变化的场景列表"
+
+  scenes:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - location_id
+        - appearances
+      properties:
+        location_id:
+          type: string
+          description: "场景ID"
+        type:
+          $ref: "../standard/enum.yaml#/scene_type"
+          description: "场景类型（来自 enum.yaml）"
+        scale:
+          type: string
+          description: "规模（来自 scene.yaml）"
+        appearances:
+          type: array
+          min_items: 1
+          items:
+            type: object
+            required:
+              - shot_id
+              - lighting
+              - atmosphere
+            properties:
+              shot_id:
+                type: string
+                pattern: "^C[0-9]+-S[0-9]+-shot[0-9]+$"
+              lighting:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: "光照类型"
+                  color_temperature:
+                    type: string
+                    enum: [warm, cool, neutral, mixed]
+                  description:
+                    type: string
+              props:
+                type: array
+                items:
+                  type: string
+                description: "出现的道具"
+              atmosphere:
+                type: string
+                description: "氛围关键词"
+              visual_keywords:
+                type: array
+                items:
+                  type: string
+              changed_from:
+                type: string
+                description: "从哪个状态变化而来"
+              changes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    element:
+                      type: string
+                      enum: [lighting, props, atmosphere]
+                    added:
+                      type: array
+                      items:
+                        type: string
+                    removed:
+                      type: array
+                      items:
+                        type: string
+                    modified:
+                      type: object
+        continuity:
+          type: object
+          properties:
+            lighting_consistent:
+              type: boolean
+            props_added:
+              type: array
+              items:
+                type: string
+            props_removed:
+              type: array
+              items:
+                type: string
+            atmosphere_shifted:
+              type: boolean
+        environment:
+          type: object
+          properties:
+            type:
+              type: string
+            description:
+              type: string
+        visual_keywords:
+          type: array
+          items:
+            type: string
+          description: "视觉关键词（来自 scene.yaml）"
+
+# Validation rules
+on_invalid: retry
+error_messages:
+  missing_location_id: "每个场景必须有 location_id"
+  missing_appearances: "每个场景至少有一个 appearance"
+  missing_shot_id: "每个 appearance 必须有 shot_id"
+  missing_lighting: "每个 appearance 必须有 lighting"
+  missing_atmosphere: "每个 appearance 必须有 atmosphere"
+  invalid_lighting_type: "lighting.type 必须是已定义的光照类型"
