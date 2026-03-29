@@ -1,11 +1,11 @@
 ---
 name: storyboard-to-shot
-description: "Convert storyboard to shot specifications and visual assets. Use when user wants to generate shot_spec, visual character/scene definitions, or visual development packages from storyboards. Commands: run/status/export."
+description: "Convert storyboard to shot specifications and shot assets. Use when user wants to generate shot_spec, shot character/scene definitions, or shot packages from storyboards. Commands: run/status/export."
 ---
 
 # storyboard-to-shot
 
-将分镜脚本转换为标准化视觉资产（shot_spec + characters + scenes），建立 AI 可执行的视觉标准层。
+将分镜脚本转换为标准化 Shot Spec（shot_spec + characters + scenes），建立 AI 可执行的 Shot 标准层。
 
 ## 快速开始
 
@@ -31,16 +31,16 @@ description: "Convert storyboard to shot specifications and visual assets. Use w
 
 ```
 novels/{novel_id}/
-├── visual/
+├── shot/
 │   ├── memory/
 │   │   ├── character_states.yaml
 │   │   └── review_log.yaml
 │   └── runtime/
-└── output/visual/
+└── output/shot/
     └── {chapter_id}/
         ├── shots/
         │   └── shot_spec.yaml
-        ├── visual/
+        ├── shot/
         │   ├── characters.yaml
         │   └── scenes.yaml
         └── meta/
@@ -50,12 +50,12 @@ novels/{novel_id}/
 ### Step 3: 初始化记忆文件
 
 从 `templates/memory/` 复制模板文件（如果不存在）：
-- `character_states.yaml` → `visual/memory/`
-- `review_log.yaml` → `visual/memory/`
+- `character_states.yaml` → `shot/memory/`
+- `review_log.yaml` → `shot/memory/`
 
 ### Step 4: 检测新分镜
 
-扫描 `storyboard_source_dir` 中的 `.yaml` 文件，与 `output/visual/` 中已处理的对比，找出未处理的分镜。
+扫描 `storyboard_source_dir` 中的 `.yaml` 文件，与 `output/shot/` 中已处理的对比，找出未处理的分镜。
 
 ### Step 5: 执行转换 Pipeline
 
@@ -69,8 +69,8 @@ novels/{novel_id}/
 6. **check_score** - 分支判断
 7. **revise** - 如需要，调用相应 agent 重写
 8. **export** - 导出到 output 目录
-9. **update_memory** - 更新视觉状态记忆
-10. **save_output** - 合并完整视觉包
+9. **update_memory** - 更新状态记忆
+10. **save_output** - 合并完整 Shot 包
 
 ### Step 6: 输出结果
 
@@ -107,17 +107,17 @@ novels/{novel_id}/
 │   └── runtime/
 ├── output/
 │   ├── storyboard/              # 分镜输出
-│   └── visual/                  # 视觉输出
+│   └── shot/                  # Shot 输出
 │       ├── {chapter_id}/
 │       │   ├── shots/
 │       │   │   └── shot_spec.yaml
-│       │   ├── visual/
+│       │   ├── shot/
 │       │   │   ├── characters.yaml
 │       │   │   └── scenes.yaml
 │       │   └── meta/
 │       │       └── consistency.yaml
-│       └── full_visual.yaml
-└── visual/                      # 视觉工作目录
+│       └── full_shot.yaml
+└── shot/                      # Shot 工作目录
     ├── memory/
     │   ├── character_states.yaml
     │   └── review_log.yaml

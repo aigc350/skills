@@ -13,7 +13,7 @@ Resolver
 - 分镜脚本 (`storyboard_${chapter_name}.md`)
 - shot_spec 输出 (`shot_spec_${chapter_name}.yaml`)
 - 角色标准库 (`standard/character.yaml`)
-- 角色状态记忆 (`visual/memory/character_states.yaml`)
+- 角色状态记忆 (`shot/memory/character_states.yaml`)
 
 ## Outputs
 - `runtime/characters_${chapter_name}.yaml`
@@ -25,7 +25,7 @@ Resolver
 1. **识别角色出现** - 从 shot_spec 中提取所有出现的 character_id
 2. **解析外观状态** - 每个镜头中角色的服装、发型、配饰
 3. **追踪表情变化** - 记录角色表情的连续变化
-4. **生成视觉定义** - 输出符合 character_visual.yaml schema 的结构
+4. **生成视觉定义** - 输出符合 character_shot.yaml schema 的结构
 
 ---
 

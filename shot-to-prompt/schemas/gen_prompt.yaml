@@ -1,0 +1,126 @@
+# Gen Prompt Schema
+# 验证生成的 AI 视频生成 Prompt
+
+type: object
+required:
+  - chapter_id
+  - platform
+  - shot_prompts
+  - metadata
+
+properties:
+  chapter_id:
+    type: string
+    description: "章节标识"
+    pattern: "^[A-Za-z0-9_-]+$"
+
+  platform:
+    type: string
+    enum: [sora, runway, pika, kling]
+    description: "目标平台"
+
+  metadata:
+    type: object
+    required:
+      - total_prompts
+      - total_duration
+      - characters
+      - locations
+    properties:
+      total_prompts:
+        type: integer
+        minimum: 1
+      total_duration:
+        type: string
+        description: "总时长"
+      characters:
+        type: array
+        items:
+          type: string
+        description: "出现的角色ID列表"
+      locations:
+        type: array
+        items:
+          type: string
+        description: "出现的场景ID列表"
+
+  shot_prompts:
+    type: array
+    min_items: 1
+    items:
+      type: object
+      required:
+        - shot_id
+        - prompt
+      properties:
+        shot_id:
+          type: string
+          pattern: "^C[0-9]+-S[0-9]+-shot[0-9]+$"
+          description: "镜头ID"
+        prompt:
+          type: string
+          description: "视频生成 Prompt"
+          minLength: 10
+          maxLength: 500
+        negative_prompt:
+          type: string
+          description: "负面 Prompt（可选）"
+          maxLength: 300
+        duration:
+          type: string
+          description: "预计时长，格式：X-Y 秒"
+          pattern: "^[0-9]+-[0-9]+ 秒$"
+        camera:
+          type: string
+          description: "镜头描述"
+        style:
+          type: string
+          description: "风格描述"
+        parameters:
+          type: object
+          properties:
+            resolution:
+              type: string
+              enum: [720p, 1080p, 4k]
+            fps:
+              type: integer
+            motion:
+              type: string
+              enum: [low, medium, high]
+          description: "生成参数"
+        continuity_tags:
+          type: array
+          items:
+            type: string
+          description: "连续性标签"
+
+  chapter_prompt:
+    type: object
+    description: "章节级联 Prompt"
+    properties:
+      full_prompt:
+        type: string
+        description: "完整章节描述"
+      scene_setup:
+        type: string
+        description: "场景设定"
+      character_introductions:
+        type: array
+        items:
+          type: string
+        description: "角色介绍"
+      continuity_notes:
+        type: string
+        description: "连续性说明"
+
+# Validation rules
+on_invalid: retry
+error_messages:
+  missing_chapter_id: "必须有 chapter_id"
+  missing_platform: "必须指定目标平台"
+  missing_shot_prompts: "必须有 shot_prompts 数组"
+  missing_shot_id: "每个 prompt 必须有 shot_id"
+  missing_prompt: "每个 prompt 必须有 prompt 文本"
+  prompt_too_long: "prompt 长度超过平台限制"
+  prompt_too_short: "prompt 长度不足，描述不够详细"
+  invalid_platform: "平台必须是 sora、runway、pika 或 kling"

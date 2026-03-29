@@ -13,7 +13,7 @@ Resolver
 - 分镜脚本 (`storyboard_${chapter_name}.md`)
 - shot_spec 输出 (`shot_spec_${chapter_name}.yaml`)
 - 场景标准库 (`standard/scene.yaml`)
-- 场景状态记忆 (`visual/memory/scene_states.yaml`)
+- 场景状态记忆 (`shot/memory/scene_states.yaml`)
 
 ## Outputs
 - `runtime/scenes_${chapter_name}.yaml`
@@ -25,7 +25,7 @@ Resolver
 1. **识别场景位置** - 从 shot_spec 中提取 location_id
 2. **解析光照条件** - 每个镜头中的光照类型、颜色、温度
 3. **追踪道具状态** - 记录关键道具的出现和使用
-4. **生成视觉定义** - 输出符合 scene_visual.yaml schema 的结构
+4. **生成视觉定义** - 输出符合 scene_shot.yaml schema 的结构
 
 ---
 

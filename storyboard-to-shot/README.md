@@ -1,17 +1,17 @@
 # storyboard-to-shot
 
-将分镜脚本转换为标准化视觉资产（shot_spec + characters + scenes），建立 AI 可执行的视觉标准层。
+将分镜脚本转换为标准化 Shot Spec（shot_spec + characters + scenes），建立 AI 可执行的 Shot 标准层。
 
 ## 核心定位
 
-**结构化编译层（Compiler Layer）**：将 storyboard（导演语言）转换为 shot_spec（机器可执行语言）与标准化视觉资产。
+**结构化编译层（Compiler Layer）**：将 storyboard（导演语言）转换为 shot_spec（机器可执行语言）与标准化 Shot 资产。
 
 ```
 novel → script → storyboard
                       ↓
          storyboard-to-shot（本模块）
                       ↓
-        shot_spec + visual assets
+        shot_spec + shot assets
                       ↓
            video generation（后续）
 ```
@@ -55,8 +55,8 @@ storyboard-to-shot/
 │
 ├── schemas/
 │   ├── shot_spec.yaml        # 镜头规格校验
-│   ├── character_visual.yaml # 角色视觉校验
-│   ├── scene_visual.yaml    # 场景视觉校验
+│   ├── character_shot.yaml # 角色 Shot 校验
+│   ├── scene_shot.yaml    # 场景 Shot 校验
 │   └── consistency.yaml      # 连续性校验
 │
 ├── references/
@@ -78,16 +78,16 @@ storyboard-to-shot/
 
 ```
 novels/{novel_id}/
-├── visual/                      # 视觉工作目录
+├── shot/                      # Shot 工作目录
 │   ├── memory/
 │   │   ├── character_states.yaml
 │   │   └── review_log.yaml
 │   └── runtime/
-└── output/visual/
+└── output/shot/
     └── {chapter_id}/
         ├── shots/
         │   └── shot_spec.yaml      # ⭐ 核心执行层
-        ├── visual/
+        ├── shot/
         │   ├── characters.yaml      # 角色结构
         │   └── scenes.yaml         # 场景结构
         └── meta/

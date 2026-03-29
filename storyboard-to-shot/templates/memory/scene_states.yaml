@@ -1,0 +1,68 @@
+# Scene States Memory Template
+# 追踪场景视觉状态变化
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_scenes_tracked: 50           # 保留最近 50 个场景状态
+  max_states_per_scene: 30         # 每个场景保留 30 个状态快照
+
+last_processed:
+  chapter_id: null
+  timestamp: null
+
+# 场景状态历史
+# 格式：location_id -> [状态快照列表]
+scene_states: {}
+
+# 状态快照结构
+# - chapter_id: 章节ID
+# - shot_id: 镜头ID
+# - lighting: 光照条件
+#   - type: 光照类型
+#   - color_temperature: 色温
+#   - description: 描述
+# - props: 道具列表
+# - atmosphere: 氛围
+# - visual_keywords: 视觉关键词
+# - changed_from: 上一状态（如果有变化）
+
+# 示例结构 (remove after initialization):
+# scene_states:
+#   banquet_hall:
+#     - chapter_id: "C1"
+#       shot_id: "C1-S1-shot1"
+#       lighting:
+#         type: "warm_chandelier"
+#         color_temperature: "warm"
+#         description: "warm ambient light from chandeliers"
+#       props:
+#         - "round_table"
+#         - "champagne_glass"
+#         - "crystal_decorations"
+#       atmosphere: "luxury"
+#       visual_keywords:
+#         - "gold_accents"
+#         - "elegant"
+#         - "festive"
+#     - chapter_id: "C1"
+#       shot_id: "C1-S1-shot5"
+#       lighting:
+#         type: "warm_chandelier"
+#         color_temperature: "warm"
+#         description: "warm ambient light, slightly dimmer"
+#       props:
+#         - "round_table"
+#         - "champagne_glass"
+#         - "crystal_decorations"
+#         - "velvet_curtains"
+#       atmosphere: "high_society"
+#       visual_keywords:
+#         - "gold_accents"
+#         - "elegant"
+#         - "moody"
+#       changed_from: "C1-S1-shot1"
+#       changes:
+#         - element: "props"
+#           added: ["velvet_curtains"]

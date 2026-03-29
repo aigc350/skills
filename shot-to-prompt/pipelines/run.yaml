@@ -1,0 +1,129 @@
+# Shot-to-Prompt Pipeline
+
+version: 1.0
+
+steps:
+  # =========================================
+  # 初始化阶段
+  # =========================================
+  - id: check_config
+    description: 检查配置文件
+
+  - id: ensure_directories
+    description: 创建目录结构
+
+  - id: load_platform_templates
+    description: 加载平台模板
+    output: runtime/platform_templates.yaml
+
+  - id: detect_shot_specs
+    description: 检测待处理的 shot_spec 文件
+    output: runtime/pending_shot_specs.yaml
+
+  # =========================================
+  # 核心转换阶段
+  # =========================================
+  - id: parse_shot_spec
+    agent: prompt_builder
+    description: 解析 shot_spec 结构
+    input: runtime/pending_shot_specs.yaml
+    output: runtime/parsed_shots.yaml
+
+  - id: build_shot_prompts
+    agent: prompt_builder
+    description: 构建每个镜头的 Prompt
+    input: runtime/parsed_shots.yaml
+    output: runtime/shot_prompts.yaml
+
+  # =========================================
+  # 平台优化阶段
+  # =========================================
+  - id: select_target_platform
+    description: 选择目标平台
+    output: runtime/target_platform.yaml
+
+  - id: optimize_prompts
+    agent: prompt_optimizer
+    description: 针对目标平台优化 Prompts
+    input: runtime/shot_prompts.yaml
+    platform_template: runtime/platform_templates.yaml
+    output: runtime/optimized_prompts.yaml
+
+  # =========================================
+  # 校验阶段
+  # =========================================
+  - id: validate_prompts
+    description: 校验 Prompt 格式
+    schema: schemas/gen_prompt.yaml
+    on_invalid: retry
+    max_retries: 3
+
+  # =========================================
+  # 组装阶段
+  # =========================================
+  - id: assemble_chapter_prompts
+    agent: prompt_builder
+    description: 组装章节级联 Prompts
+    input: runtime/optimized_prompts.yaml
+    output: runtime/chapter_prompts.yaml
+
+  - id: create_video_prompt_list
+    description: 创建视频生成任务列表
+    input: runtime/chapter_prompts.yaml
+    output: runtime/video_task_list.yaml
+
+  # =========================================
+  # 导出阶段
+  # =========================================
+  - id: export_shot_prompts
+    description: 导出镜头级 Prompts
+    input: runtime/optimized_prompts.yaml
+    output: output/gen_prompts/{chapter_id}/shots/
+
+  - id: export_chapter_prompt
+    description: 导出章节完整 Prompt
+    input: runtime/chapter_prompts.yaml
+    output: output/gen_prompts/{chapter_id}/full_chapter_prompt.yaml
+
+  - id: export_video_task_list
+    description: 导出视频任务列表
+    input: runtime/video_task_list.yaml
+    output: output/gen_prompts/{chapter_id}/video_tasks.yaml
+
+  - id: save_full_package
+    description: 保存完整输出包
+    output: output/gen_prompts/{chapter_id}/full_gen_prompt.yaml
+
+# =========================================
+# 平台配置
+# =========================================
+platforms:
+  sora:
+    enabled: true
+    default_duration: 10
+    max_prompt_length: 400
+    supports_long_video: true
+
+  runway:
+    enabled: true
+    default_duration: 5
+    max_prompt_length: 300
+    supports_camera_control: true
+
+  pika:
+    enabled: true
+    default_duration: 3
+    max_prompt_length: 200
+    fast_generation: true
+
+  kling:
+    enabled: true
+    default_duration: 5
+    max_prompt_length: 250
+    chinese_support: true
+
+# =========================================
+# 默认配置
+# =========================================
+default_platform: sora
+output_format: yaml

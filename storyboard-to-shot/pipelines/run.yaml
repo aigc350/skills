@@ -1,17 +1,17 @@
-# Storyboard-to-Visual Pipeline
-# 分镜转视觉资产：shot_spec + characters + scenes + consistency
+# Storyboard-to-Shot Pipeline
+# 分镜转 Shot Spec：shot_spec + characters + scenes + consistency
 
-name: convert_storyboard_to_visual
+name: convert_storyboard_to_shot
 description: 将分镜脚本转换为结构化 shot_spec 和标准化视觉资产，通过镜头编译、角色解析、场景解析、连续性检查和质量审查
 
 variables:
   chapter_name: "${input.chapter_name}"
   novel_id: "${config.current_novel_id}"
   storyboard_source_dir: "novels/${novel_id}/output/storyboard"
-  visual_dir: "novels/${novel_id}/visual"
-  memory_dir: "novels/${novel_id}/visual/memory"
-  runtime_dir: "novels/${novel_id}/visual/runtime"
-  output_dir: "novels/${novel_id}/output/visual"
+  shot_dir: "novels/${novel_id}/shot"
+  memory_dir: "novels/${novel_id}/shot/memory"
+  runtime_dir: "novels/${novel_id}/shot/runtime"
+  output_dir: "novels/${novel_id}/output/shot"
 
 # ─────────────────────────────────────────────────────────────
 # 失败恢复策略（全局默认）
@@ -54,8 +54,8 @@ steps:
     description: 确保项目目录结构存在
     action: ensure_dirs
     dirs:
-      - "${visual_dir}/memory"
-      - "${visual_dir}/runtime"
+      - "${shot_dir}/memory"
+      - "${shot_dir}/runtime"
       - "${output_dir}"
 
   - id: init_memory_files
@@ -83,6 +83,8 @@ steps:
     action: check_files
     input:
       - "${storyboard_source_dir}/*/storyboard.md"
+      - "${storyboard_source_dir}/*/scene_breakdown.yaml"
+      - "${storyboard_source_dir}/*/directors_notes.md"
       - "${output_dir}/*/shots/shot_spec.yaml"
     output: ${runtime_dir}/pending_storyboards.yaml
     on_result:
@@ -98,6 +100,7 @@ steps:
       - "${storyboard_source_dir}/${chapter_name}/storyboard.md"
       - "${storyboard_source_dir}/${chapter_name}/scene_breakdown.yaml"
       - "${storyboard_source_dir}/${chapter_name}/directors_notes.md"
+      - "${storyboard_source_dir}/${chapter_name}/overview.md"
       - "standard/expression_map.yaml"
     output: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
     schema: schemas/shot_spec.yaml
@@ -121,7 +124,7 @@ steps:
       - "standard/character.yaml"
       - "${memory_dir}/character_states.yaml"
     output: "${runtime_dir}/characters_${chapter_name}.yaml"
-    schema: schemas/character_visual.yaml
+    schema: schemas/character_shot.yaml
     retry:
       max: 2
     on_fail:
@@ -142,7 +145,7 @@ steps:
       - "standard/scene.yaml"
       - "${memory_dir}/scene_states.yaml"
     output: "${runtime_dir}/scenes_${chapter_name}.yaml"
-    schema: schemas/scene_visual.yaml
+    schema: schemas/scene_shot.yaml
     retry:
       max: 2
     on_fail:
@@ -264,12 +267,12 @@ steps:
   - id: export_characters
     action: copy
     input: "${runtime_dir}/characters_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/visual/characters.yaml"
+    output: "${output_dir}/${chapter_name}/shot/characters.yaml"
 
   - id: export_scenes
     action: copy
     input: "${runtime_dir}/scenes_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/visual/scenes.yaml"
+    output: "${output_dir}/${chapter_name}/shot/scenes.yaml"
 
   - id: export_consistency
     action: copy
@@ -341,14 +344,14 @@ steps:
     input:
       - "${output_dir}/${chapter_name}/*.yaml"
       - "${output_dir}/${chapter_name}/*.md"
-    output: "${output_dir}/${chapter_name}/full_visual.yaml"
+    output: "${output_dir}/${chapter_name}/full_shot.yaml"
     on_complete: log_success
 
-  - id: update_full_visual
+  - id: update_full_shot
     action: append
-    input: "${output_dir}/${chapter_name}/full_visual.yaml"
+    input: "${output_dir}/${chapter_name}/full_shot.yaml"
     content: |
-      # Full Visual Package - ${chapter_name}
+      # Full Shot Package - ${chapter_name}
       chapter_id: ${chapter_name}
       processed_at: ${timestamp}
       score: ${review.total_score}
