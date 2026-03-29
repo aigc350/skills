@@ -23,7 +23,7 @@ description: "Convert shot_spec to AI video generation prompts. Use when user wa
 
 读取 `novel.config.md` 获取：
 - `current_novel_id` - 当前小说ID
-- shot_spec 源目录：`novels/{novel_id}/output/visual/`
+- shot_spec 源目录：`novels/{novel_id}/output/shot/`
 
 ### Step 2: 初始化目录
 

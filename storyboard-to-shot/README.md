@@ -85,11 +85,9 @@ novels/{novel_id}/
 │   └── runtime/
 └── output/shot/
     └── {chapter_id}/
-        ├── shots/
-        │   └── shot_spec.yaml      # ⭐ 核心执行层
-        ├── shot/
-        │   ├── characters.yaml      # 角色结构
-        │   └── scenes.yaml         # 场景结构
+        ├── shot_spec.yaml      # ⭐ 核心执行层
+        ├── characters.yaml     # 角色结构
+        ├── scenes.yaml        # 场景结构
         └── meta/
             └── consistency.yaml     # 一致性控制
 ```

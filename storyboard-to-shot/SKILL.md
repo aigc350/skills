@@ -38,11 +38,9 @@ novels/{novel_id}/
 │   └── runtime/
 └── output/shot/
     └── {chapter_id}/
-        ├── shots/
-        │   └── shot_spec.yaml
-        ├── shot/
-        │   ├── characters.yaml
-        │   └── scenes.yaml
+        ├── shot_spec.yaml      # 镜头规格
+        ├── characters.yaml     # 角色视觉定义
+        ├── scenes.yaml        # 场景视觉定义
         └── meta/
             └── consistency.yaml
 ```
@@ -109,11 +107,9 @@ novels/{novel_id}/
 │   ├── storyboard/              # 分镜输出
 │   └── shot/                  # Shot 输出
 │       ├── {chapter_id}/
-│       │   ├── shots/
-│       │   │   └── shot_spec.yaml
-│       │   ├── shot/
-│       │   │   ├── characters.yaml
-│       │   │   └── scenes.yaml
+│       │   ├── shot_spec.yaml
+│       │   ├── characters.yaml
+│       │   ├── scenes.yaml
 │       │   └── meta/
 │       │       └── consistency.yaml
 │       └── full_shot.yaml

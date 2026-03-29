@@ -85,7 +85,7 @@ steps:
       - "${storyboard_source_dir}/*/storyboard.md"
       - "${storyboard_source_dir}/*/scene_breakdown.yaml"
       - "${storyboard_source_dir}/*/directors_notes.md"
-      - "${output_dir}/*/shots/shot_spec.yaml"
+      - "${output_dir}/*/shot_spec.yaml"
     output: ${runtime_dir}/pending_storyboards.yaml
     on_result:
       empty: exit
@@ -262,17 +262,17 @@ steps:
   - id: export_shot_spec
     action: copy
     input: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+    output: "${output_dir}/${chapter_name}/shot_spec.yaml"
 
   - id: export_characters
     action: copy
     input: "${runtime_dir}/characters_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/shot/characters.yaml"
+    output: "${output_dir}/${chapter_name}/characters.yaml"
 
   - id: export_scenes
     action: copy
     input: "${runtime_dir}/scenes_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/shot/scenes.yaml"
+    output: "${output_dir}/${chapter_name}/scenes.yaml"
 
   - id: export_consistency
     action: copy
@@ -290,10 +290,10 @@ steps:
   - id: finalize_with_warning
     action: copy
     input: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+    output: "${output_dir}/${chapter_name}/shot_spec.yaml"
     post_action:
       - action: append_note
-        file: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+        file: "${output_dir}/${chapter_name}/shot_spec.yaml"
         note: "# 警告：重写后仍未达到质量阈值"
       - action: log_error
         message: "章节 ${chapter_name} 最终质量分数较低"
@@ -302,12 +302,12 @@ steps:
   - id: finalize_v2
     action: copy
     input: "${runtime_dir}/shot_spec_v2_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+    output: "${output_dir}/${chapter_name}/shot_spec.yaml"
 
   - id: export
     action: copy
     input: "${runtime_dir}/shot_spec_${chapter_name}.yaml"
-    output: "${output_dir}/${chapter_name}/shots/shot_spec.yaml"
+    output: "${output_dir}/${chapter_name}/shot_spec.yaml"
 
   # ═══════════════════════════════════════════════════════════
   # STEP 11: 更新记忆 (Update Memory)
