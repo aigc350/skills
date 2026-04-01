@@ -1,0 +1,40 @@
+# Prompt Generation Log Template
+# 记录每个 shot prompt 的生成过程
+
+version: "1.0"
+
+# 日志条目结构
+entries: []
+
+# 模板
+# entries:
+#   - shot_id: "C01-S1-shot01"
+#     timestamp: "2026-03-29T10:00:00Z"
+#     chapter_id: "01"
+#     platform: "sora"
+#     input:
+#       shot_spec_hash: "sha256:..."
+#       shot_spec_version: "1.0"
+#     processing:
+#       style_applied: "short_drama"
+#       mappings_used:
+#         - camera.yaml
+#         - lighting.yaml
+#         - expression_map.yaml
+#         - emotion_map.yaml
+#         - motion_map.yaml
+#       strategies_applied:
+#         - hook_first_frame
+#         - short_drama
+#     output:
+#       prompt_length: 280
+#       prompt_hash: "sha256:..."
+#       negative_prompt_length: 120
+#     quality:
+#       completeness: 0.95
+#       hooks_injected: true
+#       explosive_points:
+#         - type: "face_slapping"
+#           timing: "shot_9"
+#     status: "success"
+#     error: null

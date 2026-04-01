@@ -1,0 +1,103 @@
+# =========================================
+
+# Asset Prompts v2（支持 identity + variant）
+
+# =========================================
+
+characters:
+
+* character_id: "char_001"
+  asset_id: "char_001_v1"
+  variant_id: "char_001_v1"
+
+  # --------------------------
+
+  # Identity（基础不变）
+
+  # --------------------------
+
+  base_prompt: >
+  a young woman, delicate facial features,
+  long black hair, elegant temperament,
+  consistent appearance, same identity
+
+  # --------------------------
+
+  # Variant（状态变化）
+
+  # --------------------------
+
+  variant_prompt: >
+  wearing a white wedding dress, bridal style
+
+  # --------------------------
+
+  # 最终资产 Prompt
+
+  # --------------------------
+
+  final_prompt: >
+  a young woman, delicate facial features,
+  long black hair, elegant temperament,
+  wearing a white wedding dress, bridal style,
+  cinematic, high detail, consistent appearance, same identity
+
+  negative_prompt: >
+  blurry, distorted face, inconsistent identity
+
+---
+
+* character_id: "char_001"
+  asset_id: "char_001_v2"
+  variant_id: "char_001_v2"
+
+  base_prompt: >
+  a young woman, delicate facial features,
+  long black hair, elegant temperament,
+  consistent appearance, same identity
+
+  variant_prompt: >
+  wearing a formal business suit, professional
+
+  final_prompt: >
+  a young woman, delicate facial features,
+  long black hair, elegant temperament,
+  wearing a formal business suit, professional,
+  cinematic, high detail, consistent appearance, same identity
+
+  negative_prompt: >
+  blurry, inconsistent clothing
+
+---
+
+environments:
+
+* asset_id: "env_001_day"
+  variant_id: "day"
+
+  base_prompt: >
+  modern office, clean layout, minimalist design
+
+  variant_prompt: >
+  bright daylight, natural lighting
+
+  final_prompt: >
+  modern office, clean layout, minimalist design,
+  bright daylight, natural lighting,
+  cinematic environment, consistent scene
+
+---
+
+props:
+
+* asset_id: "prop_001"
+  variant_id: "default"
+
+  base_prompt: >
+  crystal wine glass, elegant design
+
+  variant_prompt: ""
+
+  final_prompt: >
+  crystal wine glass, elegant design,
+  realistic, high detail

@@ -1,0 +1,194 @@
+# =========================================
+# Asset Registry v1.0（全局资产注册表）
+# =========================================
+
+version: "1.0"
+
+meta:
+  created_at: "2026-03-30T12:00:00Z"
+  updated_at: "2026-03-30T12:00:00Z"
+
+# =========================================
+# Characters（角色资产）
+# =========================================
+characters:
+
+  char_001_v1:
+
+    character_id: "char_001"
+    variant_id: "char_001_v1"
+    asset_id: "char_001_v1"
+
+    version: 1
+    locked: true         # 🔥 是否锁定（防止被覆盖）
+
+    base_prompt: >
+      a young woman, delicate facial features,
+      long black hair, elegant temperament,
+      consistent appearance, same identity
+
+    variant_prompt: >
+      wearing a white wedding dress, bridal style
+
+    final_prompt: >
+      a young woman, delicate facial features,
+      long black hair, elegant temperament,
+      wearing a white wedding dress, bridal style,
+      cinematic, high detail, consistent appearance, same identity
+
+    negative_prompt: >
+      blurry, distorted face, inconsistent identity
+
+    usage:
+      used_in_scenes: ["S1", "S3"]
+      used_count: 5
+
+    timestamps:
+      created_at: "2026-03-30T12:00:00Z"
+      updated_at: "2026-03-30T12:00:00Z"
+
+  # 都市爽文 - 订婚宴角色
+  shen_yan_v1:
+    character_id: "shen_yan"
+    variant_id: "v1"
+    asset_id: "shen_yan_v1"
+    version: 1
+    locked: true
+    base_prompt: >
+      30岁左右男性，短发整齐，略显陈旧深色西装，
+      冷静克制的神情，城府深沉，目光平静
+    variant_prompt: >
+      平静表情，neutral_face
+    final_prompt: >
+      30岁左右男性，短发整齐，略显陈旧深色西装，
+      冷静克制的神情，城府深沉，目光平静，
+      cinematic, film quality, consistent identity
+    negative_prompt: >
+      卡通，动漫，低质量，面部扭曲，西方脸孔
+    usage:
+      used_in_chapters: ["ch1"]
+      used_count: 13
+    timestamps:
+      created_at: "2026-03-31T00:00:00Z"
+      updated_at: "2026-03-31T00:00:00Z"
+
+  wen_wan_v1:
+    character_id: "wen_wan"
+    variant_id: "v1"
+    asset_id: "wen_wan_v1"
+    version: 1
+    locked: true
+    base_prompt: >
+      20多岁女性，精致盘发，白色礼服高贵冷艳，
+      钻石耳饰，冷漠高傲的眼神
+    variant_prompt: >
+      cold_stare 冷漠凝视
+    final_prompt: >
+      20多岁女性，精致盘发，白色礼服高贵冷艳，
+      钻石耳饰，冷漠高傲的眼神，cold_stare，
+      cinematic, film quality, consistent identity
+    negative_prompt: >
+      卡通，动漫，低质量，面部扭曲，西方脸孔
+    usage:
+      used_in_chapters: ["ch1"]
+      used_count: 5
+    timestamps:
+      created_at: "2026-03-31T00:00:00Z"
+      updated_at: "2026-03-31T00:00:00Z"
+
+  wang_shao_v1:
+    character_id: "wang_shao"
+    variant_id: "v1"
+    asset_id: "wang_shao_v1"
+    version: 1
+    locked: true
+    base_prompt: >
+      20多岁男性，穿着华丽时尚西装，造型新潮，
+      嘲讽的笑意，嚣张跋扈
+    variant_prompt: >
+      smirk 表情
+    final_prompt: >
+      20多岁男性，穿着华丽时尚西装，造型新潮，
+      嘲讽的笑意，smirk，嚣张跋扈，
+      cinematic, film quality
+    negative_prompt: >
+      卡通，动漫，低质量，面部扭曲，西方脸孔
+    usage:
+      used_in_chapters: ["ch1"]
+      used_count: 2
+    timestamps:
+      created_at: "2026-03-31T00:00:00Z"
+      updated_at: "2026-03-31T00:00:00Z"
+
+  wen_fu_v1:
+    character_id: "wen_fu"
+    variant_id: "v1"
+    asset_id: "wen_fu_v1"
+    version: 1
+    locked: true
+    base_prompt: >
+      50岁左右中年男子，正式商人西装，威严而克制的神情
+    variant_prompt: >
+      composed_face 表情
+    final_prompt: >
+      50岁左右中年男子，正式商人西装，
+      威严而克制的神情，composed_face，cinematic, film quality
+    negative_prompt: >
+      卡通，动漫，低质量，面部扭曲，西方脸孔
+    usage:
+      used_in_chapters: ["ch1"]
+      used_count: 3
+    timestamps:
+      created_at: "2026-03-31T00:00:00Z"
+      updated_at: "2026-03-31T00:00:00Z"
+
+---
+
+# =========================================
+# Environments（环境资产）
+# =========================================
+environments:
+
+  env_office_day:
+
+    asset_id: "env_office_day"
+    variant_id: "day"
+
+    version: 1
+    locked: false
+
+    base_prompt: >
+      modern office, clean layout, minimalist design
+
+    variant_prompt: >
+      bright daylight, natural lighting
+
+    final_prompt: >
+      modern office, clean layout, minimalist design,
+      bright daylight, natural lighting,
+      cinematic environment, consistent scene
+
+    usage:
+      used_count: 3
+
+---
+
+# =========================================
+# Props（道具资产）
+# =========================================
+props:
+
+  prop_001:
+
+    asset_id: "prop_001"
+    variant_id: "default"
+
+    version: 1
+    locked: false
+
+    final_prompt: >
+      crystal wine glass, elegant design,
+      realistic, high detail
+
+    usage:
+      used_count: 10

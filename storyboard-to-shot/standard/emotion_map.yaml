@@ -1,0 +1,181 @@
+# Emotion Mapping - 情绪定义（工业完整版）
+# 说明：
+# - desc_en：用于 prompt
+# - intensity_bias：情绪强度倾向（low / medium / high）
+# - expression_hints：推荐表情（用于自动生成）
+# - 不直接绑定 expression（只是建议）
+
+emotion_map:
+
+  # ========================
+  # 中性 / 控制类
+  # ========================
+  neutral:
+    desc_cn: "中性"
+    desc_en: "calm neutral state"
+    intensity_bias: "low"
+    expression_hints:
+      - neutral_face
+      - composed_face
+
+  calm:
+    desc_cn: "冷静"
+    desc_en: "calm and composed"
+    intensity_bias: "low"
+    expression_hints:
+      - composed_face
+      - relaxed_face
+
+  focused:
+    desc_cn: "专注"
+    desc_en: "focused and attentive"
+    intensity_bias: "medium"
+    expression_hints:
+      - intense_gaze
+      - narrowed_eyes
+
+  # ========================
+  # 正向情绪
+  # ========================
+  happiness:
+    desc_cn: "开心"
+    desc_en: "happy and joyful"
+    intensity_bias: "medium"
+    expression_hints:
+      - broad_smile
+      - raised_eyebrows
+
+  satisfaction:
+    desc_cn: "满足"
+    desc_en: "subtle satisfaction"
+    intensity_bias: "low"
+    expression_hints:
+      - slight_smile
+      - relaxed_face
+
+  confidence:
+    desc_cn: "自信"
+    desc_en: "confident and assured"
+    intensity_bias: "medium"
+    expression_hints:
+      - smirk
+      - chin_raised
+
+  # ========================
+  # 负向情绪
+  # ========================
+  sadness:
+    desc_cn: "悲伤"
+    desc_en: "sad and sorrowful"
+    intensity_bias: "low"
+    expression_hints:
+      - downward_gaze
+      - teary_eyes
+      - downturned_lips
+
+  grief:
+    desc_cn: "悲痛"
+    desc_en: "deep grief and emotional pain"
+    intensity_bias: "high"
+    expression_hints:
+      - teary_eyes
+      - trembling_lips
+      - tense_face
+
+  anxiety:
+    desc_cn: "焦虑"
+    desc_en: "anxious and uneasy"
+    intensity_bias: "medium"
+    expression_hints:
+      - restless_gaze
+      - narrowed_eyes
+
+  fear:
+    desc_cn: "恐惧"
+    desc_en: "fearful and tense"
+    intensity_bias: "high"
+    expression_hints:
+      - wide_eyes
+      - pale_face
+      - tense_face
+
+  shock:
+    desc_cn: "震惊"
+    desc_en: "sudden shock and disbelief"
+    intensity_bias: "high"
+    expression_hints:
+      - wide_eyes
+      - parted_lips
+
+  # ========================
+  # 攻击 / 对抗
+  # ========================
+  anger:
+    desc_cn: "愤怒"
+    desc_en: "angry and aggressive"
+    intensity_bias: "high"
+    expression_hints:
+      - furrowed_brows
+      - clenched_teeth
+      - tense_face
+
+  rage:
+    desc_cn: "暴怒"
+    desc_en: "intense rage and fury"
+    intensity_bias: "high"
+    expression_hints:
+      - clenched_teeth
+      - wide_eyes
+      - tense_face
+
+  suppressed_anger:
+    desc_cn: "压抑愤怒"
+    desc_en: "suppressed anger, barely controlled"
+    intensity_bias: "medium"
+    expression_hints:
+      - tight_lips
+      - tense_face
+      - narrowed_eyes
+
+  # ========================
+  # 高级情绪（爽剧关键）
+  # ========================
+  dominance:
+    desc_cn: "压迫感"
+    desc_en: "dominant and intimidating presence"
+    intensity_bias: "medium"
+    expression_hints:
+      - cold_stare
+      - chin_raised
+
+  disdain:
+    desc_cn: "轻蔑"
+    desc_en: "disdainful and dismissive"
+    intensity_bias: "medium"
+    expression_hints:
+      - contempt_expression
+      - subtle_smirk
+
+  revenge:
+    desc_cn: "复仇欲"
+    desc_en: "vengeful and calculating"
+    intensity_bias: "high"
+    expression_hints:
+      - cold_stare
+      - tight_lips
+
+  determination:
+    desc_cn: "坚定"
+    desc_en: "determined and unwavering"
+    intensity_bias: "high"
+    expression_hints:
+      - intense_gaze
+      - tense_face
+
+  coldness:
+    desc_cn: "冷漠"
+    desc_en: "emotionally detached and cold"
+    intensity_bias: "low"
+    expression_hints:
+      - blank_expression
+      - cold_stare

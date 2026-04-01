@@ -1,0 +1,74 @@
+type: object
+
+required:
+  - scene_id
+  - shots
+
+properties:
+
+  scene_id:
+    type: string
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - prompt
+        - enhancement
+
+      properties:
+
+        shot_id:
+          type: string
+
+        # 🔥 完全复用 canonical
+        prompt:
+          $ref: "common.schema.yaml#/Prompt"
+
+        # 🔥 Enhancer 专属
+        enhancement:
+          type: object
+
+          properties:
+
+            style:
+              type: object
+
+              properties:
+                applied:
+                  type: boolean
+
+                style_tags:
+                  type: array
+                  items:
+                    type: string
+
+                intensity:
+                  type: string
+
+            hook:
+              type: object
+
+              properties:
+                applied:
+                  type: boolean
+
+                hook_type:
+                  type: string
+
+                hook_text:
+                  type: string
+
+            pacing:
+              type: object
+
+              properties:
+                rhythm:
+                  type: string
+
+                speed:
+                  type: string

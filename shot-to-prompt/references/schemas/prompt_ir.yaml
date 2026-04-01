@@ -1,0 +1,224 @@
+type: object
+
+required:
+  - chapter_id
+  - shots
+
+properties:
+
+  chapter_id:
+    type: string
+
+  meta:
+    type: object
+    required: [total_shots]
+
+    properties:
+      total_shots:
+        type: integer
+
+      generated_at:
+        type: string
+
+      platform:
+        type: string
+
+      scenes:
+        type: object
+        additionalProperties:
+          type: object
+          required: [name, shot_count, start_shot, end_shot]
+          properties:
+            name:
+              type: string
+            shot_count:
+              type: integer
+            start_shot:
+              type: string
+            end_shot:
+              type: string
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - subject
+        - environment
+        - camera
+        - style
+        - continuity
+        - intent
+        - visual_intent
+
+      properties:
+
+        shot_id:
+          type: string
+
+        # =========================
+        # Subject
+        # =========================
+        subject:
+          type: object
+
+          required: [characters, primary_character]
+
+          properties:
+
+            primary_character:
+              type: string
+
+            characters:
+              type: array
+
+              items:
+                type: object
+
+                required:
+                  - character_id
+                  - variant_id
+
+                properties:
+
+                  character_id:
+                    type: string
+
+                  variant_id:
+                    type: string
+
+                  appearance:
+                    type: object
+
+                  expression:
+                    type: string
+
+                  emotion:
+                    type: string
+
+                  pose:
+                    type: string
+
+                  gaze:
+                    type: string
+
+                  motion:
+                    type: array
+                    items:
+                      type: string
+
+        # =========================
+        # Intent（原样照搬 shot_spec.intent）
+        # =========================
+        intent:
+          type: object
+
+          properties:
+            narrative_function:
+              type: string
+            emphasis:
+              type: string
+
+        # =========================
+        # Visual Intent（原样照搬 shot_spec.visual_intent）
+        # =========================
+        visual_intent:
+          type: object
+
+          properties:
+            shot_type:
+              type: string
+            composition:
+              type: string
+            camera_angle:
+              type: string
+            camera_movement:
+              type: string
+            style:
+              type: string
+            lighting:
+              type: string
+            atmosphere:
+              type: string
+            emotion:
+              type: string
+
+        # =========================
+        # Environment
+        # =========================
+        environment:
+          type: object
+
+          required:
+            - location_id
+            - type
+
+          properties:
+
+            location_id:
+              type: string
+
+            variant_id:
+              type: string
+
+            type:
+              type: string
+
+            setting:
+              type: string
+
+            atmosphere:
+              type: string
+
+            props:
+              type: array
+              items:
+                type: object
+
+                properties:
+                  prop_id:
+                    type: string
+                  variant_id:
+                    type: string
+
+        # =========================
+        # Camera
+        # =========================
+        camera:
+          type: object
+
+        # =========================
+        # Style
+        # =========================
+        style:
+          type: object
+
+        # =========================
+        # Continuity（仅意图）
+        # =========================
+        continuity:
+          type: object
+
+          properties:
+
+            previous_shot_id:
+              type: [string, "null"]
+
+            spatial_intent:
+              type: array
+              items:
+                type: string
+
+            temporal_intent:
+              type: object
+              properties:
+                transition:
+                  type: string
+                motion:
+                  type: string
+
+        meta:
+          type: object

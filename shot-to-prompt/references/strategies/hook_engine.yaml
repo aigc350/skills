@@ -1,0 +1,295 @@
+# Hook Engine Template Library v1.0
+
+## 🧠 Role
+
+提供“爆点模板库”，供 prompt_enhancer 调用。
+
+---
+
+## ⚙️ Design Principles
+
+* 按 **genre（题材）** 分类
+* 按 **scene_position（镜头位置）** 分类
+* 支持 **intensity（强度分级）**
+* 输出为 **可插入 prompt 的短语（phrases）**
+
+---
+
+## 📦 Schema
+
+```yaml
+hooks:
+  <genre>:
+    <position>:
+      low: []
+      medium: []
+      high: []
+```
+
+---
+
+# 🔥 Hook Templates
+
+hooks:
+
+# =========================
+
+# 🩸 REVENGE（复仇）
+
+# =========================
+
+revenge:
+
+```
+opening:
+  low:
+    - "subtle tension begins"
+    - "quiet but uneasy atmosphere"
+  medium:
+    - "dramatic opening shot"
+    - "tension quietly building"
+  high:
+    - "intense dramatic opening"
+    - "immediate confrontation tension"
+    - "a moment filled with suppressed rage"
+
+middle:
+  low:
+    - "lingering tension"
+  medium:
+    - "growing emotional pressure"
+    - "uneasy confrontation"
+  high:
+    - "escalating confrontation"
+    - "rising emotional conflict"
+    - "palpable tension in the air"
+
+climax:
+  low:
+    - "emotional turning point"
+  medium:
+    - "intense emotional moment"
+    - "dramatic confrontation peak"
+  high:
+    - "explosive confrontation"
+    - "peak emotional intensity"
+    - "overwhelming dramatic tension"
+    - "a decisive and powerful moment"
+```
+
+---
+
+# =========================
+
+# 💕 ROMANCE（恋爱）
+
+# =========================
+
+romance:
+
+```
+opening:
+  low:
+    - "soft gentle moment"
+  medium:
+    - "warm and intimate opening"
+    - "a tender beginning"
+  high:
+    - "deep emotional connection begins"
+    - "intense romantic atmosphere"
+
+middle:
+  low:
+    - "subtle emotional exchange"
+  medium:
+    - "growing intimacy"
+    - "emotional connection deepening"
+  high:
+    - "strong emotional bonding"
+    - "intimate and heartfelt interaction"
+
+climax:
+  low:
+    - "emotional highlight"
+  medium:
+    - "heartfelt emotional peak"
+    - "romantic turning point"
+  high:
+    - "overwhelming romantic climax"
+    - "deep emotional confession moment"
+```
+
+---
+
+# =========================
+
+# 🎭 DRAMA（现实/剧情）
+
+# =========================
+
+drama:
+
+```
+opening:
+  low:
+    - "calm narrative opening"
+  medium:
+    - "grounded and realistic opening"
+  high:
+    - "emotionally loaded opening scene"
+
+middle:
+  low:
+    - "steady narrative progression"
+  medium:
+    - "emotional tension building"
+  high:
+    - "complex emotional conflict unfolds"
+
+climax:
+  low:
+    - "subtle emotional shift"
+  medium:
+    - "strong emotional turning point"
+  high:
+    - "powerful emotional climax"
+    - "deep dramatic resolution moment"
+```
+
+---
+
+# =========================
+
+# 👑 POWER / STATUS（权势/逆袭）
+
+# =========================
+
+power:
+
+```
+opening:
+  low:
+    - "subtle display of confidence"
+  medium:
+    - "quiet authority presence"
+  high:
+    - "dominant and commanding entrance"
+
+middle:
+  low:
+    - "controlled interaction"
+  medium:
+    - "assertive presence grows"
+  high:
+    - "clear dominance in the scene"
+
+climax:
+  low:
+    - "moment of recognition"
+  medium:
+    - "decisive power shift"
+  high:
+    - "overwhelming dominance"
+    - "undeniable authority moment"
+```
+
+---
+
+# =========================
+
+# 😱 SUSPENSE / THRILLER（悬疑）
+
+# =========================
+
+suspense:
+
+```
+opening:
+  low:
+    - "slightly unsettling opening"
+  medium:
+    - "mysterious atmosphere begins"
+  high:
+    - "immediate sense of danger"
+    - "tense and unsettling opening"
+
+middle:
+  low:
+    - "subtle unease"
+  medium:
+    - "tension steadily rising"
+  high:
+    - "suspense intensifies"
+    - "unpredictable tension builds"
+
+climax:
+  low:
+    - "revealing moment"
+  medium:
+    - "major suspense payoff"
+  high:
+    - "shocking reveal moment"
+    - "extreme tension release"
+    - "unexpected dramatic twist"
+```
+
+---
+
+# 🎯 Selection Rules（供 enhancer 使用）
+
+rules:
+
+position_detection:
+opening: shot_index == 0
+climax: shot_index == last
+middle: otherwise
+
+intensity_mapping:
+high:
+- use "high"
+- allow multiple phrases (1~2)
+medium:
+- use "medium"
+- pick 1 phrase
+low:
+- use "low"
+- optional usage
+
+injection_strategy:
+opening:
+- prepend to prompt
+middle:
+- append lightly
+climax:
+- append + emphasize
+
+---
+
+# 🧩 Output Contract
+
+返回：
+
+```yaml
+hook_result:
+  phrases: [string]
+  position: opening | middle | climax
+  intensity: low | medium | high
+```
+
+---
+
+# 🚫 Constraints
+
+❌ 不生成完整句子
+❌ 不修改原 prompt 结构
+❌ 不涉及模型适配
+
+---
+
+# 🚀 Usage Flow
+
+```text
+IR → enhancer → hook_engine → 返回 phrases → 注入 prompt
+```
+
+---

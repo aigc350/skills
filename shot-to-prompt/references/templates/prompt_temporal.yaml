@@ -1,0 +1,24 @@
+shots:
+
+  - shot_id: "S1_SH02"
+
+    previous_shot_id: "S1_SH01"
+
+    temporal_tags:
+      - "motion_continuity"
+      - "smooth_transition"
+
+    continuity_score: 0.92
+
+    final_prompt: >
+      continue motion from previous shot,
+
+      state transition, outfit change,
+
+      a young woman wearing a business suit,
+      walking forward with confident steps,
+
+      in a modern office environment,
+
+      smooth transition, natural motion flow,
+      cinematic, high detail

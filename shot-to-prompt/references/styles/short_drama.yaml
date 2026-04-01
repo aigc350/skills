@@ -1,0 +1,55 @@
+# Short Drama Style - 短剧风格
+# 抖音/快手 1-3 分钟竖屏短剧风格
+# 特点：强冲突、快节奏、爽点密集、情绪爆发
+
+name: short_drama
+description: 短剧风格 - 强冲突快节奏爽点密集
+
+# 视觉特征
+visual:
+  aspect_ratio: "9:16"  # 竖屏
+  shot_style: "close-up focused"  # 强调特写，捕捉表情
+  pacing: "fast cuts, 2-4 seconds per shot"
+  transitions: "quick cuts, minimal dissolves"
+
+# 情绪特征
+emotion:
+  intensity: "high"  # 高强度情绪
+  contrast: "dramatic"  # 强对比
+  buildup: "explosive"  # 爆发式
+
+# 台词特征
+dialogue:
+  style: "sharp, impactful lines"
+  delivery: "emotionally charged"
+  callback: true  # 支持回扣
+
+# 爆点设计
+explosive_points:
+  - "first_frame_hook"  # 首帧钩子
+  - "plot_twist"  # 剧情反转
+  - "face_slapping"  # 打脸时刻
+  - "status_reveal"  # 身份揭晓
+  - "emotional_burst"  # 情绪爆发
+
+# Prompt 注入模板
+prompt_template: |
+  [STYLE: 短剧风格 - 强冲突快节奏]
+  情绪强度：{intensity}
+  视觉特征：{visual_description}
+  节奏：{pacing}
+
+# 负面 Prompt 模板
+negative_prompt_template: |
+  slow pacing, boring, no conflict, weak emotions,
+  low quality, amateur, phone recording feel,
+  excessive dissolves, faded colors, dull dialogue
+
+# 平台适配
+platform_adaptation:
+  douyin:
+    duration: "30-60 seconds per clip"
+    hook_timing: "first 3 seconds"
+  kuaishou:
+    duration: "15-45 seconds per clip"
+    hook_timing: "first 2 seconds"

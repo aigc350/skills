@@ -1,0 +1,28 @@
+type: object
+
+required:
+  - shots
+
+properties:
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - model
+        - request
+
+      properties:
+
+        shot_id:
+          type: string
+
+        model:
+          type: string
+
+        request:
+          type: object

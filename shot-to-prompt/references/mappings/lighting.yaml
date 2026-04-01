@@ -1,0 +1,75 @@
+# Lighting Mapping - 光线语义层
+# 作用：定义场景光线类型（偏语义，不是直接prompt）
+# 后续由 prompt_builder 转为英文视觉描述
+# 设计原则：
+# 1. 必须是"视觉可见"的光影描述
+# 2. 不直接写情绪词（如压抑、恐怖）
+# 3. 兼容后续 strategies 做增强
+
+lighting:
+
+  # ========================
+  # 基础光线
+  # ========================
+  soft: "soft diffused lighting, smooth shadows, gentle illumination"  # 柔和光线，阴影平滑，柔和照明
+  hard: "hard lighting, sharp shadows, strong contrast edges"  # 强硬光线，阴影清晰锐利
+  natural: "natural daylight, realistic ambient light"  # 自然光，接近日常环境光
+  studio: "studio lighting, controlled and balanced illumination"  # 棚拍光线，均匀可控
+
+  # ========================
+  # 明暗风格
+  # ========================
+  low_key: "low-key lighting, dark shadows, high contrast areas"  # 低调光，暗部较多，对比强
+  high_key: "high-key lighting, bright and evenly lit scene"  # 高调光，整体明亮，对比弱
+
+  # ========================
+  # 氛围光
+  # ========================
+  dramatic: "dramatic lighting, strong highlights and deep shadows"  # 戏剧化光线，强对比与聚焦效果
+  rim_light: "rim lighting, light outlining the subject edges"  # 边缘光，勾勒人物轮廓
+  backlight: "backlighting, subject silhouetted against light source"  # 逆光，人物背后有强光源
+  silhouette: "silhouette, dark figure against bright background"  # 剪影效果，主体呈黑色轮廓
+  volumetric: "volumetric lighting, visible light rays in air"  # 体积光，可见光束
+  god_rays: "god rays, beams of light breaking through environment"  # 耶稣光，从环境中穿透的光束
+
+  # ========================
+  # 色温光
+  # ========================
+  warm: "warm color lighting, orange and golden tones"  # 暖色光，偏橙黄色
+  cool: "cool color lighting, blue tones"  # 冷色光，偏蓝色
+  mixed: "mixed lighting, combination of warm and cool tones"  # 冷暖混合光
+
+  # ========================
+  # 特殊光源
+  # ========================
+  neon: "neon lighting, colorful glowing light sources"  # 霓虹光，彩色发光源
+  firelight: "firelight, warm flickering illumination"  # 火光，闪烁的暖光
+  candlelight: "candlelight, soft warm glow"  # 烛光，柔弱且温暖
+  flickering: "flickering light, unstable light source"  # 光源闪烁，不稳定
+  screen_light: "screen light illuminating face in dark environment"  # 屏幕光，照亮人物面部
+
+# ========================
+# atmosphere 氛围
+# ========================
+atmosphere:
+  luxury: "luxurious setting, elegant and upscale"  # 奢华场景，高端优雅
+  tense: "tense atmosphere, building suspense"  # 紧张氛围，悬念渐起
+  romantic: "romantic atmosphere, intimate and warm"  # 浪漫氛围，亲密温暖
+  mysterious: "mysterious atmosphere, unknown and intriguing"  # 神秘氛围，未知引人
+  dark: "dark atmosphere, somber and heavy"  # 黑暗氛围，沉闷压抑
+  bright: "bright atmosphere, cheerful and energetic"  # 明亮氛围，欢快活力
+  chaotic: "chaotic atmosphere, disorder and confusion"  # 混乱氛围，失序困惑
+  formal: "formal atmosphere, official and structured"  # 正式氛围，官方结构
+  intimate: "intimate atmosphere, private and personal"  # 亲密氛围，私密个人
+
+# ========================
+# style 风格
+# ========================
+style:
+  cinematic: "cinematic, film-quality photography"  # 电影感，电影级摄影
+  realistic: "realistic, grounded in reality"  # 写实，根植现实
+  stylized: "stylized, artistic interpretation"  # 风格化，艺术化诠释
+  noir: "film noir style, high contrast shadows"  # 黑色电影风格，高对比阴影
+  cyberpunk: "cyberpunk aesthetic, futuristic neon"  # 赛博朋克美学，未来感霓虹
+  vintage: "vintage style, retro feel"  # 复古风格，怀旧感
+  documentary: "documentary style, raw and authentic"  # 纪录片风格，原始真实

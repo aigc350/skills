@@ -1,0 +1,18 @@
+model: "runway"
+
+request:
+
+  prompt: "{final_prompt}"
+
+  duration: 5
+
+  resolution: "1080p"
+
+  aspect_ratio: "9:16"
+
+  motion: "smooth"
+
+  seed: 12345
+
+  references:
+    images: []

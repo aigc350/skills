@@ -1,0 +1,38 @@
+# Prompt Generation History
+# 记录所有生成的 prompt 历史
+
+version: "1.0"
+limits:
+  max_entries: 500
+  archive_threshold: 400
+
+last_updated: null
+
+# 生成历史
+# 格式：novel_id -> chapter_id -> [shot_id -> log_entry]
+history: {}
+
+# 统计摘要
+statistics:
+  total_generated: 0
+  by_platform:
+    sora: 0
+    runway: 0
+    pika: 0
+    kling: 0
+  by_style:
+    short_drama: 0
+    cinematic: 0
+  average_prompt_length: 0
+
+# 模板
+# history:
+#   urban_011:
+#     "01":
+#       - shot_id: "C01-S1-shot01"
+#         timestamp: "2026-03-29T10:00:00"
+#         platform: "sora"
+#         style: "short_drama"
+#         prompt_length: 280
+#         hooks_injected: true
+#         explosive_points: []

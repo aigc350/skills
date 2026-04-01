@@ -1,0 +1,29 @@
+type: object
+
+required:
+  - shots
+
+properties:
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - prompt
+        - continuity
+
+      properties:
+
+        shot_id:
+          type: string
+
+        prompt:
+          $ref: "common.schema.yaml#/Prompt"
+
+        continuity:
+          allOf:
+            - $ref: "common.schema.yaml#/ContinuityBase"

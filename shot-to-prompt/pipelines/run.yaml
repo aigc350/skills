@@ -1,7 +1,15 @@
 # Shot-to-Prompt Pipeline
 
-version: 1.0
-
+version: 1.1
+variables:
+  chapter_name: "${input.chapter_name}"
+  chapter_id: "${input.chapter_id}"
+  novel_id: "${config.current_novel_id}"
+  shot_dir: "novels/${novel_id}/shot/${chapter_id}"
+  prompt_dir: "novels/${novel_id}/prompt"
+  memory_dir: "novels/${novel_id}/prompt/memory"
+  runtime_dir: "novels/${novel_id}/prompt/runtime/{chapter_id}"
+  output_dir: "novels/${novel_id}/output/prompt"
 steps:
   # =========================================
   # 初始化阶段
@@ -10,89 +18,132 @@ steps:
     description: 检查配置文件
 
   - id: ensure_directories
-    description: 创建目录结构
+    description: 创建目录结构 
 
   - id: load_platform_templates
     description: 加载平台模板
-    output: runtime/platform_templates.yaml
+    output: {runtime_dir}/platform_templates.yaml
 
   - id: detect_shot_specs
     description: 检测待处理的 shot_spec 文件
-    output: runtime/pending_shot_specs.yaml
+    output: {runtime_dir}/pending_shot_specs.yaml
 
   # =========================================
-  # 核心转换阶段
+  # IR 构建阶段
   # =========================================
-  - id: parse_shot_spec
-    agent: prompt_builder
-    description: 解析 shot_spec 结构
-    input: runtime/pending_shot_specs.yaml
-    output: runtime/parsed_shots.yaml
-
-  - id: build_shot_prompts
-    agent: prompt_builder
-    description: 构建每个镜头的 Prompt
-    input: runtime/parsed_shots.yaml
-    output: runtime/shot_prompts.yaml
+  - id: ir_builder
+    agent: prompt_ir_builder
+    description: 将 shot_spec + characters + scenes 编译为统一语义 IR
+    input:
+      - {shot_dir}/shot_spec.yaml
+      - {shot_dir}/characters.yaml
+      - {shot_dir}/scenes.yaml
+    output:
+      - {runtime_dir}/prompt_ir.yaml
 
   # =========================================
-  # 平台优化阶段
+  # 核心转换阶段：Canonical → Enhancer → Asset → Consistency → Temporal → Fusion → Model Adapter
   # =========================================
+
+  # Step 1: Canonical - 将 IR 规范化为结构化 Prompt（应用 mappings 翻译）
+  - id: prompt_canonical
+    agent: prompt_canonical_builder
+    description: 将 prompt_ir 规范化为 canonical prompt（应用 mappings）
+    mappings:
+      - references/mappings/emotion_map.yaml
+      - references/mappings/expression_map.yaml
+      - references/mappings/motion_map.yaml
+      - references/mappings/camera.yaml
+      - references/mappings/lighting.yaml
+    input:
+      - {runtime_dir}/prompt_ir.yaml
+    output:
+      - {runtime_dir}/prompt_canonical.yaml
+
+  # Step 2: Enhancer - 策略增强（应用 styles 风格层 + hook 爆点策略）
+  - id: prompt_enhancer
+    agent: prompt_enhancer
+    description: 注入爆点策略增强（应用 styles 风格）
+    styles:
+      - references/styles/short_drama.yaml
+      - references/styles/cinematic.yaml
+    input:
+      - {runtime_dir}/prompt_ir.yaml
+      - {runtime_dir}/prompt_canonical.yaml
+      - references/strategies/hook_engine.yaml
+    output:
+      - {runtime_dir}/prompt_enhanced.yaml
+
+  # Step 3: Asset - 构建 prompt 资产（镜头资产、角色资产、场景资产）
+  - id: prompt_asset
+    agent: prompt_asset_builder
+    description: 构建 prompt 资产库
+    registry: {memory_dir}/asset_registry.yaml
+    input:
+      - {runtime_dir}/prompt_ir.yaml
+    output:
+      - {runtime_dir}/prompt_asset.yaml
+
+  # Step 4: Consistency - 一致性强制执行
+  - id: prompt_consistency
+    agent: prompt_consistency_enforcer
+    description: 确保跨镜头一致性
+    registry: {memory_dir}/asset_registry.yaml
+    input:
+      - {runtime_dir}/prompt_ir.yaml
+      - {runtime_dir}/prompt_asset.yaml
+      - {runtime_dir}/prompt_canonical.yaml
+      - {memory_dir}/asset_registry.yaml
+    output:
+      - {runtime_dir}/prompt_consistency.yaml
+
+  # Step 5: Temporal - 时序强制执行
+  - id: prompt_temporal
+    agent: prompt_temporal_enforcer
+    description: 时序一致性处理
+    input:
+      - {runtime_dir}/prompt_ir.yaml
+      - {runtime_dir}/prompt_consistency.yaml
+    output:
+      - {runtime_dir}/prompt_temporal.yaml
+
+  # Step 6: Fusion - 融合各层 IR
+  - id: prompt_fusion
+    agent: prompt_fusion
+    description: 融合 canonical + enhanced + asset + consistency + temporal
+    input:
+      - {runtime_dir}/prompt_canonical.yaml
+      - {runtime_dir}/prompt_enhanced.yaml
+      - {runtime_dir}/prompt_asset.yaml
+      - {runtime_dir}/prompt_consistency.yaml
+      - {runtime_dir}/prompt_temporal.yaml
+    output:
+      - {runtime_dir}/prompt_fusion.yaml
+
+  # Step 7: Model Adapter - 平台适配优化
   - id: select_target_platform
     description: 选择目标平台
-    output: runtime/target_platform.yaml
+    output: {runtime_dir}/target_platform.yaml
 
-  - id: optimize_prompts
-    agent: prompt_optimizer
+  - id: model_adapter
+    agent: model_adapter
     description: 针对目标平台优化 Prompts
-    input: runtime/shot_prompts.yaml
-    platform_template: runtime/platform_templates.yaml
-    output: runtime/optimized_prompts.yaml
+    input:
+      - {runtime_dir}/prompt_fusion.yaml
+    platform_template: {runtime_dir}/platform_templates.yaml
+    output:
+      - {runtime_dir}/final_prompts.yaml
 
   # =========================================
   # 校验阶段
   # =========================================
   - id: validate_prompts
     description: 校验 Prompt 格式
-    schema: schemas/gen_prompt.yaml
+    schema: schemas/model_request.yaml
+    input:
+      - {runtime_dir}/final_prompts.yaml
     on_invalid: retry
     max_retries: 3
-
-  # =========================================
-  # 组装阶段
-  # =========================================
-  - id: assemble_chapter_prompts
-    agent: prompt_builder
-    description: 组装章节级联 Prompts
-    input: runtime/optimized_prompts.yaml
-    output: runtime/chapter_prompts.yaml
-
-  - id: create_video_prompt_list
-    description: 创建视频生成任务列表
-    input: runtime/chapter_prompts.yaml
-    output: runtime/video_task_list.yaml
-
-  # =========================================
-  # 导出阶段
-  # =========================================
-  - id: export_shot_prompts
-    description: 导出镜头级 Prompts
-    input: runtime/optimized_prompts.yaml
-    output: output/gen_prompts/{chapter_id}/shots/
-
-  - id: export_chapter_prompt
-    description: 导出章节完整 Prompt
-    input: runtime/chapter_prompts.yaml
-    output: output/gen_prompts/{chapter_id}/full_chapter_prompt.yaml
-
-  - id: export_video_task_list
-    description: 导出视频任务列表
-    input: runtime/video_task_list.yaml
-    output: output/gen_prompts/{chapter_id}/video_tasks.yaml
-
-  - id: save_full_package
-    description: 保存完整输出包
-    output: output/gen_prompts/{chapter_id}/full_gen_prompt.yaml
 
 # =========================================
 # 平台配置
@@ -122,8 +173,15 @@ platforms:
     max_prompt_length: 250
     chinese_support: true
 
+  hailuo:
+    enabled: true
+    default_duration: 4
+    max_prompt_length: 200
+    fast_generation: true
+
 # =========================================
 # 默认配置
 # =========================================
-default_platform: sora
+default_platform: hailuo
 output_format: yaml
+

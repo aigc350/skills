@@ -1,0 +1,55 @@
+# Cinematic Style - 电影感风格
+# 长视频、剧情片、电影感内容
+# 特点：叙事性强、镜头语言丰富、氛围营造
+
+name: cinematic
+description: 电影感风格 - 叙事性强镜头语言丰富
+
+# 视觉特征
+visual:
+  aspect_ratio: "16:9"  # 横屏
+  shot_style: "varied"  # 多样化镜头
+  pacing: "measured, deliberate"  # 节奏从容
+  transitions: "smooth dissolves, matched cuts"
+
+# 镜头语言
+lens:
+  focal_range: "24mm-85mm"
+  depth_of_field: "shallow preferred"
+  color_grade: "filmic, slight grain"
+  contrast: "medium contrast"
+
+# 情绪特征
+emotion:
+  intensity: "medium"  # 中等强度
+  contrast: "subtle"  # 细腻对比
+  buildup: "gradual"  # 渐进式
+
+# 叙事特征
+narrative:
+  continuity: "strong"  # 强连续性
+  scene_flow: "smooth transitions"
+  character_depth: "psychological depth"
+
+# Prompt 注入模板
+prompt_template: |
+  [STYLE: 电影感风格 - 叙事性强]
+  视觉：{visual_description}
+  氛围：{atmosphere_description}
+  色调：filmic color grading with subtle grain
+
+# 负面 Prompt 模板
+negative_prompt_template: |
+  cartoon, anime, bright saturated colors,
+  flat lighting, excessive sharpness,
+  amateur video quality, webcam aesthetic,
+  rapid cuts, choppy editing
+
+# 平台适配
+platform_adaptation:
+  sora:
+    duration: "10-60 seconds"
+    continuity: "strong"
+  runway:
+    duration: "5-15 seconds"
+    camera_control: "enabled"

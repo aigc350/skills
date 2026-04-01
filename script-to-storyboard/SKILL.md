@@ -93,7 +93,7 @@ novels/{novel_id}/
 ├── output/
 │   ├── script/                 # 剧本输出
 │   └── storyboard/             # 分镜输出
-│       ├── {chapter_id}/
+│       └── {chapter_id}/
 │       │   ├── directors_notes.md
 │       │   ├── scene_breakdown.yaml
 │       │   ├── storyboard.md

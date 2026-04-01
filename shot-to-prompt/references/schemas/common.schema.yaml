@@ -1,0 +1,102 @@
+# =========================================
+# Common Schema v2（全局复用）
+# =========================================
+
+PromptBlock:
+  text: string
+  tokens: string[]
+
+  semantic:
+    type: object
+    additionalProperties: true
+
+Prompt:
+  type: object
+
+  properties:
+    subject:
+      $ref: "#/PromptBlock"
+    action:
+      $ref: "#/PromptBlock"
+    environment:
+      $ref: "#/PromptBlock"
+    camera:
+      $ref: "#/PromptBlock"
+    style:
+      $ref: "#/PromptBlock"
+    quality:
+      $ref: "#/PromptBlock"
+
+    final:
+      $ref: "#/PromptBlock"
+
+    negative:
+      $ref: "#/PromptBlock"
+
+# -----------------------------------------
+
+AssetBase:
+  type: object
+
+  required:
+    - asset_id
+    - variant_id
+    - version
+    - locked
+    - source
+    - final_prompt
+
+  properties:
+
+    asset_id:
+      type: string
+
+    variant_id:
+      type: string
+
+    version:
+      type: integer
+
+    locked:
+      type: boolean
+
+    source:
+      type: string
+      enum: [generated, reused]
+
+    base_prompt:
+      type: string
+
+    variant_prompt:
+      type: string
+
+    final_prompt:
+      type: string
+
+    negative_prompt:
+      type: string
+
+# -----------------------------------------
+
+ContinuityBase:
+  type: object
+
+  properties:
+
+    previous_shot_id:
+      type: [string, "null"]
+
+    spatial_tags:
+      type: array
+      items:
+        type: string
+
+    temporal_tags:
+      type: array
+      items:
+        type: string
+
+    continuity_score:
+      type: number
+      minimum: 0
+      maximum: 1

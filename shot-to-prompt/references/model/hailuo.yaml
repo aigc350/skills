@@ -1,0 +1,11 @@
+model: "hailuo"
+
+request:
+
+  prompt: "{final_prompt}"
+
+  duration: 5
+
+  quality: "high"
+
+  style_strength: 0.8

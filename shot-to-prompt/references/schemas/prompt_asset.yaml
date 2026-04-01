@@ -1,0 +1,29 @@
+type: object
+
+required:
+  - characters
+  - environments
+  - props
+
+properties:
+
+  characters:
+    type: array
+    items:
+      allOf:
+        - $ref: "common.schema.yaml#/AssetBase"
+        - type: object
+          required: [character_id]
+          properties:
+            character_id:
+              type: string
+
+  environments:
+    type: array
+    items:
+      $ref: "common.schema.yaml#/AssetBase"
+
+  props:
+    type: array
+    items:
+      $ref: "common.schema.yaml#/AssetBase"

@@ -90,8 +90,15 @@ properties:
                   type: string
                   description: "面部识别ID（来自 character.yaml）"
                 expression:
-                  $ref: "../standard/expression_map.yaml#/expression_map"
+                  type: array
+                  items:
+                    $ref: "../standard/expression_map.yaml#/expression_map"
                   description: "表情（来自 expression_map）"
+                motion:
+                  type: array
+                  items:
+                    $ref: "../standard/motion_map.yaml#/motion_map" 
+                  description: "运动（来自 motion_map）"
                 gaze:
                   $ref: "../standard/visual_intent.yaml#/gaze"
                   description: "视线方向"
@@ -141,9 +148,10 @@ properties:
         continuity:
           type: object
           properties:
-            previous_shot:
-              type: string
+            previous_shot_id:
+              type: [string, "null"]
               description: "前一个镜头的 shot_id"
+              nullable: true
             maintain:
               type: array
               items:
@@ -196,7 +204,7 @@ properties:
               $ref: "../standard/visual_intent.yaml#/atmosphere"
               description: "氛围"
             emotion:
-              $ref: "../standard/visual_intent.yaml#/emotion"
+              $ref: "../standard/emotion_map.yaml#/emotion_map"
               description: "情绪"
         generation:
           type: object

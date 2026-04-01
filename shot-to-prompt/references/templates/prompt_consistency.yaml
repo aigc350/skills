@@ -1,0 +1,24 @@
+shots:
+
+  - shot_id: "S1_SH01"
+
+    referenced_assets:
+      - "char_001_v1"
+      - "env_office_day"
+
+    continuity_tags:
+      - "identity_locked"
+      - "spatial_consistent"
+
+    final_prompt: >
+      a young woman, long black hair, elegant face,
+      wearing a white wedding dress,
+      consistent appearance, same identity,
+
+      standing in a luxurious office environment,
+      bright daylight, clean layout,
+
+      medium shot, eye-level angle,
+      cinematic lighting,
+
+      high detail, cinematic style

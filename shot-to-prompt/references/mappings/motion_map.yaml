@@ -1,0 +1,72 @@
+# Motion Mapping - 动作定义（工业完整版）
+# 说明：
+# - desc_en：用于 prompt
+# - 分层设计：基础 / 头部 / 身体 / 移动 / 爆发
+# - 所有动作都“可组合”
+
+motion_map:
+
+  # ========================
+  # 静态 / 微动（基础）
+  # ========================
+  still: "standing still, minimal movement"  # 静止站立，几乎不动
+  subtle: "subtle natural movement, slight motion"  # 自然微动，轻微动作
+  pause: "brief pause, holding still momentarily"  # 短暂停顿
+
+  # ========================
+  # 头部（Head）
+  # ========================
+  slight_head_turn: "slight head turn"  # 轻微转头
+  slow_head_turn: "slow deliberate head turn"  # 缓慢转头
+  sudden_head_turn: "sudden sharp head turn"  # 突然转头
+  head_tilt: "slight head tilt"  # 头微歪
+  lowered_head: "head lowered slightly"  # 低头
+  chin_raise: "chin slightly raised"  # 抬下巴
+
+  # ========================
+  # 视线（Gaze Motion）
+  # ========================
+  slow_look_up: "slowly looking up"  # 缓慢向上看
+  slow_look_down: "slowly looking down"  # 缓慢向下看
+  glance_side: "quick sideways glance"  # 快速侧视
+  gaze_shift: "shifting gaze slowly"  # 缓慢转移视线
+  lock_gaze: "locking gaze steadily"  # 锁定目光
+
+  # ========================
+  # 上半身（Upper Body）
+  # ========================
+  slight_lean_forward: "slightly leaning forward"  # 微微前倾
+  slight_lean_back: "slightly leaning backward"  # 微微后仰
+  shoulder_tension: "shoulders tensing slightly"  # 肩膀微紧
+  deep_breath: "taking a slow deep breath"  # 深呼吸
+
+  # ========================
+  # 手部（Hands）
+  # ========================
+  clenched_fists: "hands clenched into fists"  # 握拳
+  relaxed_hands: "hands relaxed"  # 手部放松
+  slight_hand_movement: "subtle hand movement"  # 手部微动
+
+  # ========================
+  # 移动（Movement）
+  # ========================
+  step_forward: "taking a step forward"  # 向前一步
+  step_back: "taking a step back"  # 向后一步
+  slow_walk: "walking slowly"  # 慢走
+  approach: "slowly approaching forward"  # 缓慢靠近
+  stop_walk: "coming to a stop"  # 停止
+
+  # ========================
+  # 爆发（Dynamic / Impact）
+  # ========================
+  sudden_stop: "sudden stop in movement"  # 突然停止
+  sharp_turn: "sharp body turn"  # 急转身
+  aggressive_step: "forceful step forward"  # 用力向前一步
+  lunge_forward: "sudden forward lunge"  # 突然前冲
+  recoil: "slight recoil backward"  # 轻微后仰
+
+  # ========================
+  # 状态组合（少量）
+  # ========================
+  frozen: "frozen in place, no movement at all"  # 完全僵住
+  trembling: "slight trembling movement"  # 微微颤抖

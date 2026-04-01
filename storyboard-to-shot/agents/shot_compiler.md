@@ -16,6 +16,8 @@ Compiler
 - 表情标准库 (`standard/expression_map.yaml`)
 - 视觉意图标准库 (`standard/visual_intent.yaml`)
 - 枚举标准库 (`standard/enum.yaml`)
+- 运动标准库 (`standard/motion_map.yaml`)
+- 情绪标准库 (`standard/emotion_map.yaml`)
 
 ## Outputs
 - `runtime/shot_spec_${chapter_name}.yaml`
@@ -59,12 +61,18 @@ subject:
   type: "character"           # character/environment/crowd（来自 standard/enum.yaml）
   character_id: "shen_yan"    # 角色ID
   face_id: "shenyan_face_v1"  # 面部识别ID（来自 character.yaml）
-  expression: "subtle_smirk"  # 表情（必须来自 standard/expression_map.yaml）
-  gaze: "downward"           # 视线方向（来自 standard/visual_intent.yaml）
-  pose: "standing"           # 姿态（来自 standard/enum.yaml）
+  expression:                 # 表情数组（来自 standard/expression_map.yaml）
+    - "subtle_smirk"
+    - "narrowed_eyes"
+  # 以下为可选字段
+  motion:                     # 动作数组（来自 standard/motion_map.yaml，可选）
+    - "slight_head_turn"
+    - "lock_gaze"
+  gaze: "downward"           # 视线方向（来自 standard/visual_intent.yaml，可选）
+  pose: "standing"           # 姿态（来自 standard/enum.yaml，可选）
 ```
 
-> **⚠️ 约束：expression 必须从 expression_map.yaml 中选择；gaze 来自 visual_intent.yaml；pose 来自 enum.yaml。**
+> **⚠️ 约束：expression 为必填数组，必须从 expression_map.yaml 选择；motion 为可选数组，来自 motion_map.yaml；gaze 来自 visual_intent.yaml；pose 来自 enum.yaml。**
 
 ---
 
@@ -95,7 +103,7 @@ environment:
 
 ```yaml
 continuity:
-  previous_shot: "C1-S1-shot1"  # 前一个镜头的 shot_id
+  previous_shot_id: "C1-S1-shot1"  # 前一个镜头的 shot_id
   maintain:
     - "character"               # 保持一致的元素（来自 standard/enum.yaml）
     - "outfit"
@@ -145,8 +153,9 @@ visual_intent:
 1. **shot_id**: `{chapter_id}-S{scene_num}-shot{shot_num}`, 例如 `C1-S1-shot1`
 2. **camera**: 从分镜描述中提取 lens 参数（焦距）
 3. **subject**: 从角色台词和动作描述中识别
-4. **expression**: **必须**从 `standard/expression_map.yaml` 中选择对应的标准表情，禁止自定义。若分镜描述的表情在 expression_map 中找不到近似映射，选择最接近的已有表情。
-5. **visual_intent**: 根据分镜描述确定构图类型和视觉风格
+4. **expression**: **数组**，从 `standard/expression_map.yaml` 中选择对应的标准表情，禁止自定义。若分镜描述的表情在 expression_map 中找不到近似映射，选择最接近的已有表情。
+5. **motion**: **数组**，从 `standard/motion_map.yaml` 中选择对应的动作，支持多个动作组合。
+6. **visual_intent**: 根据分镜描述确定构图类型和视觉风格
 
 ---
 
@@ -156,7 +165,8 @@ visual_intent:
 - [ ] camera.lens 值为有效枚举（24mm/35mm/50mm/85mm/135mm）
 - [ ] subject 包含 face_id（面部识别ID）
 - [ ] subject 引用有效的 character_id
-- [ ] **expression 来自 expression_map.yaml，不可自定义**
+- [ ] **expression 是数组，来自 expression_map.yaml，不可自定义**
+- [ ] **motion 是数组，来自 motion_map.yaml，不可自定义**
 - [ ] appearance 与 character.yaml 一致
 - [ ] continuity 正确追踪跨镜头变化
 - [ ] visual_intent 包含 composition 和 style

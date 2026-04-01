@@ -1,0 +1,113 @@
+# Camera Mapping - 镜头语义翻译层
+# 作用：将结构化 shot 字段 → AI 可理解的视觉描述
+# 设计原则：
+# 1. 不包含风格（爽剧/电影）差异
+# 2. 描述必须"可被拍出来"
+# 3. 语义稳定、可复用
+
+# ========================
+# 镜头类型（构图范围）
+# ========================
+shot_type:
+  establishing: "establishing shot, wide view of the entire scene environment"  # 建立镜头，全景展示环境
+  wide: "wide shot, full body of character and environment"  # 宽镜头，完整人物+环境
+  medium: "medium shot, waist-up view of character"  # 中景，人物腰部以上
+  medium_close_up: "medium close-up, chest-up framing"  # 中近景，人物胸部以上
+  close_up: "close-up shot, focusing on face and expressions"  # 近景，聚焦面部表情
+  extreme_close_up: "extreme close-up, focusing on details like eyes or lips"  # 特写，聚焦眼睛或嘴唇等细节
+  over_the_shoulder: "over-the-shoulder shot, from behind another character"  # 过肩镜头，从另一人物背后拍摄
+  point_of_view: "first-person POV shot, viewer sees through character's eyes"  # 主观镜头，观众通过角色眼睛视角
+  two_shot: "two-shot, two characters in the same frame"  # 双人镜头，两人物同框
+  crowd: "crowd shot, multiple people in the scene"  # 群像镜头，多人场景
+
+  # 短剧补充
+  reaction: "reaction shot, capturing immediate emotional response"  # 反应镜头，捕捉即时情绪反应
+  insert: "insert shot, close-up of important object or detail"  # 插入镜头，特写重要物件或细节
+  confrontation: "confrontation shot, two characters facing each other with tension"  # 对峙镜头，两人紧张对峙
+
+# ========================
+# 机位角度（空间关系）
+# ========================
+camera_angle:
+  eye_level: "eye-level camera, natural perspective"  # 平视机位，自然视角
+  low_angle: "low angle shot, looking up, making subject appear powerful"  # 仰拍，从下往上看，显得主体强势
+  high_angle: "high angle shot, looking down, making subject appear vulnerable"  # 俯拍，从上往下看，显得主体弱势
+  bird_eye: "bird's eye view, overhead shot"  # 鸟瞰，俯视全景
+  worm_eye: "worm's eye view, extremely low angle looking up"  # 虫视，极低角度仰视
+  dutch_tilt: "dutch angle, tilted frame creating tension and imbalance"  # 荷兰角，倾斜构图制造紧张不稳定感
+
+# ========================
+# 镜头运动（动态）
+# ========================
+camera_movement:
+  static: "static shot, camera remains still"  # 固定镜头，摄影机静止
+  pan: "slow pan, horizontal camera movement"  # 水平摇，摄影机水平移动
+  tilt: "vertical tilt, camera moves up or down"  # 垂直摇，摄影机上下移动
+  zoom_in: "zoom in, lens pushes closer to subject"  # 变焦推进，镜头拉近主体
+  zoom_out: "zoom out, lens pulls away from subject"  # 变焦拉远，镜头远离主体
+  dolly_in: "dolly in, camera physically moves toward subject"  # 移动推进，摄影机物理靠近主体
+  dolly_out: "dolly out, camera physically moves away from subject"  # 移动拉远，摄影机物理远离主体
+  tracking: "tracking shot, camera follows subject movement"  # 跟拍，摄影机跟随主体移动
+  handheld: "handheld shot, slight natural camera shake"  # 手持，轻微自然抖动
+  crane: "crane shot, smooth vertical sweeping movement"  # 升降镜头，顺滑垂直移动
+
+  # 短剧高冲击增强
+  whip_pan: "whip pan, fast sudden horizontal camera swing"  # 快速摇镜，急速水平甩动
+  snap_zoom: "quick snap zoom-in for emphasis"  # 快速变焦，强调瞬间
+  crash_zoom: "fast aggressive zoom-in, dramatic impact"  # 冲击变焦，戏剧性冲击感
+  push_in_fast: "fast push-in camera movement, intense focus"  # 快速推进，强烈聚焦
+  shake_intense: "intense camera shake, chaotic energy"  # 强烈抖动，混乱能量感
+
+# ========================
+# 构图（画面组织）
+# ========================
+composition:
+  centered: "centered composition, subject in the middle of frame"  # 中心构图，主体在画面中央
+  rule_of_thirds: "rule of thirds composition"  # 三分法构图
+  symmetrical: "symmetrical composition, balanced framing"  # 对称构图，平衡画面
+  leading_lines: "leading lines guiding viewer's eye"  # 引导线，引导观众视线
+  frame_within_frame: "frame within frame composition"  # 框中框，利用前景框架
+  foreground_focus: "foreground emphasis, strong depth layering"  # 前景强调，强纵深感
+  background_focus: "background emphasis, subject integrated in environment"  # 背景强调，主体融入环境
+  depth_layered: "layered depth, multiple planes of focus"  # 多层景深，多个焦平面
+  diagonal: "diagonal composition, dynamic tension"  # 对角线构图，动态张力
+  minimal: "minimal composition, strong negative space"  # 极简构图，大量负空间
+
+# ========================
+# 镜头焦距（视觉风格）
+# ========================
+lens:
+  "16mm": "ultra wide lens, exaggerated perspective and distortion"  # 超广角，夸张透视变形
+  "24mm": "wide angle lens, strong environmental context"  # 广角，强烈环境交代
+  "35mm": "natural wide lens, balanced perspective"  # 自然广角，平衡视角
+  "50mm": "standard lens, natural human vision"  # 标准镜头，自然人眼视角
+  "85mm": "portrait lens, flattering compression, intimate feel"  # 人像镜头，柔美压缩感，亲密氛围
+  "135mm": "telephoto lens, strong subject isolation"  # 中长焦，强烈主体分离感
+  "200mm": "extreme telephoto lens, heavy compression, distant feel"  # 超长焦，重度压缩感，遥远感
+
+# ========================
+# 光圈（景深）
+# ========================
+aperture:
+  f1.4: "very wide aperture, extremely shallow depth of field, dreamy bokeh"  # 最大光圈，极浅景深，梦幻散景
+  f2.0: "wide aperture, shallow depth of field, soft background blur"  # 大光圈，浅景深，柔和小虚化
+  f2.8: "moderate aperture, slight background blur, balanced focus"  # 中等光圈，轻微背景虚化，平衡焦点
+  f4.0: "narrow aperture, more background in focus, environmental context"  # 小光圈，更多背景清晰，环境交代
+  f8.0: "small aperture, deep depth of field, everything in focus"  # 最小光圈，深景深，全部清晰
+
+# ========================
+# 对焦（焦点控制）
+# ========================
+focus:
+  shallow: "shallow depth of field, subject sharp, background blurred"  # 浅景深，主体清晰背景虚化
+  deep: "deep depth of field, entire scene in focus"  # 深景深，整个场景清晰
+  rack_focus: "rack focus, shifting focus between subjects"  # 焦点切换，在不同主体间转移焦点
+
+# ========================
+# 节奏（给后续视频层用）
+# ========================
+rhythm:
+  normal: "normal pacing"  # 正常节奏
+  fast_cut: "fast-paced cutting, rapid transitions"  # 快切，快速切换
+  slow_burn: "slow build-up tension"  # 慢燃烧，渐进紧张
+  sudden_cut: "sudden cut, abrupt transition"  # 突然切换，急促过渡

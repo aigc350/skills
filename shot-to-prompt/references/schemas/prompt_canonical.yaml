@@ -1,0 +1,31 @@
+type: object
+
+required:
+  - chapter_id
+  - shots
+
+properties:
+
+  chapter_id:
+    type: string
+  
+  meta:
+    semantic_locked: false
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - prompt
+
+      properties:
+
+        shot_id:
+          type: string
+
+        prompt:
+          $ref: "common.schema.yaml#/Prompt"

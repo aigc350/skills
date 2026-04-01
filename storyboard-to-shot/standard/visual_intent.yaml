@@ -105,25 +105,7 @@ chaotic: {}             # 混乱
 formal: {}              # 正式
 intimate: {}            # 私密
 
-# =========================================
 
-# 🎭 人物情绪（内在状态）
-# 说明：emotion 是角色内在的情绪/心理状态，是叙事层面的描述
-#       对应的外在表情由 expression_map.yaml 定义
-
-# =========================================
-
-emotion:
-calm: {}                # 冷静
-tension: {}             # 紧张
-dominance: {}           # 压制/掌控
-humiliation: {}         # 羞辱
-anger: {}               # 愤怒
-suppressed_anger: {}    # 克制愤怒
-sadness: {}             # 悲伤
-shock: {}               # 震惊
-fear: {}                # 恐惧
-confidence: {}          # 自信
 
 # =========================================
 
