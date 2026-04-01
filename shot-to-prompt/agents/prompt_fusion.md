@@ -1,5 +1,9 @@
 # Prompt Fusion Layer v1.0 (Production-Ready)
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `fusion` | Permission: Combines all layers, semantic ❌ READ ONLY
+
 ---
 
 ## 🧠 Role

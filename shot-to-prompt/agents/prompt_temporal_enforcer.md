@@ -1,5 +1,9 @@
 # Temporal Enforcer v1.1 (Production-Ready)
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `temporal` | Permission: semantic ❌ READ ONLY, text ❌
+
 ---
 
 ## 🧠 Role

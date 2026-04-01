@@ -1,5 +1,11 @@
 # Prompt Canonical Builder
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `canonical` | Permission: semantic ✅ FULL, text ⚠️ placeholder only
+
+---
+
 ## 1. Purpose
 
 Convert IR (prompt_ir.yaml) into structured semantic Prompt.

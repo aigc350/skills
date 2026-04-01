@@ -1,5 +1,9 @@
 # Consistency Enforcer v1.0 (Production-Ready)
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `consistency` | Permission: semantic ❌ READ ONLY, text ❌
+
 ---
 
 ## 🧠 Role

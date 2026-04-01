@@ -1,5 +1,9 @@
 # Prompt Enhancer Agent v1.1 (Structured Enhancement Engine)
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `enhancer` | Permission: semantic ⚠ LIMITED (style/intensity only), quality ✅, negative ✅
+
 ---
 
 ## 🧠 Role

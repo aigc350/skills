@@ -1,5 +1,9 @@
 # Model Adapter v1.0 (Production-Ready)
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `adapter` | Permission: semantic ❌ READ ONLY, text ✅ FULL, tokens ✅ FULL, final ✅ FULL
+
 ---
 
 ## 🧠 Role

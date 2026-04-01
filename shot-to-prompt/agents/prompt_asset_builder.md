@@ -1,16 +1,23 @@
 # Asset Prompt Builder v2.1 (Production-Ready, Registry Enabled)
 
+> ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
+>
+> Stage: `asset` | Generates: asset_registry.yaml (parallel to canonical)
+
 ---
 
 ## 🧠 Role
 
 从 `prompt_ir.yaml` 中解析：
 
-* character_id（身份）
-* variant_id（状态）
-* asset_id（视觉）
+* character_id（身份）- 来自 IR
+* variant_id（状态）- 来自 IR
 
-生成：
+**生成**：
+
+* asset_id（视觉资产 ID）- **由本阶段决定**
+
+输出：
 
 * `prompts_asset.yaml`
   并维护：
@@ -36,10 +43,17 @@
 
 ---
 
-## 1️⃣ Identity / Variant 分离
+## 1️⃣ Three-Layer Mapping
 
-* base_prompt（身份）稳定
-* variant_prompt（状态）变化
+```
+IR 输出                  Asset Builder 输出
+─────────────────────    ─────────────────────
+character_id: shen_yan   → base_prompt（身份）
+variant_id: work_v1      → variant_prompt（状态）
+                         → asset_id: shen_yan_work_v1（资产）
+```
+
+**关键**：asset_id 由 asset_builder 决定，不是 IR。
 
 ---
 
@@ -49,7 +63,34 @@ asset_prompt = base_prompt + variant_prompt
 
 ---
 
-## 3️⃣ Registry First（最重要）
+## 3️⃣ asset_id 生成规则
+
+**默认规则**：
+```yaml
+asset_id = variant_id
+```
+
+**拆分规则**（根据上下文）：
+```yaml
+# 当需要区分同一服饰的不同场景时
+variant_id: shenyan_work_clothes_v1
+context:
+  lighting: night
+  scene: office
+    → asset_id: shenyan_work_clothes_v1_night_office
+```
+
+**何时拆分**：
+
+| 条件 | 是否拆分 |
+|------|----------|
+| 同一服饰，不同光照（day/night） | ✅ 可拆分 |
+| 同一服饰，不同场景（office/outdoor） | ✅ 可拆分 |
+| 同一服饰，同一环境 | ❌ 不拆分 |
+
+---
+
+## 4️⃣ Registry First（最重要）
 
 在生成前必须：
 
@@ -85,31 +126,58 @@ memory/asset_registry.yaml
 
 ---
 
-## Step 1️⃣ 收集资产
+## Step 1️⃣ 收集输入
 
-收集：
+从 IR 收集：
 
-* character_id
-* variant_id
-* asset_id
+```yaml
+character_id: shen_yan        # 身份 ID
+variant_id: shenyan_work_v1   # 变体 ID
+face_id: shenyan_male_v1      # 面部 ID
+appearance:                   # 外观信息
+  outfit: "工作服"
+  accessories: ["watch"]
+```
+
+**注意**：IR 不提供 asset_id，由本阶段生成。
 
 ---
 
-## Step 2️⃣ 处理每个 Asset
+## Step 2️⃣ 决定 asset_id
 
 ---
 
-### 🔥 2.1 Resolve asset_id
+### 🔥 2.1 默认情况
 
-```text
-asset_id = variant_id（推荐）
+```yaml
+asset_id = variant_id
+```
+
+示例：
+```
+variant_id: shenyan_work_clothes_v1
+    → asset_id: shenyan_work_clothes_v1
 ```
 
 ---
 
+### 🔥 2.2 需要拆分时
+
+检查上下文：
+* lighting（lighting = night 可能需要不同资产）
+* scene（室内/室外可能有差异）
+
+```yaml
+# 判断逻辑
+IF context.lighting == "night" AND registry.has(variant_id + "_night"):
+    asset_id = variant_id + "_night"
+ELSE:
+    asset_id = variant_id
+```
+
 ---
 
-### 🔥 2.2 查询 Registry
+### 🔥 2.3 查询 Registry
 
 ---
 
