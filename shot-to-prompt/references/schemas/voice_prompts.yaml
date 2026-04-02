@@ -1,0 +1,75 @@
+# voice_prompts.yaml schema v1.0
+# 配音生成请求输出（由 Output Splitter 生成）
+
+type: object
+
+required:
+  - chapter_id
+  - voice_tasks
+
+properties:
+
+  chapter_id:
+    type: string
+
+  voice_tasks:
+    type: array
+    description: "配音任务列表（仅有对白的镜头）"
+    items:
+      type: object
+      required:
+        - shot_id
+        - character_id
+        - dialogue
+      properties:
+
+        shot_id:
+          type: string
+          description: "所属镜头 ID"
+
+        character_id:
+          type: string
+          description: "说话角色 ID"
+
+        dialogue:
+          type: string
+          description: "对白文本"
+
+        voice_style:
+          type: string
+          description: "配音风格描述（供 TTS 或配音员参考）"
+
+        duration_estimate:
+          type: number
+          description: "预估时长（秒）"
+          minimum: 0
+
+        emotion_tags:
+          type: array
+          description: "情感标签（从 IR 或 canonical 提取）"
+          items:
+            type: string
+
+        volume:
+          type: string
+          enum: [quiet, normal, loud, shout, whisper]
+          description: "音量级别"
+          default: "normal"
+
+        pace:
+          type: string
+          enum: [slow, normal, fast]
+          description: "语速"
+          default: "normal"
+
+        # ===== 配音时间同步 =====
+        timing:
+          type: object
+          description: "配音与视频的时间同步信息"
+          properties:
+            start_offset:
+              type: number
+              description: "对白开始时间偏移（秒，相对镜头开始）"
+            overlap_with_previous:
+              type: boolean
+              description: "是否与上一镜头对白重叠"

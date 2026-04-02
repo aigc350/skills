@@ -1,0 +1,185 @@
+# =========================================
+# 平台适配映射配置 v1.0
+# =========================================
+# 设计原则：抽象参数 + 平台映射，一次定义多平台适配
+# 使用方式：Prompt Resolver 的 Adapt 阶段读取此配置
+# 扩展方式：新增平台只需添加新的 platform 条目
+# =========================================
+
+# ===== 抽象参数定义（Resolver 输出）=====
+abstract_params:
+  consistency_control:
+    character:
+      reference_strength: 0.9      # 参考图影响权重（0.0-1.0）
+      prompt_detail: "standard"    # prompt 详细程度
+      seed_locked: true            # 是否锁定种子
+    scene:
+      reference_strength: 0.7
+      prompt_detail: "standard"
+    object:
+      reference_strength: 0.8
+      prompt_detail: "standard"
+
+# ===== 参考图优先级定义 =====
+reference_priority:
+  critical: "必须注入，不可跳过"
+  high: "优先注入，平台支持时必注入"
+  medium: "建议注入，平台允许时注入"
+  low: "可选注入，平台有空间时注入"
+
+# =========================================
+# 平台映射配置
+# =========================================
+
+platform_mappings:
+
+  # ===== 海螺 (hailuo) =====
+  hailuo:
+    # 参考图参数映射
+    reference_param:
+      name: "weight"               # hailuo 使用 weight
+      range: [0.0, 1.0]
+      transform: "identity"        # 直接映射：y = x
+
+    # prompt 详细程度映射
+    prompt_detail:
+      "standard":
+        suffix: ""
+      "simplified":
+        suffix: ", simple"
+      "expanded":
+        suffix: ", detailed, intricate"
+
+    # 种子参数映射
+    seed:
+      param: "seed"
+      locked_param: "seed_locked"
+
+    # 参考图限制
+    max_references: 3
+    supports_priority: true
+
+    # 平台特定规则
+    platform_rules: []
+
+    # fallback 策略（参考图超出限制时）
+    fallback_strategy: "按 priority 排序，取前 3 个"
+
+  # ===== Runway =====
+  runway:
+    reference_param:
+      name: "strength"             # runway 使用 strength
+      range: [0.0, 1.0]
+      transform: "identity"
+
+    prompt_detail:
+      "standard":
+        prompt_simplify: false
+      "simplified":
+        prompt_simplify: true      # runway 需要简化 prompt
+      "expanded":
+        prompt_simplify: false
+
+    seed:
+      param: "seed"
+      locked_param: "fix_seed"     # runway 使用 fix_seed
+
+    max_references: 2
+    supports_priority: false
+
+    platform_rules:
+      # 参考图权重过高时，强制简化 prompt
+      - condition: "reference_strength > 0.8"
+        action:
+          prompt_simplify: true
+      # 多参考图时，只取 critical 级别
+      - condition: "referenced_assets_count > 2"
+        action:
+          filter_priority: "critical"
+          max_take: 1
+
+    fallback_strategy: "只取 critical 和 high，忽略其他"
+
+  # ===== 可灵 (kling) =====
+  kling:
+    reference_param:
+      name: "fidelity"             # kling 使用 fidelity
+      range: [0.0, 1.0]
+      transform: "scale_0.9"       # kling 需要降低 10%：y = x * 0.9
+
+    prompt_detail:
+      "standard":
+        prompt_expand: false
+      "simplified":
+        prompt_expand: false
+      "expanded":
+        prompt_expand: true        # kling 支持扩展 prompt
+
+    seed:
+      param: "seed"
+      locked_param: "lock_seed"    # kling 使用 lock_seed
+
+    max_references: 5
+    supports_priority: true
+
+    platform_rules:
+      # 参考图权重自动降低 10%
+      - condition: "always"
+        action:
+          scale_reference_strength: 0.9
+
+    fallback_strategy: "全部注入，按 priority 排序"
+
+  # ===== Sora（预留）=====
+  sora:
+    reference_param:
+      name: "reference_strength"
+      range: [0.0, 1.0]
+      transform: "identity"
+
+    prompt_detail:
+      "standard":
+        style: "natural"
+      "simplified":
+        style: "minimal"
+      "expanded":
+        style: "detailed"
+
+    seed:
+      param: "random_seed"
+      locked_param: "deterministic"
+
+    max_references: 3
+    supports_priority: true
+
+    platform_rules: []
+
+    fallback_strategy: "按 priority 排序，取前 3 个"
+
+# =========================================
+# Adapt 阶段处理流程
+# =========================================
+#
+# Step 1: 读取抽象参数
+#   → abstract_params.consistency_control.character.reference_strength = 0.9
+#
+# Step 2: 查找目标平台映射
+#   → target_platform = "kling"
+#   → 映射: reference_param.name = "fidelity"
+#   → 映射: reference_param.transform = "scale_0.9"
+#
+# Step 3: 转换参数
+#   → fidelity = 0.9 * 0.9 = 0.81
+#   → prompt_expand = false (standard → expand: false)
+#
+# Step 4: 应用平台规则
+#   → kling: scale_reference_strength = 0.9 (已通过 transform 处理)
+#
+# Step 5: 处理参考图优先级
+#   → 按 priority 排序
+#   → 如果超出 max_references，按 fallback_strategy 截取
+#
+# Step 6: 输出平台请求
+#   → request.fidelity = 0.81
+#   → request.seed = 12345
+#   → request.lock_seed = true

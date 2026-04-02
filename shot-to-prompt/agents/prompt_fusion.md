@@ -1,4 +1,14 @@
-# Prompt Fusion Layer v1.0 (Production-Ready)
+# ❌ DEPRECATED — 已废弃（v0.4 合并进 prompt_resolver.md）
+#
+# 本文件已废弃，功能已合并至：
+#   agents/prompt_resolver.md（Phase A: Resolve）
+#
+# 废弃原因：Fusion + Adapter 职责重叠，边界模糊
+# 替代方案：Prompt Resolver 统一处理融合 + 冲突裁决 + 平台适配
+#
+# ⚠️ 请勿继续使用本文件，新 Pipeline 已移除此步骤
+
+# Prompt Fusion Layer v1.0 (Production-Ready) — ARCHIVED
 
 > ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
 >
@@ -274,13 +284,13 @@ hook → 插入开头（优先）
 * final_prompt（string）
 * negative_prompt
 * referenced_assets
-* fusion_trace
+* resolver_trace
 
 ---
 
 ---
 
-# 🧬 Fusion Trace（调试用）
+# 🧬 Resolver Trace（调试用）
 
 ---
 

@@ -1,0 +1,134 @@
+# asset_manifest.yaml schema v1.0
+# 资产状态汇总 + 生成任务清单（由 Output Splitter 生成）
+
+type: object
+
+required:
+  - chapter_id
+  - generated_at
+  - assets
+
+properties:
+
+  chapter_id:
+    type: string
+
+  generated_at:
+    type: string
+    description: "生成时间戳"
+
+  # ===== 资产生成状态汇总 =====
+  assets:
+    type: object
+    properties:
+
+      characters:
+        type: array
+        description: "角色资产状态"
+        items:
+          type: object
+          required:
+            - asset_id
+            - status
+          properties:
+            asset_id:
+              type: string
+            status:
+              type: string
+              enum: [pending, generating, approved, failed]
+              description: "参考图生成状态"
+            reference_image:
+              type: [string, "null"]
+              description: "参考图路径（null 表示待生成）"
+            used_in_shots:
+              type: array
+              description: "使用该资产的镜头列表"
+              items:
+                type: string
+
+      locations:
+        type: array
+        description: "场景资产状态"
+        items:
+          type: object
+          required:
+            - asset_id
+            - status
+          properties:
+            asset_id:
+              type: string
+            status:
+              type: string
+              enum: [pending, generating, approved, failed]
+            reference_image:
+              type: [string, "null"]
+            used_in_shots:
+              type: array
+              items:
+                type: string
+
+      objects:
+        type: array
+        description: "物品资产状态"
+        items:
+          type: object
+          required:
+            - asset_id
+            - status
+          properties:
+            asset_id:
+              type: string
+            status:
+              type: string
+              enum: [pending, generating, approved, failed]
+            reference_image:
+              type: [string, "null"]
+            used_in_shots:
+              type: array
+              items:
+                type: string
+
+  # ===== 生成任务清单 =====
+  generation_tasks:
+    type: array
+    description: "需要执行的生成任务（按优先级排序）"
+    items:
+      type: object
+      required:
+        - task_type
+        - priority
+      properties:
+        task_type:
+          type: string
+          enum: [image, voice, video]
+          description: "任务类型"
+        asset_id:
+          type: string
+          description: "关联资产 ID（image 任务）"
+        shot_id:
+          type: string
+          description: "关联镜头 ID（voice/video 任务）"
+        character_id:
+          type: string
+          description: "关联角色 ID（voice 任务）"
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+          description: "任务优先级"
+        depends_on:
+          type: array
+          description: "前置依赖任务"
+          items:
+            type: string
+
+  # ===== 依赖关系图 =====
+  dependency_graph:
+    type: object
+    description: "任务依赖关系图（key = 任务ID, value = 依赖列表）"
+    additionalProperties:
+      type: object
+      properties:
+        depends_on:
+          type: array
+          items:
+            type: string

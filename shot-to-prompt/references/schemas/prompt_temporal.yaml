@@ -1,9 +1,16 @@
+# prompt_temporal.yaml schema v2.0
+# ⭐ v0.4 新增：identity_continuity（种子继承 + 漂移检测 + 连续性锚点）
+
 type: object
 
 required:
+  - chapter_id
   - shots
 
 properties:
+
+  chapter_id:
+    type: string
 
   shots:
     type: array
@@ -13,17 +20,93 @@ properties:
 
       required:
         - shot_id
-        - prompt
-        - continuity
+        - previous_shot_id
+        - temporal_tags
+        - continuity_score
 
       properties:
 
         shot_id:
           type: string
 
-        prompt:
-          $ref: "common.schema.yaml#/Prompt"
+        previous_shot_id:
+          type: [string, "null"]
+          description: "上一镜头 ID（第一个镜头为 null）"
 
-        continuity:
-          allOf:
-            - $ref: "common.schema.yaml#/ContinuityBase"
+        # ===== ⭐ v0.4 身份连续性 =====
+        identity_continuity:
+          type: object
+          description: "镜头间身份连续性控制"
+          properties:
+
+            inherited_seed:
+              type: [integer, "null"]
+              description: "继承的种子值（第一个镜头为 null）"
+
+            seed_source:
+              type: string
+              description: "种子来源（镜头 ID 或 'initial'/'generated'）"
+
+            seed_locked:
+              type: boolean
+              description: "是否锁定种子"
+
+            inherited_anchors:
+              type: array
+              description: "从上一镜头继承的身份特征锚点"
+              items:
+                type: string
+
+            drift_check:
+              type: object
+              description: "漂移检测结果（与上一镜头比较）"
+              properties:
+                facial_features:
+                  type: number
+                  description: "面部特征漂移值"
+                body_proportions:
+                  type: number
+                  description: "身体比例漂移值"
+                clothing:
+                  type: number
+                  description: "服装漂移值"
+
+            continuity_verified:
+              type: boolean
+              description: "连续性验证是否通过"
+
+        # ===== 时序提示 =====
+        temporal_prompt:
+          type: string
+          description: "时序增强后的 prompt 文本"
+
+        # ===== 时序标签 =====
+        temporal_tags:
+          type: array
+          items:
+            type: string
+
+        # ===== 物品状态更新 =====
+        object_state_updates:
+          type: array
+          description: "物品状态变化（供 registry 更新）"
+          items:
+            type: object
+            properties:
+              object_id:
+                type: string
+              asset_id:
+                type: string
+              previous_state:
+                type: string
+              current_state:
+                type: string
+              changed:
+                type: boolean
+
+        # ===== 连续性评分 =====
+        continuity_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: "综合连续性评分（motion + state + transition + identity）"

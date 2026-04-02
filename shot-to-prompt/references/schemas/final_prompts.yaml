@@ -1,0 +1,177 @@
+type: object
+
+required:
+  - chapter_id
+  - platform
+  - shots
+
+properties:
+
+  chapter_id:
+    type: string
+
+  platform:
+    type: string
+    description: "目标平台（hailuo/runway/kling/sora/pika）"
+
+  model_version:
+    type: string
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - final_prompt               # ✅ 统一命名（非 prompt_text）
+        - request
+
+      properties:
+
+        shot_id:
+          type: string
+
+        # ===== 最终 Prompt 文本 =====
+        final_prompt:
+          type: string
+          minLength: 10
+          description: "平台适配后的最终 prompt 文本"
+
+        negative_prompt:
+          type: string
+          description: "负面提示词"
+
+        # ===== 抽象参数（平台无关）=====
+        abstract_params:
+          type: object
+          description: "Resolver 输出的抽象参数（供调试和回溯）"
+          properties:
+            consistency_control:
+              type: object
+              properties:
+                character:
+                  type: object
+                  properties:
+                    reference_strength:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                      description: "参考图影响权重（0.0-1.0）"
+                    prompt_detail:
+                      type: string
+                      enum: [standard, simplified, expanded]
+                    seed_locked:
+                      type: boolean
+                scene:
+                  type: object
+                  properties:
+                    reference_strength:
+                      type: number
+                    prompt_detail:
+                      type: string
+                object:
+                  type: object
+                  properties:
+                    reference_strength:
+                      type: number
+                    prompt_detail:
+                      type: string
+
+        # ===== 身份连续性 =====
+        identity_continuity:
+          type: object
+          description: "镜头间身份连续性控制"
+          properties:
+            inherit_from_previous_shot:
+              type: [string, "null"]
+              description: "继承的上一镜头 ID（第一个镜头为 null）"
+            inherited_seed:
+              type: [integer, "null"]
+              description: "继承的种子值"
+            seed_locked:
+              type: boolean
+              description: "是否锁定种子"
+            drift_threshold:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: "允许的最大漂移值"
+            continuity_anchors:
+              type: array
+              items:
+                type: string
+              description: "必须继承的特征锚点"
+
+        # ===== 多参考优先级 =====
+        referenced_assets:
+          type: array
+          description: "按优先级排序的参考图清单"
+          items:
+            type: object
+            required:
+              - asset_id
+              - type
+              - priority
+            properties:
+              asset_id:
+                type: string
+              type:
+                type: string
+                description: "资产类型"
+              reference_image:
+                type: string
+                description: "参考图路径"
+              priority:
+                type: string
+                enum: [critical, high, medium, low]
+              purpose:
+                type: string
+                description: "用途说明"
+
+        # ===== 平台请求参数 =====
+        request:
+          type: object
+          description: "平台映射后的请求参数"
+          properties:
+            duration:
+              type: integer
+              minimum: 1
+              maximum: 60
+            aspect_ratio:
+              type: string
+            quality:
+              type: string
+            image_references:
+              type: array
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  weight:
+                    type: number
+                  strength:
+                    type: number
+                  fidelity:
+                    type: number
+            prompt:
+              type: string
+            negative_prompt:
+              type: string
+            seed:
+              type: integer
+            # 平台特定参数（动态生成）
+            additionalProperties: true
+
+        # ===== 元数据 =====
+        metadata:
+          type: object
+          properties:
+            dramatic_focus:
+              type: string
+            emphasis_tags:
+              type: array
+              items:
+                type: string

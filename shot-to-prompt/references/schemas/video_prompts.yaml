@@ -1,0 +1,133 @@
+# video_prompts.yaml schema v1.0
+# 视频生成请求输出（由 Output Splitter 生成）
+
+type: object
+
+required:
+  - chapter_id
+  - platform
+  - generation_strategy
+  - shots
+
+properties:
+
+  chapter_id:
+    type: string
+
+  platform:
+    type: string
+    description: "目标平台（hailuo/runway/kling/sora/pika）"
+
+  model_version:
+    type: string
+    description: "平台模型版本"
+
+  # ===== 生成策略配置 =====
+  generation_strategy:
+    type: object
+    description: "视频生成策略配置"
+    properties:
+      mode:
+        type: string
+        enum: [shot_per_video, scene_grouped, custom]
+        description: "生成模式：一个镜头一个视频 / 同场景合并 / 自定义"
+        default: "shot_per_video"
+      batch_size:
+        type: integer
+        description: "批量提交数量（并行生成优化）"
+        default: 5
+      auto_merge:
+        type: boolean
+        description: "是否自动合并同场景镜头"
+        default: false
+      output_for_edit:
+        type: object
+        description: "自动剪辑配置（供 auto-edit skill 使用）"
+        properties:
+          enabled:
+            type: boolean
+            default: true
+          transition_hints:
+            type: boolean
+            default: true
+
+  shots:
+    type: array
+    description: "视频生成请求列表"
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - final_prompt
+        - request
+
+      properties:
+
+        shot_id:
+          type: string
+
+        final_prompt:
+          type: string
+          minLength: 10
+          description: "平台适配后的最终 prompt"
+
+        negative_prompt:
+          type: string
+          description: "负面提示词"
+
+        # ===== 剪辑元数据 =====
+        edit_metadata:
+          type: object
+          description: "剪辑元数据（供 auto-edit 使用）"
+          properties:
+            location_id:
+              type: string
+              description: "所属场景 ID"
+            sequence:
+              type: integer
+              description: "场景内镜头序号"
+            duration:
+              type: integer
+              description: "预期时长（秒）"
+            transition_in:
+              type: string
+              enum: [cut, smooth, match, dramatic]
+              description: "入场转场类型"
+            transition_out:
+              type: string
+              enum: [cut, smooth, match, dramatic]
+              description: "出场转场类型"
+
+        # ===== 平台请求参数 =====
+        request:
+          type: object
+          properties:
+            duration:
+              type: integer
+              minimum: 1
+              maximum: 60
+            aspect_ratio:
+              type: string
+            quality:
+              type: string
+            image_references:
+              type: array
+              items:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  weight:
+                    type: number
+                  strength:
+                    type: number
+                  fidelity:
+                    type: number
+            prompt:
+              type: string
+            negative_prompt:
+              type: string
+            seed:
+              type: integer
+            additionalProperties: true

@@ -1,12 +1,12 @@
 type: object
 
 required:
-  - scene_id
+  - location_id
   - shots
 
 properties:
 
-  scene_id:
+  location_id:
     type: string
 
   shots:

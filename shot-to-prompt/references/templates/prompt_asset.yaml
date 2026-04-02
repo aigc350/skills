@@ -70,7 +70,7 @@ characters:
 
 ---
 
-environments:
+locations:
 
 * asset_id: "env_001_day"
   variant_id: "day"

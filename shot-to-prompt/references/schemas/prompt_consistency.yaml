@@ -1,13 +1,17 @@
+# prompt_consistency.yaml schema v2.0
+# ⭐ v0.4 新增：repairs_applied（自动修复记录）+ issues（无法修复的问题）
+
 type: object
 
 required:
-  - scene_id
+  - chapter_id
   - shots
 
 properties:
 
-  scene_id:
+  chapter_id:
     type: string
+    description: "章节 ID"
 
   shots:
     type: array
@@ -17,12 +21,146 @@ properties:
 
       required:
         - shot_id
-        - prompt
+        - character_bindings
+        - location_bindings
 
       properties:
 
         shot_id:
           type: string
 
-        prompt:
-          $ref: "common.schema.yaml#/Prompt"
+        # ===== 角色绑定 =====
+        character_bindings:
+          type: array
+          description: "角色身份绑定（每个出场角色一个条目）"
+          items:
+            type: object
+            required:
+              - character_id
+              - asset_id
+              - appearance_consistent
+            properties:
+              character_id:
+                type: string
+              asset_id:
+                type: string
+              reference_image:
+                type: string
+                description: "角色面部参考图路径（自动注入）"
+              appearance_fingerprint:
+                type: array
+                description: "外观特征指纹（自动补充）"
+                items:
+                  type: string
+              must_keep:
+                type: array
+                description: "不可变锚点（从 fingerprint 提取的身份特征）"
+                items:
+                  type: string
+              variant_locked:
+                type: boolean
+                description: "变体是否锁定"
+              appearance_consistent:
+                type: boolean
+                description: "修复后外观是否一致"
+
+        # ===== 场景绑定（✅ 统一命名）=====
+        location_bindings:
+          type: array
+          description: "场景连续性绑定"
+          items:
+            type: object
+            required:
+              - location_id
+              - asset_id
+            properties:
+              location_id:
+                type: string
+              asset_id:
+                type: string
+              anchors:
+                type: array
+                description: "场景连续性锚点（自动补充）"
+                items:
+                  type: string
+              reference_image:
+                type: string
+                description: "场景参考图路径（自动注入）"
+
+        # ===== 物品绑定 =====
+        object_bindings:
+          type: array
+          description: "物品状态绑定"
+          items:
+            type: object
+            properties:
+              object_id:
+                type: string
+              asset_id:
+                type: string
+              state:
+                type: string
+                description: "物品当前状态（从 temporal 层获取）"
+              holder:
+                type: string
+                description: "持有者 character_id"
+              reference_image:
+                type: string
+
+        # ===== 标签 =====
+        spatial_tags:
+          type: array
+          items:
+            type: string
+
+        temporal_tags:
+          type: array
+          items:
+            type: string
+
+        # ===== ⭐ v0.4 新增：修复记录 =====
+        repairs_applied:
+          type: array
+          description: "自动修复操作记录（所有修复必须可追溯）"
+          items:
+            type: object
+            required:
+              - field
+              - action
+            properties:
+              field:
+                type: string
+                description: "修复的字段名"
+              action:
+                type: string
+                description: "修复类型"
+                enum:
+                  - fingerprint_added           # fingerprint 从 registry 补充
+                  - fingerprint_generated       # fingerprint 从 base_prompt 提取
+                  - prompt_overridden_by_fingerprint  # prompt 被 fingerprint 覆盖
+                  - reference_injected          # reference 从 registry 注入
+                  - scene_reference_injected    # 场景 reference 注入
+                  - asset_id_corrected          # asset_id 从 registry 纠正
+                  - anchors_added               # 场景 anchors 补充
+              source:
+                type: string
+                description: "修复数据来源"
+              value:
+                type: string
+                description: "修复后的值"
+
+        # ===== 无法自动修复的问题 =====
+        issues:
+          type: array
+          description: "需要人工介入的问题"
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+                description: "问题描述"
+              suggestion:
+                type: string
+                description: "修复建议"

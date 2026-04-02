@@ -145,9 +145,9 @@ characters:
 ---
 
 # =========================================
-# Environments（环境资产）
+# Locations（空间资产）
 # =========================================
-environments:
+locations:
 
   env_office_day:
 

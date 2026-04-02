@@ -1,6 +1,9 @@
-# Shot-to-Prompt Pipeline
+# Shot-to-Prompt Pipeline v2.0
+# v0.4 架构：新增 Load Assets / Prompt Resolver / Output Splitter
+# 替代旧版 Fusion + Model Adapter
 
-version: 1.1
+version: 2.0
+
 variables:
   chapter_name: "${input.chapter_name}"
   chapter_id: "${input.chapter_id}"
@@ -8,11 +11,12 @@ variables:
   shot_dir: "novels/${novel_id}/output/shot/${chapter_id}"
   prompt_dir: "novels/${novel_id}/prompt"
   memory_dir: "novels/${novel_id}/prompt/memory"
-  runtime_dir: "novels/${novel_id}/prompt/runtime/{chapter_id}"
-  output_dir: "novels/${novel_id}/output/prompt"
+  runtime_dir: "novels/${novel_id}/prompt/runtime/${chapter_id}"
+  output_dir: "novels/${novel_id}/output/prompt/${chapter_id}"
+
 steps:
   # =========================================
-  # 初始化阶段
+  # 阶段 0：初始化
   # =========================================
   - id: check_config
     description: 检查配置文件
@@ -29,41 +33,41 @@ steps:
       - references/mappings/motion_map.yaml
       - references/mappings/camera.yaml
       - references/mappings/lighting.yaml
-    output: {runtime_dir}/mappings.yaml
+    output: ${runtime_dir}/mappings.yaml
 
   - id: load_styles
     description: 加载风格层 styles
     styles:
       - references/styles/short_drama.yaml
       - references/styles/cinematic.yaml
-    output: {runtime_dir}/styles.yaml
+    output: ${runtime_dir}/styles.yaml
 
   - id: load_platform_templates
     description: 加载平台模板
-    output: {runtime_dir}/platform_templates.yaml
+    output: ${runtime_dir}/platform_templates.yaml
 
   - id: detect_shot_specs
     description: 检测待处理的 shot_spec 文件
-    output: {runtime_dir}/pending_shot_specs.yaml
+    output: ${runtime_dir}/pending_shot_specs.yaml
 
   # =========================================
-  # IR 构建阶段
+  # 阶段 1：IR 构建
   # =========================================
   - id: ir_builder
     agent: prompt_ir_builder
     description: 将 shot_spec + characters + scenes 编译为统一语义 IR
     input:
-      - {shot_dir}/shot_spec.yaml
-      - {shot_dir}/characters.yaml
-      - {shot_dir}/scenes.yaml
+      - ${shot_dir}/shot_spec.yaml
+      - ${shot_dir}/characters.yaml
+      - ${shot_dir}/scenes.yaml
     output:
-      - {runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/prompt_ir.yaml
 
   # =========================================
-  # 核心转换阶段：Canonical → Enhancer → Asset → Consistency → Temporal → Fusion → Model Adapter
+  # 阶段 2-3：Canonical + Enhancer
   # =========================================
 
-  # Step 1: Canonical - 将 IR 规范化为结构化 Prompt（应用 mappings 翻译）
+  # Step 2: Canonical - 将 IR 规范化为结构化 Prompt（应用 mappings 翻译）
   - id: prompt_canonical
     agent: prompt_canonical_builder
     description: 将 prompt_ir 规范化为 canonical prompt（应用 mappings）
@@ -74,11 +78,11 @@ steps:
       - references/mappings/camera.yaml
       - references/mappings/lighting.yaml
     input:
-      - {runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/prompt_ir.yaml
     output:
-      - {runtime_dir}/prompt_canonical.yaml
+      - ${runtime_dir}/prompt_canonical.yaml
 
-  # Step 2: Enhancer - 策略增强（应用 styles 风格层 + hook 爆点策略）
+  # Step 3: Enhancer - 策略增强（应用 styles 风格层 + hook 爆点策略）
   - id: prompt_enhancer
     agent: prompt_enhancer
     description: 注入爆点策略增强（应用 styles 风格）
@@ -86,94 +90,113 @@ steps:
       - references/styles/short_drama.yaml
       - references/styles/cinematic.yaml
     input:
-      - {runtime_dir}/prompt_ir.yaml
-      - {runtime_dir}/prompt_canonical.yaml
+      - ${runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/prompt_canonical.yaml
       - references/strategies/hook_engine.yaml
     output:
-      - {runtime_dir}/prompt_enhanced.yaml
-
-  # Step 3: Asset - 构建 prompt 资产（镜头资产、角色资产、场景资产）
-  - id: prompt_asset
-    agent: prompt_asset_builder
-    description: 构建 prompt 资产库
-    registry: {memory_dir}/asset_registry.yaml
-    input:
-      - {runtime_dir}/prompt_ir.yaml
-    output:
-      - {runtime_dir}/prompt_asset.yaml
-
-  # Step 4: Consistency - 一致性强制执行
-  - id: prompt_consistency
-    agent: prompt_consistency_enforcer
-    description: 确保跨镜头一致性
-    registry: {memory_dir}/asset_registry.yaml
-    input:
-      - {runtime_dir}/prompt_ir.yaml
-      - {runtime_dir}/prompt_asset.yaml
-      - {runtime_dir}/prompt_canonical.yaml
-      - {memory_dir}/asset_registry.yaml
-    output:
-      - {runtime_dir}/prompt_consistency.yaml
-
-  # Step 5: Temporal - 时序强制执行（在 Consistency 之前）
-  - id: prompt_temporal
-    agent: prompt_temporal_enforcer
-    description: 时序一致性处理（状态推进、动作结果应用）
-    input:
-      - {runtime_dir}/prompt_ir.yaml
-      - {runtime_dir}/prompt_asset.yaml
-    output:
-      - {runtime_dir}/prompt_temporal.yaml
-
-  # Step 6: Consistency - 一致性强制执行（在 Temporal 之后）
-  - id: prompt_consistency
-    agent: prompt_consistency_enforcer
-    description: 确保跨镜头一致性（ID绑定、状态校验、空间一致性）
-    registry: {memory_dir}/asset_registry.yaml
-    input:
-      - {runtime_dir}/prompt_ir.yaml
-      - {runtime_dir}/prompt_asset.yaml
-      - {runtime_dir}/prompt_canonical.yaml
-      - {runtime_dir}/prompt_temporal.yaml
-      - {memory_dir}/asset_registry.yaml
-    output:
-      - {runtime_dir}/prompt_consistency.yaml
-
-  # Step 7: Fusion - 融合各层 IR
-  - id: prompt_fusion
-    agent: prompt_fusion
-    description: 融合 canonical + enhanced + asset + temporal + consistency
-    input:
-      - {runtime_dir}/prompt_canonical.yaml
-      - {runtime_dir}/prompt_enhanced.yaml
-      - {runtime_dir}/prompt_asset.yaml
-      - {runtime_dir}/prompt_temporal.yaml
-      - {runtime_dir}/prompt_consistency.yaml
-    output:
-      - {runtime_dir}/prompt_fusion.yaml
-
-  # Step 8: Model Adapter - 平台适配优化
-  - id: select_target_platform
-    description: 选择目标平台
-    output: {runtime_dir}/target_platform.yaml
-
-  - id: model_adapter
-    agent: model_adapter
-    description: 针对目标平台优化 Prompts
-    input:
-      - {runtime_dir}/prompt_fusion.yaml
-    platform_template: {runtime_dir}/platform_templates.yaml
-    output:
-      - {runtime_dir}/final_prompts.yaml
+      - ${runtime_dir}/prompt_enhanced.yaml
 
   # =========================================
-  # 校验阶段
+  # 阶段 4：跨章节资产加载（⭐ 必须在 Asset Builder 之前）
+  # =========================================
+  - id: load_assets
+    agent: load_assets
+    description: 加载已有资产，输出可复用资产清单
+    input:
+      - ${memory_dir}/asset_registry.yaml
+      - ${runtime_dir}/prompt_ir.yaml
+    output:
+      - ${runtime_dir}/reusable_assets.yaml
+    # ⭐ 关键：Asset Builder 依赖此输出判断复用
+
+  # =========================================
+  # 阶段 5：Asset Builder（依赖 reusable_assets）
+  # =========================================
+  - id: prompt_asset
+    agent: prompt_asset_builder
+    description: 构建 prompt 资产库（支持跨章节复用）
+    registry: ${memory_dir}/asset_registry.yaml
+    input:
+      - ${runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/reusable_assets.yaml
+    output:
+      - ${runtime_dir}/prompt_asset.yaml
+
+  # =========================================
+  # 阶段 6-7：Temporal → Consistency（修正顺序）
+  # =========================================
+
+  # Step 6: Temporal - 时序强制执行
+  - id: prompt_temporal
+    agent: prompt_temporal_enforcer
+    description: 时序一致性处理（状态推进、动作结果应用、身份连续性）
+    input:
+      - ${runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/prompt_asset.yaml
+    output:
+      - ${runtime_dir}/prompt_temporal.yaml
+
+  # Step 7: Consistency - 一致性强制执行（含自动修复）
+  - id: prompt_consistency
+    agent: prompt_consistency_enforcer
+    description: 一致性校验 + 自动修复（ID绑定、状态校验、fingerprint 补充）
+    registry: ${memory_dir}/asset_registry.yaml
+    input:
+      - ${runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/prompt_asset.yaml
+      - ${runtime_dir}/prompt_canonical.yaml
+      - ${runtime_dir}/prompt_temporal.yaml
+      - ${memory_dir}/asset_registry.yaml
+    output:
+      - ${runtime_dir}/prompt_consistency.yaml
+
+  # =========================================
+  # 阶段 8：Prompt Resolver（⭐ 核心模块，替代 Fusion + Adapter）
+  # =========================================
+  - id: select_target_platform
+    description: 选择目标平台
+    output: ${runtime_dir}/target_platform.yaml
+
+  - id: prompt_resolver
+    agent: prompt_resolver
+    description: 融合解析 + 平台适配（双产物输出）
+    input:
+      - ${runtime_dir}/prompt_canonical.yaml
+      - ${runtime_dir}/prompt_enhanced.yaml
+      - ${runtime_dir}/prompt_asset.yaml
+      - ${runtime_dir}/prompt_temporal.yaml
+      - ${runtime_dir}/prompt_consistency.yaml
+      - ${runtime_dir}/reusable_assets.yaml
+      - references/platform_mappings.yaml
+    output:
+      - ${runtime_dir}/resolved_shots.yaml
+      - ${runtime_dir}/final_prompts.yaml
+
+  # =========================================
+  # 阶段 9：多模态输出拆分
+  # =========================================
+  - id: output_splitter
+    agent: output_splitter
+    description: 拆分为 video/image/voice/manifest 四种输出
+    input:
+      - ${runtime_dir}/resolved_shots.yaml
+      - ${runtime_dir}/final_prompts.yaml
+      - ${memory_dir}/asset_registry.yaml
+    output:
+      - ${output_dir}/video_prompts.yaml
+      - ${output_dir}/image_prompts.yaml
+      - ${output_dir}/voice_prompts.yaml
+      - ${output_dir}/asset_manifest.yaml
+    # ⭐ 同时更新 asset_registry 的 used_in_chapters/used_in_shots
+
+  # =========================================
+  # 阶段 10：校验
   # =========================================
   - id: validate_prompts
     description: 校验 Prompt 格式
-    schema: schemas/model_request.yaml
+    schema: schemas/final_prompts.yaml
     input:
-      - {runtime_dir}/final_prompts.yaml
+      - ${runtime_dir}/final_prompts.yaml
     on_invalid: retry
     max_retries: 3
 
@@ -216,4 +239,3 @@ platforms:
 # =========================================
 default_platform: hailuo
 output_format: yaml
-

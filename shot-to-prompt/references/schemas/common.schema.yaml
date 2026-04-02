@@ -18,7 +18,7 @@ Prompt:
       $ref: "#/PromptBlock"
     action:
       $ref: "#/PromptBlock"
-    background:
+    location:
       $ref: "#/PromptBlock"
     camera:
       $ref: "#/PromptBlock"
@@ -62,7 +62,8 @@ AssetBase:
 
     source:
       type: string
-      enum: [generated, reused]
+      enum: [generated, reused, derived]
+      description: "资产生源：generated=全新创建，reused=完全复用，derived=派生变体"
 
     base_prompt:
       type: string
@@ -75,6 +76,97 @@ AssetBase:
 
     negative_prompt:
       type: string
+
+    # ===== v0.4 新增：参考图绑定 =====
+
+    reference:
+      type: object
+      description: "参考图绑定信息（由 prompt-to-video 回写）"
+      properties:
+        face_image:
+          type: string
+          description: "角色面部参考图路径"
+        scene_image:
+          type: string
+          description: "场景参考图路径"
+        object_image:
+          type: string
+          description: "物品参考图路径"
+        seed:
+          type: integer
+          description: "生成种子值（保证一致性）"
+
+    # ===== v0.4 新增：外观指纹 =====
+
+    appearance_fingerprint:
+      type: array
+      description: "外观特征锚点（用于一致性校验和自动修复）"
+      items:
+        type: string
+      # 示例: ["short_black_hair", "dark_suit", "calm_face", "late_20s"]
+
+    # ===== v0.4 新增：场景锚点 =====
+
+    anchors:
+      type: array
+      description: "场景连续性锚点元素（场景资产专用）"
+      items:
+        type: string
+      # 示例: ["crystal_chandelier", "white_round_tables", "warm_gold_light"]
+
+    # ===== v0.4 新增：生成状态 =====
+
+    generation_status:
+      type: object
+      description: "资产生成状态追踪"
+      properties:
+        image:
+          type: string
+          enum: [pending, generating, approved, failed]
+          description: "参考图生成状态（Asset Builder 初始化，prompt-to-video 更新）"
+        video_count:
+          type: integer
+          description: "使用该资产生成的视频数量"
+          minimum: 0
+        last_used:
+          type: string
+          description: "最后使用日期（YYYY-MM-DD）"
+
+    # ===== v0.4 新增：使用追踪 =====
+
+    used_in_chapters:
+      type: array
+      description: "使用过该资产的章节列表（Output Splitter 维护）"
+      items:
+        type: string
+
+    used_in_shots:
+      type: array
+      description: "使用过该资产的镜头列表（Output Splitter 维护）"
+      items:
+        type: string
+
+    # ===== v0.4 新增：物品持有关系 =====
+
+    holder:
+      type: string
+      description: "当前持有者的 character_id（物品资产专用）"
+
+    state_history:
+      type: array
+      description: "物品状态变化历史（Temporal Enforcer 追加）"
+      items:
+        type: object
+        properties:
+          chapter_id:
+            type: string
+          state:
+            type: string
+            description: "该章节中的状态（intact/broken/empty 等）"
+          shots:
+            type: array
+            items:
+              type: string
 
 # -----------------------------------------
 

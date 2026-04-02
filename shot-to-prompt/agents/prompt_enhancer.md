@@ -445,7 +445,7 @@ intense dramatic opening, a man with a subtle smirk in a banquet hall, intense, 
 ---
 
 ```yaml
-scene_id: string
+location_id: string
 
 meta:
   enhanced: true

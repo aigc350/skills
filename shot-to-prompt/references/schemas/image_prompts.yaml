@@ -1,0 +1,76 @@
+# image_prompts.yaml schema v1.0
+# 参考图生成请求输出（由 Output Splitter 生成）
+
+type: object
+
+required:
+  - chapter_id
+  - pending_images
+
+properties:
+
+  chapter_id:
+    type: string
+
+  # ===== 需要生成参考图的资产 =====
+  pending_images:
+    type: array
+    description: "待生成参考图的资产列表（按优先级排序）"
+    items:
+      type: object
+      required:
+        - asset_id
+        - asset_type
+        - final_prompt
+        - purpose
+        - priority
+      properties:
+        asset_id:
+          type: string
+          description: "资产 ID"
+        asset_type:
+          type: string
+          enum: [character, scene, object]
+          description: "资产类型"
+        final_prompt:
+          type: string
+          description: "图片生成 prompt（从 registry 继承）"
+        purpose:
+          type: string
+          enum: [character_reference, scene_reference, object_reference, expression, pose]
+          description: "图片用途"
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+          description: "生成优先级"
+        additional_prompt:
+          type: string
+          description: "额外补充描述（如特定角度、光照等）"
+
+  # ===== 已有参考图（可复用）=====
+  completed_images:
+    type: array
+    description: "已有参考图资产（无需重新生成）"
+    items:
+      type: object
+      required:
+        - asset_id
+        - asset_type
+        - image_path
+        - status
+      properties:
+        asset_id:
+          type: string
+        asset_type:
+          type: string
+          enum: [character, scene, object]
+        image_path:
+          type: string
+          description: "已生成的图片路径"
+        generated_at:
+          type: string
+          description: "生成日期"
+        status:
+          type: string
+          enum: [approved, generating, failed]
+          description: "图片状态"

@@ -1,0 +1,104 @@
+# Shot-to-Prompt Pipeline v2.1 (Fast Mode)
+# 合并 10 阶段为 2 阶段，减少 Agent 启动开销
+# 适用于：章节完整处理（不分批）
+# 预期提速：3-5x（主要来自减少重复文件读取）
+
+version: 2.1
+
+variables:
+  chapter_name: "${input.chapter_name}"
+  chapter_id: "${input.chapter_id}"
+  novel_id: "${config.current_novel_id}"
+  shot_dir: "novels/${novel_id}/output/shot/${chapter_id}"
+  prompt_dir: "novels/${novel_id}/prompt"
+  memory_dir: "novels/${novel_id}/prompt/memory"
+  runtime_dir: "novels/${novel_id}/prompt/runtime/${chapter_id}"
+  output_dir: "novels/${novel_id}/output/prompt/${chapter_id}"
+
+steps:
+  # =========================================
+  # 阶段 0：初始化（不变）
+  # =========================================
+  - id: check_config
+    description: 检查配置文件
+
+  - id: ensure_directories
+    description: 创建目录结构
+
+  - id: detect_shot_specs
+    description: 检测待处理的 shot_spec 文件
+    output: ${runtime_dir}/pending_shot_specs.yaml
+
+  # =========================================
+  # 阶段 1：构建（合并 IR + Canonical + Enhanced + Asset + Temporal）
+  # 单 Agent 完成：读取原始输入 → 输出 prompt_built.yaml
+  # =========================================
+  - id: build_all
+    agent: shot_builder_combined
+    description: |
+      合并构建：IR + Canonical + Enhanced + Load Assets + Asset Builder + Temporal
+      一次性遍历所有镜头，输出构建产物
+    input:
+      # 原始输入（只读一次）
+      - ${shot_dir}/shot_spec.yaml
+      - ${shot_dir}/characters.yaml
+      - ${shot_dir}/scenes.yaml
+      # 资产库
+      - ${memory_dir}/asset_registry.yaml
+    output:
+      - ${runtime_dir}/prompt_built.yaml
+
+  # =========================================
+  # 阶段 2：解析（合并 Consistency + Resolver + Splitter）
+  # 单 Agent 完成：读取构建产物 → 输出最终 4 文件
+  # =========================================
+  - id: resolve_all
+    agent: shot_resolver_combined
+    description: |
+      合并解析：Consistency + Resolver + Splitter
+      一次性遍历所有镜头，输出最终文件
+    input:
+      - ${runtime_dir}/prompt_built.yaml
+      - ${memory_dir}/asset_registry.yaml
+    output:
+      - ${output_dir}/video_prompts.yaml
+      - ${output_dir}/image_prompts.yaml
+      - ${output_dir}/voice_prompts.yaml
+      - ${output_dir}/asset_manifest.yaml
+
+# =========================================
+# 平台配置（不变）
+# =========================================
+platforms:
+  sora:
+    enabled: true
+    default_duration: 10
+    max_prompt_length: 400
+    supports_long_video: true
+
+  runway:
+    enabled: true
+    default_duration: 5
+    max_prompt_length: 300
+    supports_camera_control: true
+
+  pika:
+    enabled: true
+    default_duration: 3
+    max_prompt_length: 200
+    fast_generation: true
+
+  kling:
+    enabled: true
+    default_duration: 5
+    max_prompt_length: 250
+    chinese_support: true
+
+  hailuo:
+    enabled: true
+    default_duration: 4
+    max_prompt_length: 200
+    fast_generation: true
+
+default_platform: hailuo
+output_format: yaml

@@ -2,7 +2,7 @@ type: object
 
 required:
   - characters
-  - environments
+  - locations
   - props
 
 properties:
@@ -18,7 +18,7 @@ properties:
             character_id:
               type: string
 
-  environments:
+  locations:
     type: array
     items:
       $ref: "common.schema.yaml#/AssetBase"

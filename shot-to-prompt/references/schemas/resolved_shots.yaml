@@ -1,0 +1,207 @@
+type: object
+
+required:
+  - chapter_id
+  - shots
+
+properties:
+
+  chapter_id:
+    type: string
+    description: "章节 ID"
+
+  target_platform:
+    type: string
+    description: "目标平台标识"
+
+  generated_at:
+    type: string
+    description: "生成时间戳"
+
+  shots:
+    type: array
+
+    items:
+      type: object
+
+      required:
+        - shot_id
+        - resolved_prompt
+        - continuity
+
+      properties:
+
+        shot_id:
+          type: string
+
+        # ===== 平台无关的解析结果 =====
+        resolved_prompt:
+          type: object
+          properties:
+            subject:
+              type: string
+              description: "角色描述（身份 + 变体）"
+            action:
+              type: string
+              description: "动作描述"
+            environment:
+              type: string
+              description: "场景描述"
+            camera:
+              type: string
+              description: "镜头语言"
+            style:
+              type: string
+              description: "视觉风格"
+            quality:
+              type: string
+              description: "质量基准"
+            negative:
+              type: string
+              description: "负面提示词"
+
+        # ===== 一致性绑定 =====
+        continuity:
+          type: object
+          properties:
+
+            # 角色绑定
+            character_bindings:
+              type: array
+              items:
+                type: object
+                required:
+                  - character_id
+                  - asset_id
+                properties:
+                  character_id:
+                    type: string
+                  asset_id:
+                    type: string
+                  reference_image:
+                    type: string
+                  must_keep:
+                    type: array
+                    items:
+                      type: string
+                    description: "不可变锚点列表"
+
+            # 场景绑定（✅ 统一命名）
+            location_bindings:
+              type: array
+              items:
+                type: object
+                required:
+                  - location_id
+                  - asset_id
+                properties:
+                  location_id:
+                    type: string
+                  asset_id:
+                    type: string
+                  anchors:
+                    type: array
+                    items:
+                      type: string
+                    description: "场景连续性锚点"
+
+            # 物品绑定
+            object_bindings:
+              type: array
+              items:
+                type: object
+                properties:
+                  object_id:
+                    type: string
+                  asset_id:
+                    type: string
+                  state:
+                    type: string
+                    description: "物品当前状态"
+                  holder:
+                    type: string
+                    description: "持有者 character_id"
+
+            temporal_tags:
+              type: array
+              items:
+                type: string
+
+            spatial_tags:
+              type: array
+              items:
+                type: string
+
+        # ===== 爽点/爆点结构化 =====
+        dramatic_focus:
+          type: object
+          properties:
+            hook_type:
+              type: string
+              description: "爽点类型"
+            opening_beat:
+              type: string
+              description: "开场张力描述"
+            payoff_target:
+              type: array
+              items:
+                type: string
+              description: "受益角色/物品"
+            emphasis:
+              type: array
+              items:
+                type: string
+              description: "强调元素"
+
+        # ===== 引用的资产清单（按优先级排序）=====
+        referenced_assets:
+          type: array
+          items:
+            type: object
+            required:
+              - asset_id
+              - type
+              - priority
+            properties:
+              asset_id:
+                type: string
+              type:
+                type: string
+                description: "资产类型（character/scene/object/character_variant）"
+              reference_image:
+                type: string
+              priority:
+                type: string
+                enum: [critical, high, medium, low]
+                description: "优先级"
+              purpose:
+                type: string
+                description: "用途（face_identity/scene_anchor/key_prop/expression/pose）"
+
+        # ===== 处理链追踪（✅ 统一命名）=====
+        resolver_trace:
+          type: object
+          properties:
+            canonical:
+              type: boolean
+            enhancer:
+              type: boolean
+            asset:
+              type: boolean
+            temporal:
+              type: boolean
+            consistency:
+              type: boolean
+            resolved_at:
+              type: string
+            repairs_applied:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  action:
+                    type: string
+                  source:
+                    type: string

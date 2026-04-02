@@ -31,7 +31,7 @@ properties:
           items:
             type: string
 
-        fusion_trace:
+        resolver_trace:
           type: object
 
           properties:
