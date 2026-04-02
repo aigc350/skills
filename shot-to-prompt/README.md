@@ -159,9 +159,9 @@ shot-to-prompt/
 | 2 | prompt_canonical_builder | prompt_ir + mappings | prompt_canonical.yaml | 规范化 + 翻译 |
 | 3 | prompt_enhancer | prompt_ir + canonical + styles + hook_engine | prompt_enhanced.yaml | 策略增强 + 风格 |
 | 4 | prompt_asset_builder | prompt_ir + asset_registry | prompt_asset.yaml | 资产构建 |
-| 5 | prompt_consistency_enforcer | prompt_ir + asset + canonical + registry | prompt_consistency.yaml | 一致性强制 |
-| 6 | prompt_temporal_enforcer | prompt_ir + consistency | prompt_temporal.yaml | 时序处理 |
-| 7 | prompt_fusion | canonical + enhanced + asset + consistency + temporal | prompt_fusion.yaml | 融合各层 IR |
+| 5 | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml | 时序处理（状态推进） |
+| 6 | prompt_consistency_enforcer | prompt_ir + asset + canonical + temporal + registry | prompt_consistency.yaml | 一致性强制 |
+| 7 | prompt_fusion | canonical + enhanced + asset + temporal + consistency | prompt_fusion.yaml | 融合各层 IR |
 | 8 | model_adapter ⭐ | prompt_fusion + platform_template | final_prompts.yaml | 平台适配 |
 
 > ⭐ = 核心模块

@@ -209,12 +209,12 @@ character:
 
 ---
 
-## 3️⃣ Environment（区分 props 和 objects）
+## 3️⃣ Location（区分 props 和 objects）
 
 ---
 
 ```yaml
-environment:
+location:
 
   location_id: string           # 场景 ID
   variant_id: string            # 场景变体（day/night）

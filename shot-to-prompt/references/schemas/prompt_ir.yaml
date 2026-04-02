@@ -47,7 +47,7 @@ properties:
       required:
         - shot_id
         - subject
-        - environment
+        - location
         - camera
         - style
         - continuity
@@ -147,9 +147,9 @@ properties:
               type: string
 
         # =========================
-        # Environment
+        # Location（场景位置）
         # =========================
-        environment:
+        location:
           type: object
 
           required:
@@ -182,6 +182,21 @@ properties:
                   prop_id:
                     type: string
                   variant_id:
+                    type: string
+
+            objects:
+              type: array
+              items:
+                type: object
+
+                properties:
+                  object_id:
+                    type: string
+                  type:
+                    type: string
+                  object_state:
+                    type: string
+                  role:
                     type: string
 
         # =========================

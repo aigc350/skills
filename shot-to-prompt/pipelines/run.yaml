@@ -115,30 +115,44 @@ steps:
     output:
       - {runtime_dir}/prompt_consistency.yaml
 
-  # Step 5: Temporal - 时序强制执行
+  # Step 5: Temporal - 时序强制执行（在 Consistency 之前）
   - id: prompt_temporal
     agent: prompt_temporal_enforcer
-    description: 时序一致性处理
+    description: 时序一致性处理（状态推进、动作结果应用）
     input:
       - {runtime_dir}/prompt_ir.yaml
-      - {runtime_dir}/prompt_consistency.yaml
+      - {runtime_dir}/prompt_asset.yaml
     output:
       - {runtime_dir}/prompt_temporal.yaml
 
-  # Step 6: Fusion - 融合各层 IR
+  # Step 6: Consistency - 一致性强制执行（在 Temporal 之后）
+  - id: prompt_consistency
+    agent: prompt_consistency_enforcer
+    description: 确保跨镜头一致性（ID绑定、状态校验、空间一致性）
+    registry: {memory_dir}/asset_registry.yaml
+    input:
+      - {runtime_dir}/prompt_ir.yaml
+      - {runtime_dir}/prompt_asset.yaml
+      - {runtime_dir}/prompt_canonical.yaml
+      - {runtime_dir}/prompt_temporal.yaml
+      - {memory_dir}/asset_registry.yaml
+    output:
+      - {runtime_dir}/prompt_consistency.yaml
+
+  # Step 7: Fusion - 融合各层 IR
   - id: prompt_fusion
     agent: prompt_fusion
-    description: 融合 canonical + enhanced + asset + consistency + temporal
+    description: 融合 canonical + enhanced + asset + temporal + consistency
     input:
       - {runtime_dir}/prompt_canonical.yaml
       - {runtime_dir}/prompt_enhanced.yaml
       - {runtime_dir}/prompt_asset.yaml
-      - {runtime_dir}/prompt_consistency.yaml
       - {runtime_dir}/prompt_temporal.yaml
+      - {runtime_dir}/prompt_consistency.yaml
     output:
       - {runtime_dir}/prompt_fusion.yaml
 
-  # Step 7: Model Adapter - 平台适配优化
+  # Step 8: Model Adapter - 平台适配优化
   - id: select_target_platform
     description: 选择目标平台
     output: {runtime_dir}/target_platform.yaml

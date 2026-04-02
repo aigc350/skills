@@ -18,7 +18,7 @@ Prompt:
       $ref: "#/PromptBlock"
     action:
       $ref: "#/PromptBlock"
-    environment:
+    background:
       $ref: "#/PromptBlock"
     camera:
       $ref: "#/PromptBlock"

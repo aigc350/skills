@@ -87,9 +87,9 @@ novels/{novel_id}/
 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml + mappings | prompt_canonical.yaml |
 | prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + styles + hook_engine | prompt_enhanced.yaml |
 | prompt_asset | prompt_asset_builder | prompt_ir + asset_registry | prompt_asset.yaml |
-| prompt_consistency | prompt_consistency_enforcer | prompt_ir + prompt_asset + prompt_canonical + asset_registry | prompt_consistency.yaml |
-| prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_consistency | prompt_temporal.yaml |
-| prompt_fusion | prompt_fusion | canonical + enhanced + asset + consistency + temporal | prompt_fusion.yaml |
+| prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml |
+| prompt_consistency | prompt_consistency_enforcer | prompt_ir + prompt_asset + prompt_canonical + prompt_temporal + asset_registry | prompt_consistency.yaml |
+| prompt_fusion | prompt_fusion | canonical + enhanced + asset + temporal + consistency | prompt_fusion.yaml |
 
 #### 阶段 8-9：平台适配与校验
 
@@ -136,9 +136,9 @@ model_adapter           → agents/model_adapter.md
 | 2 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml + mappings | prompt_canonical.yaml | 规范化 IR + 翻译 |
 | 3 | prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + styles + hook_engine | prompt_enhanced.yaml | 策略增强 + 风格 |
 | 4 | prompt_asset | prompt_asset_builder | prompt_ir + asset_registry | prompt_asset.yaml | 资产构建 |
-| 5 | prompt_consistency | prompt_consistency_enforcer | prompt_ir + prompt_asset + prompt_canonical + asset_registry | prompt_consistency.yaml | 一致性强制 |
-| 6 | prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_consistency | prompt_temporal.yaml | 时序处理 |
-| 7 | prompt_fusion | prompt_fusion | canonical + enhanced + asset + consistency + temporal | prompt_fusion.yaml | 融合各层 IR |
+| 5 | prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml | 时序处理（状态推进） |
+| 6 | prompt_consistency | prompt_consistency_enforcer | prompt_ir + prompt_asset + prompt_canonical + prompt_temporal + asset_registry | prompt_consistency.yaml | 一致性强制 |
+| 7 | prompt_fusion | prompt_fusion | canonical + enhanced + asset + temporal + consistency | prompt_fusion.yaml | 融合各层 IR |
 | 8 | model_adapter | model_adapter ⭐ | prompt_fusion + platform_template | final_prompts.yaml | 平台适配 |
 | 9 | validate_prompts | - | final_prompts.yaml | - | 校验格式 |
 
@@ -230,9 +230,9 @@ prompt_ir.yaml（统一语义层）
     ↓
 Asset（资产构建：角色/场景/道具）
     ↓
-Consistency（跨镜头一致性）
+Temporal（时序处理：状态推进、动作结果应用）
     ↓
-Temporal（时序连续性）
+Consistency（一致性强制：ID绑定、状态校验、空间一致性）
     ↓
 Fusion（融合所有层）
     ↓
