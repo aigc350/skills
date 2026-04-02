@@ -197,51 +197,97 @@ character:
   pose: string
   gaze: string
   motion: [string]
+
+  subject_state: string          # ⭐ 剧情事实：人物状态（clean/dirty/wet/damaged/bloody）
 ```
 
-**注意**：IR 阶段不输出 `asset_id`，由 asset_builder 根据 `variant_id` + context 决定。
+**注意**：
+- IR 阶段不输出 `asset_id`，由 asset_builder 根据 `variant_id` + context 决定
+- `subject_state` 是剧情事实，从 shot_spec 读取或推导
 
 ---
 
 ---
 
-## 3️⃣ Environment（支持 Variant）
+## 3️⃣ Environment（区分 props 和 objects）
 
 ---
 
 ```yaml
 environment:
 
-  location_id: string
-  asset_id: string
-  variant_id: string   ⭐（如 day / night）
+  location_id: string           # 场景 ID
+  variant_id: string            # 场景变体（day/night）
 
-  type: string
-  scale: string
+  # 弱一致：背景道具，观众不会特别注意
+  props:
+    - chandelier
+    - round_tables
+    - background_crowd
+
+  # 强一致：关键物品，需要资产追踪
+  objects:
+    - object_id: string         # 物品唯一 ID
+      type: string              # 物品类型
+      object_state: string      # ⭐ 剧情事实：物品状态（full/empty/broken...）
+      role: string              # 表达策略（prop/key_item/weapon/artifact）
 ```
 
----
+**props vs objects 判断标准**：
+
+| 问题 | props | objects |
+|------|-------|---------|
+| 观众会特别注意它吗？ | ❌ | ✅ |
+| 需要跨镜头一致性？ | ❌ | ✅ |
+| 需要生成 asset_id？ | ❌ | ✅ |
+| 状态会影响剧情？ | ❌ | ✅ |
 
 ---
 
-## 4️⃣ Props（支持 Variant）
+---
+
+## 4️⃣ State（剧情事实）
 
 ---
+
+**所有 state 字段都是剧情事实，在 IR 层定义**：
 
 ```yaml
-props:
+# 人物状态
+subject_state: clean | slightly_dirty | dirty | wet | damaged | bloody
 
-  - id: string
-    name: string
-    asset_id: string
-    variant_id: string   ⭐
+# 物品状态
+object_state: full | half_full | empty | broken | spilled | intact | cracked | lit | extinguished
 ```
 
----
+**状态变化**：由 Temporal 层推导，不在 IR 层处理。
 
 ---
 
-## 5️⃣ Continuity（无需改动）
+---
+
+## 5️⃣ Role（表达策略）
+
+---
+
+**role 只影响 prompt 表达，不影响 semantic**：
+
+```yaml
+role: prop | key_item | weapon | artifact
+```
+
+| role | 描述策略 | detail_level |
+|------|----------|--------------|
+| prop | 简单提及 | low |
+| key_item | 详细强调 | high |
+| weapon | 武器描述 | high |
+| artifact | 神秘氛围 | high |
+
+---
+
+---
+
+## 6️⃣ Continuity（无需改动）
 
 ---
 

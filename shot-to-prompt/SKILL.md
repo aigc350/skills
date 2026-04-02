@@ -47,10 +47,13 @@ novels/{novel_id}/
 - `runway` - Runway Gen-3
 - `pika` - Pika Labs
 - `kling` - 快手可灵
+- `hailuo` - 海螺（默认）
 
 ### Step 4: 执行转换 Pipeline
 
-**执行前必读**：`pipelines/run.yaml` - 定义了完整的 steps 顺序
+**执行前必读**：
+- `pipelines/run.yaml` - 定义了完整的 steps 顺序
+- `references/rules/common.rule.md` - **统一规则（所有 Agent 必须遵守）**
 
 **执行原则**：
 1. 按 `run.yaml` 中 `steps` 的顺序依次执行

@@ -5,7 +5,7 @@ variables:
   chapter_name: "${input.chapter_name}"
   chapter_id: "${input.chapter_id}"
   novel_id: "${config.current_novel_id}"
-  shot_dir: "novels/${novel_id}/shot/${chapter_id}"
+  shot_dir: "novels/${novel_id}/output/shot/${chapter_id}"
   prompt_dir: "novels/${novel_id}/prompt"
   memory_dir: "novels/${novel_id}/prompt/memory"
   runtime_dir: "novels/${novel_id}/prompt/runtime/{chapter_id}"
@@ -18,7 +18,25 @@ steps:
     description: 检查配置文件
 
   - id: ensure_directories
-    description: 创建目录结构 
+    description: 创建目录结构
+
+  - id: load_mappings
+    description: 加载翻译层 mappings
+    mappings:
+      - references/mappings/enums.yaml
+      - references/mappings/emotion_map.yaml
+      - references/mappings/expression_map.yaml
+      - references/mappings/motion_map.yaml
+      - references/mappings/camera.yaml
+      - references/mappings/lighting.yaml
+    output: {runtime_dir}/mappings.yaml
+
+  - id: load_styles
+    description: 加载风格层 styles
+    styles:
+      - references/styles/short_drama.yaml
+      - references/styles/cinematic.yaml
+    output: {runtime_dir}/styles.yaml
 
   - id: load_platform_templates
     description: 加载平台模板

@@ -1,0 +1,163 @@
+# Enums - 枚举定义 v1.0
+
+> 用于 IR 层的剧情事实枚举
+> 所有枚举值用于 semantic，需要考虑 prompt 生成
+
+---
+
+## 1. subject_state（人物状态）
+
+**用途**：描述角色外观状态，影响 asset 生成和 prompt 描述
+
+```yaml
+subject_state:
+  clean: "干净整洁"           # 默认
+  slightly_dirty: "略显脏污"   # 轻微灰尘、污渍
+  dirty: "脏乱"               # 明显脏污
+  wet: "湿透"                 # 雨水、汗水
+  damaged: "破损"             # 衣服破损
+  bloody: "血迹"              # 沾染血迹
+```
+
+**Prompt 映射**：
+```
+clean → "pristine, well-groomed"
+slightly_dirty → "slightly disheveled"
+dirty → "dirty, disheveled appearance"
+wet → "soaked, wet clothes"
+damaged → "torn, damaged clothing"
+bloody → "blood-stained, disheveled"
+```
+
+---
+
+## 2. object_state（物品状态）
+
+**用途**：描述物品当前状态，影响 asset 生成
+
+```yaml
+object_state:
+  # 容器类
+  full: "满"                  # 满杯
+  half_full: "半满"           # 半杯
+  empty: "空"                 # 空杯
+  spilled: "洒落"             # 洒了
+
+  # 完整性
+  intact: "完好"              # 完好
+  cracked: "裂开"             # 裂纹
+  broken: "破碎"              # 破碎
+
+  # 特殊
+  lit: "点燃"                 # 蜡烛、火焰
+  extinguished: "熄灭"        # 熄灭
+```
+
+**Prompt 映射**：
+```
+full → "filled to the brim"
+half_full → "half-filled"
+empty → "empty"
+spilled → "spilled contents"
+broken → "broken, shattered pieces"
+```
+
+---
+
+## 3. role（物品角色）
+
+**用途**：表达策略，影响 prompt 描述方式（不影响 semantic）
+
+```yaml
+role:
+  prop: "普通物件"            # 背景道具，简单描述
+  key_item: "关键道具"         # 剧情关键，强调描述
+  weapon: "武器"              # 武器，特殊处理
+  artifact: "宝物/法器"        # 神秘物品，氛围描述
+```
+
+**Prompt 策略**：
+```yaml
+prop:
+  detail_level: low
+  description: simple mention
+
+key_item:
+  detail_level: high
+  description: detailed, emphasized
+
+weapon:
+  detail_level: high
+  description: "menacing, detailed weapon"
+
+artifact:
+  detail_level: high
+  description: "mysterious, glowing, powerful aura"
+```
+
+---
+
+## 4. lighting（光照）
+
+**用途**：场景光照类型
+
+```yaml
+lighting:
+  # 基础
+  natural: "自然光"
+  studio: "棚拍光"
+  soft: "柔光"
+  hard: "硬光"
+
+  # 明暗
+  low_key: "低调光（暗）"
+  high_key: "高调光（亮）"
+
+  # 色温
+  warm: "暖光"
+  cold: "冷光"
+  mixed: "混合光"
+
+  # 特殊
+  backlight: "逆光"
+  spotlight: "聚光"
+  candlelight: "烛光"
+  screen_light: "屏幕光"
+```
+
+---
+
+## 5. atmosphere（氛围）
+
+**用途**：场景氛围
+
+```yaml
+atmosphere:
+  luxury: "奢华"
+  tense: "紧张"
+  romantic: "浪漫"
+  mysterious: "神秘"
+  dark: "黑暗"
+  bright: "明亮"
+  chaotic: "混乱"
+  formal: "正式"
+  intimate: "亲密"
+```
+
+---
+
+## 使用规则
+
+1. **IR 层**：使用枚举值填充 semantic
+2. **Canonical 层**：透传，不做转换
+3. **Enhancer 层**：根据 role 调整表达策略
+4. **Adapter 层**：将枚举映射为英文 prompt
+
+---
+
+## 扩展规则
+
+新增枚举时：
+1. 确保枚举值有明确的语义
+2. 必须定义 Prompt 映射
+3. 考虑对视频生成的影响
