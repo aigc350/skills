@@ -13,7 +13,7 @@
 将以下输入：
 
 * prompt_canonical.yaml（标准化语义）
-* prompt_enhanced.yaml（增强后语义）
+* prompt_enhancer.yaml（增强后语义）
 * prompt_asset.yaml（资产绑定）
 * prompt_temporal.yaml（时序状态）
 * prompt_consistency.yaml（一致性校验）
@@ -76,7 +76,7 @@ resolution_rules:
 input:
   # 所有中间层数据
   - {runtime_dir}/prompt_canonical.yaml
-  - {runtime_dir}/prompt_enhanced.yaml
+  - {runtime_dir}/prompt_enhancer.yaml
   - {runtime_dir}/prompt_asset.yaml
   - {runtime_dir}/prompt_temporal.yaml
   - {runtime_dir}/prompt_consistency.yaml
@@ -133,7 +133,7 @@ FOR each shot in prompt_ir.yaml:
 
   收集数据：
     canonical = prompt_canonical.yaml[shot_id]
-    enhanced = prompt_enhanced.yaml[shot_id]
+    enhanced = prompt_enhancer.yaml[shot_id]
     asset = prompt_asset.yaml[shot_id]
     temporal = prompt_temporal.yaml[shot_id]
     consistency = prompt_consistency.yaml[shot_id]

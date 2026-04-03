@@ -88,7 +88,7 @@ input:
 
 ```yaml
 output:
-  - prompt_enhanced.yaml
+  - prompt_enhancer.yaml
 ```
 
 ---

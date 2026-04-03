@@ -8,7 +8,7 @@ variables:
   chapter_name: "${input.chapter_name}"
   chapter_id: "${input.chapter_id}"
   novel_id: "${config.current_novel_id}"
-  shot_dir: "novels/${novel_id}/output/shot/${chapter_id}"
+  shot_dir: "novels/${novel_id}/output/shot"
   prompt_dir: "novels/${novel_id}/prompt"
   memory_dir: "novels/${novel_id}/prompt/memory"
   runtime_dir: "novels/${novel_id}/prompt/runtime/${chapter_id}"
@@ -24,31 +24,9 @@ steps:
   - id: ensure_directories
     description: 创建目录结构
 
-  - id: load_mappings
-    description: 加载翻译层 mappings
-    mappings:
-      - references/mappings/enums.yaml
-      - references/mappings/emotion_map.yaml
-      - references/mappings/expression_map.yaml
-      - references/mappings/motion_map.yaml
-      - references/mappings/camera.yaml
-      - references/mappings/lighting.yaml
-    output: ${runtime_dir}/mappings.yaml
-
-  - id: load_styles
-    description: 加载风格层 styles
-    styles:
-      - references/styles/short_drama.yaml
-      - references/styles/cinematic.yaml
-    output: ${runtime_dir}/styles.yaml
-
-  - id: load_platform_templates
-    description: 加载平台模板
-    output: ${runtime_dir}/platform_templates.yaml
-
   - id: detect_shot_specs
-    description: 检测待处理的 shot_spec 文件
-    output: ${runtime_dir}/pending_shot_specs.yaml
+    description: 检测章节是否已处理（检查 output_dir 是否存在最终输出），未处理则处理该章节所有 shot
+    output: ${memory_dir}/pending_shot_specs.yaml
 
   # =========================================
   # 阶段 1：IR 构建
@@ -57,9 +35,9 @@ steps:
     agent: prompt_ir_builder
     description: 将 shot_spec + characters + scenes 编译为统一语义 IR
     input:
-      - ${shot_dir}/shot_spec.yaml
-      - ${shot_dir}/characters.yaml
-      - ${shot_dir}/scenes.yaml
+      - ${shot_dir}/${chapter_id}/shot_spec.yaml
+      - ${shot_dir}/${chapter_id}/characters.yaml
+      - ${shot_dir}/${chapter_id}/locations.yaml
     output:
       - ${runtime_dir}/prompt_ir.yaml
 
@@ -67,34 +45,25 @@ steps:
   # 阶段 2-3：Canonical + Enhancer
   # =========================================
 
-  # Step 2: Canonical - 将 IR 规范化为结构化 Prompt（应用 mappings 翻译）
+  # Step 2: Canonical - 将 IR 规范化为结构化 Prompt
   - id: prompt_canonical
     agent: prompt_canonical_builder
-    description: 将 prompt_ir 规范化为 canonical prompt（应用 mappings）
-    mappings:
-      - references/mappings/emotion_map.yaml
-      - references/mappings/expression_map.yaml
-      - references/mappings/motion_map.yaml
-      - references/mappings/camera.yaml
-      - references/mappings/lighting.yaml
+    description: 将 prompt_ir 规范化为 canonical prompt
     input:
       - ${runtime_dir}/prompt_ir.yaml
     output:
       - ${runtime_dir}/prompt_canonical.yaml
 
-  # Step 3: Enhancer - 策略增强（应用 styles 风格层 + hook 爆点策略）
+  # Step 3: Enhancer - 策略增强（hook 爆点策略）
   - id: prompt_enhancer
     agent: prompt_enhancer
-    description: 注入爆点策略增强（应用 styles 风格）
-    styles:
-      - references/styles/short_drama.yaml
-      - references/styles/cinematic.yaml
+    description: 注入爆点策略增强
     input:
       - ${runtime_dir}/prompt_ir.yaml
       - ${runtime_dir}/prompt_canonical.yaml
       - references/strategies/hook_engine.yaml
     output:
-      - ${runtime_dir}/prompt_enhanced.yaml
+      - ${runtime_dir}/prompt_enhancer.yaml
 
   # =========================================
   # 阶段 4：跨章节资产加载（⭐ 必须在 Asset Builder 之前）
@@ -162,7 +131,7 @@ steps:
     description: 融合解析 + 平台适配（双产物输出）
     input:
       - ${runtime_dir}/prompt_canonical.yaml
-      - ${runtime_dir}/prompt_enhanced.yaml
+      - ${runtime_dir}/prompt_enhancer.yaml
       - ${runtime_dir}/prompt_asset.yaml
       - ${runtime_dir}/prompt_temporal.yaml
       - ${runtime_dir}/prompt_consistency.yaml
@@ -189,16 +158,6 @@ steps:
       - ${output_dir}/asset_manifest.yaml
     # ⭐ 同时更新 asset_registry 的 used_in_chapters/used_in_shots
 
-  # =========================================
-  # 阶段 10：校验
-  # =========================================
-  - id: validate_prompts
-    description: 校验 Prompt 格式
-    schema: schemas/final_prompts.yaml
-    input:
-      - ${runtime_dir}/final_prompts.yaml
-    on_invalid: retry
-    max_retries: 3
 
 # =========================================
 # 平台配置

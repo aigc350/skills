@@ -55,8 +55,8 @@ shot-to-prompt/
 │   ├── prompt_asset_builder.md      # 资产构建
 │   ├── prompt_consistency_enforcer.md # 一致性强制
 │   ├── prompt_temporal_enforcer.md  # 时序处理
-│   ├── prompt_fusion.md             # 融合各层 IR
-│   └── model_adapter.md             # 平台适配（核心）
+│   ├── prompt_resolver.md           # 融合解析 + 平台适配 ⭐
+│   └── output_splitter.md           # 多模态输出拆分
 │
 ├── pipelines/
 │   └── run.yaml                 # Pipeline 步骤定义
@@ -151,18 +151,16 @@ shot-to-prompt/
 |------|-------|------|------|------|
 | 0 | check_config | novel.config.md | - | 检查配置 |
 | 0 | ensure_directories | - | - | 创建目录结构 |
-| 0 | load_mappings | mappings/*.yaml | mappings.yaml | 加载翻译层 |
-| 0 | load_styles | styles/*.yaml | styles.yaml | 加载风格层 |
-| 0 | load_platform_templates | platform_templates/*.md | platform_templates.yaml | 加载平台模板 |
-| 0 | detect_shot_specs | output/shot/{id}/ | pending_shot_specs.yaml | 检测待处理文件 |
+| 0 | detect_shot_specs | output_dir | pending_shot_specs.yaml | 检测章节是否已处理（全部 shot 一起处理） |
 | 1 | prompt_ir_builder ⭐ | shot_spec + characters + scenes | prompt_ir.yaml | 编译为统一语义 IR |
-| 2 | prompt_canonical_builder | prompt_ir + mappings | prompt_canonical.yaml | 规范化 + 翻译 |
-| 3 | prompt_enhancer | prompt_ir + canonical + styles + hook_engine | prompt_enhanced.yaml | 策略增强 + 风格 |
-| 4 | prompt_asset_builder | prompt_ir + asset_registry | prompt_asset.yaml | 资产构建 |
-| 5 | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml | 时序处理（状态推进） |
-| 6 | prompt_consistency_enforcer | prompt_ir + asset + canonical + temporal + registry | prompt_consistency.yaml | 一致性强制 |
-| 7 | prompt_fusion | canonical + enhanced + asset + temporal + consistency | prompt_fusion.yaml | 融合各层 IR |
-| 8 | model_adapter ⭐ | prompt_fusion + platform_template | final_prompts.yaml | 平台适配 |
+| 2 | prompt_canonical_builder | prompt_ir | prompt_canonical.yaml | 规范化 |
+| 3 | prompt_enhancer | prompt_ir + canonical + hook_engine | prompt_enhancer.yaml | 策略增强 |
+| 4 | load_assets | asset_registry + prompt_ir | reusable_assets.yaml | 跨章节资产加载 |
+| 5 | prompt_asset_builder | prompt_ir + reusable_assets + asset_registry | prompt_asset.yaml | 资产构建 |
+| 6 | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml | 时序处理 |
+| 7 | prompt_consistency_enforcer | prompt_ir + asset + canonical + temporal + registry | prompt_consistency.yaml | 一致性强制 |
+| 8 | prompt_resolver ⭐ | canonical + enhanced + asset + temporal + consistency + platform_mappings | resolved_shots.yaml + final_prompts.yaml | 融合解析 + 平台适配 |
+| 9 | output_splitter | resolved_shots + final_prompts + asset_registry | video/image/voice_prompts.yaml + asset_manifest.yaml | 多模态输出拆分 |
 
 > ⭐ = 核心模块
 
@@ -222,19 +220,15 @@ novels/{novel_id}/
 │           └── full_prompt.yaml
 └── prompt/
     ├── memory/                    # 记忆目录
-    │   └── asset_registry.yaml    # 资产注册表
+    │   ├── asset_registry.yaml    # 资产注册表
+    │   └── pending_shot_specs.yaml # 待处理章节记录
     └── runtime/{chapter_id}/       # 中间产物
-        ├── mappings.yaml
-        ├── styles.yaml
-        ├── platform_templates.yaml
-        ├── pending_shot_specs.yaml
         ├── prompt_ir.yaml
         ├── prompt_canonical.yaml
-        ├── prompt_enhanced.yaml
+        ├── prompt_enhancer.yaml
         ├── prompt_asset.yaml
         ├── prompt_consistency.yaml
         ├── prompt_temporal.yaml
-        ├── prompt_fusion.yaml
         ├── target_platform.yaml
         └── final_prompts.yaml
 ```

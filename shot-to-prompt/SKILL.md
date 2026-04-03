@@ -11,7 +11,6 @@ description: "Convert shot_spec to AI video generation prompts. Use when user wa
 
 ```
 /shot-to-prompt run            # 执行转换（首次运行自动初始化）
-/shot-to-prompt run --fast     # 快速模式（2 阶段，提速 3-5x）
 ```
 
 ---
@@ -74,10 +73,7 @@ novels/{novel_id}/
 |---------|------|---------|
 | check_config | 读取 novel.config.md | - |
 | ensure_directories | 创建目录结构 | - |
-| load_mappings | 加载 references/mappings/*.yaml | {runtime_dir}/mappings.yaml |
-| load_styles | 加载 references/styles/*.yaml | {runtime_dir}/styles.yaml |
-| load_platform_templates | 加载 platform_templates/*.md | {runtime_dir}/platform_templates.yaml |
-| detect_shot_specs | 检测 output/shot/{id}/ | {runtime_dir}/pending_shot_specs.yaml |
+| detect_shot_specs | 检查 output_dir 是否存在最终输出，未处理则处理全部 shot | {memory_dir}/pending_shot_specs.yaml |
 
 #### 阶段 1：IR 构建
 
@@ -90,7 +86,7 @@ novels/{novel_id}/
 | Step ID | Agent | 输入 | 输出文件 |
 |---------|-------|------|---------|
 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml + mappings | prompt_canonical.yaml |
-| prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + styles + hook_engine | prompt_enhanced.yaml |
+| prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + styles + hook_engine | prompt_enhancer.yaml |
 | load_assets ⭐ | load_assets | asset_registry + prompt_ir | reusable_assets.yaml |
 | prompt_asset | prompt_asset_builder | prompt_ir + reusable_assets + asset_registry | prompt_asset.yaml |
 | prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml |
@@ -136,13 +132,10 @@ output_splitter             → agents/output_splitter.md                 ⭐ v0
 |------|----|----|----|---|------|
 | 0 | check_config | - | novel.config.md | - | 检查配置 |
 | 0 | ensure_directories | - | - | - | 创建目录结构 |
-| 0 | load_mappings | - | references/mappings/*.yaml | mappings.yaml | 加载翻译层 |
-| 0 | load_styles | - | references/styles/*.yaml | styles.yaml | 加载风格层 |
-| 0 | load_platform_templates | - | platform_templates/*.md | platform_templates.yaml | 加载平台模板 |
-| 0 | detect_shot_specs | - | output/shot/{id}/ | pending_shot_specs.yaml | 检测待处理文件 |
+| 0 | detect_shot_specs | - | output_dir | pending_shot_specs.yaml | 检测章节是否已处理（全部 shot 一起处理） |
 | 1 | ir_builder | prompt_ir_builder | shot_spec + characters + scenes | prompt_ir.yaml | 编译为统一语义 IR |
-| 2 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml + mappings | prompt_canonical.yaml | 规范化 IR + 翻译 |
-| 3 | prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + styles + hook_engine | prompt_enhanced.yaml | 策略增强 + 风格 |
+| 2 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml | prompt_canonical.yaml | 规范化 IR |
+| 3 | prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + hook_engine | prompt_enhancer.yaml | 策略增强 |
 | 4 | load_assets ⭐ | load_assets | asset_registry + prompt_ir | reusable_assets.yaml | 跨章节资产加载 |
 | 5 | prompt_asset | prompt_asset_builder | prompt_ir + reusable_assets + asset_registry | prompt_asset.yaml | 资产构建（支持复用） |
 | 6 | prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml | 时序 + 身份连续性 |
@@ -173,15 +166,12 @@ novels/{novel_id}/
 │           └── asset_manifest.yaml  # 资产状态汇总
 └── prompt/
     ├── memory/                      # 记忆目录（跨章节持久化）
-    │   └── asset_registry.yaml      # 全局资产注册表
+    │   ├── asset_registry.yaml      # 全局资产注册表
+    │   └── pending_shot_specs.yaml  # 待处理章节记录
     └── runtime/{chapter_id}/        # 中间产物
-        ├── mappings.yaml
-        ├── styles.yaml
-        ├── platform_templates.yaml
-        ├── pending_shot_specs.yaml
         ├── prompt_ir.yaml            # IR 层
         ├── prompt_canonical.yaml     # 规范化层
-        ├── prompt_enhanced.yaml      # 增强层
+        ├── prompt_enhancer.yaml      # 增强层
         ├── reusable_assets.yaml      # ⭐ 可复用资产清单
         ├── prompt_asset.yaml         # 资产层
         ├── prompt_temporal.yaml      # 时序层
@@ -232,7 +222,7 @@ IR Builder ────────────────────→ promp
     ↓
 Canonical Builder ─────────────→ prompt_canonical.yaml
     ↓
-Enhancer ──────────────────────→ prompt_enhanced.yaml
+Enhancer ──────────────────────→ prompt_enhancer.yaml
     ↓
 Load Assets ⭐ ────────────────→ reusable_assets.yaml
     ↓
@@ -263,43 +253,3 @@ validate_prompts
 6. **Identity Continuity** - 身份连续性保障（种子继承 + 漂移检测）
 7. **Auto-Repair** - 自动修复一致性问题（fingerprint + reference 注入）
 
----
-
-## Fast 模式（2 阶段）
-
-> 适用于：章节完整处理（不分批），预期提速 3-5x
-
-执行 `/shot-to-prompt run --fast` 时，使用 `pipelines/run_fast.yaml` 的 2 阶段流程：
-
-### Fast Pipeline 流程
-
-```
-shot_spec + characters + scenes + asset_registry
-    ↓
-[阶段 0: 初始化] （与标准模式相同）
-    ↓
-[阶段 1: Builder Combined] ──→ prompt_built.yaml
-    IR + Canonical + Enhanced + Load Assets + Asset Builder + Temporal
-    （6 个 Agent 合并为 1 次 Agent 调用，单次遍历所有镜头）
-    ↓
-[阶段 2: Resolver Combined] ──→ video_prompts.yaml
-    Consistency + Resolver + Splitter            → image_prompts.yaml
-    （3 个 Agent 合并为 1 次 Agent 调用）         → voice_prompts.yaml
-                                                 → asset_manifest.yaml
-```
-
-### Agent 文件映射（Fast 模式）
-
-```
-shot_builder_combined  → agents/shot_builder_combined.md    ⭐ Fast 模式
-shot_resolver_combined → agents/shot_resolver_combined.md   ⭐ Fast 模式
-```
-
-### 性能对比
-
-| 维度 | 标准模式 (10 阶段) | Fast 模式 (2 阶段) |
-|------|-------------------|-------------------|
-| Agent 启动次数 | 6 次 | 2 次 |
-| 文件读取总量 | ~1.2M | ~400K |
-| 上下文切换 | 6 次 | 0 次 |
-| 预估时间（30 shots） | ~70 分钟 | ~15-25 分钟 |

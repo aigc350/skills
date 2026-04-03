@@ -1,0 +1,21 @@
+# target_platform.yaml schema
+# 选择目标平台后的配置输出
+
+type: object
+
+required:
+  - platform
+
+properties:
+  platform:
+    type: string
+    description: "目标平台标识"
+    enum: [sora, runway, pika, kling, hailuo]
+
+  model_version:
+    type: string
+    description: "平台模型版本（可选，不指定则使用默认）"
+
+  selected_at:
+    type: string
+    description: "选择时间戳"

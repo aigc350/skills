@@ -131,7 +131,7 @@ steps:
 
   - name: Enhancer
     input: [prompt_canonical.yaml, style_control.yaml, hook_engine.yaml]
-    output: prompt_enhanced.yaml
+    output: prompt_enhancer.yaml
 ```
 
 ---
