@@ -43,9 +43,15 @@ properties:
           type: string
           enum: [critical, high, medium, low]
           description: "生成优先级"
-        additional_prompt:
-          type: string
-          description: "额外补充描述（如特定角度、光照等）"
+        required_views:
+          type: integer
+          description: "需要生成的视角数量（character=1, scene=4, object=1）"
+          default: 1
+        views:
+          type: array
+          description: "视角标签列表（如 scene 需要 [north, south, east, west]）"
+          items:
+            type: string
 
   # ===== 已有参考图（可复用）=====
   completed_images:
@@ -56,7 +62,7 @@ properties:
       required:
         - asset_id
         - asset_type
-        - image_path
+        - reference_images
         - status
       properties:
         asset_id:
@@ -64,9 +70,16 @@ properties:
         asset_type:
           type: string
           enum: [character, scene, object]
-        image_path:
-          type: string
-          description: "已生成的图片路径"
+        reference_images:
+          type: array
+          description: "参考图路径列表（scene 可能有多张，character/object 只有一张）"
+          items:
+            type: string
+        view_labels:
+          type: array
+          description: "视角标签（如 [north, south, east, west]）"
+          items:
+            type: string
         generated_at:
           type: string
           description: "生成日期"

@@ -7,7 +7,7 @@
 验证整个 Prompt Pipeline：
 
 ```text
-IR → Canonical → Enhancer → Asset → Consistency → Temporal → Fusion → Adapter
+IR → Canonical → Enhancer → Asset → Consistency → Temporal → Resolver → Splitter
 ```
 
 确保：
@@ -317,7 +317,7 @@ data_loss
 ## Rule 1️⃣ Pipeline 顺序
 
 ```text
-IR → Canonical → Enhancer → Asset → Consistency → Temporal → Fusion → Adapter
+IR → Canonical → Enhancer → Asset → Consistency → Temporal → Resolver → Splitter
 ```
 
 ---
@@ -335,11 +335,11 @@ Asset ← IR
 
 Consistency ← Canonical + Asset
 
-Temporal ← Consistency
+Temporal ← Consistency + Asset
 
-Fusion ← ALL
+Resolver ← ALL
 
-Adapter ← Fusion
+Splitter ← Resolver + Registry
 ```
 
 ---
@@ -351,7 +351,7 @@ Adapter ← Fusion
 ```text
 Enhancer ❌ IR
 Temporal ❌ Canonical
-Adapter ❌ IR
+Resolver ❌ IR
 ```
 
 ---

@@ -314,7 +314,7 @@ role: [prop, key_item, weapon, artifact]
 
 ---
 
-## 10. Key Principle
+## 13. Key Principle
 
 Semantic is the source of truth.
 Text and tokens are derived artifacts.

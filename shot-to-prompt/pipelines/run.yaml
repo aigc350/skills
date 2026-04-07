@@ -1,6 +1,6 @@
-# Shot-to-Prompt Pipeline v2.0
-# v0.4 架构：新增 Load Assets / Prompt Resolver / Output Splitter
-# 替代旧版 Fusion + Model Adapter
+# Shot-to-Prompt Pipeline v2.1
+# v0.5 架构：合并 load_assets → asset_builder, select_platform → resolver
+# v0.5 修正：Consistency 在 Temporal 之前（fingerprint 修复优先于 drift detection）
 
 version: 2.0
 
@@ -57,86 +57,72 @@ steps:
   # Step 3: Enhancer - 策略增强（hook 爆点策略）
   - id: prompt_enhancer
     agent: prompt_enhancer
-    description: 注入爆点策略增强
+    description: 注入爆点策略增强（只读 canonical，不读 IR）
     input:
-      - ${runtime_dir}/prompt_ir.yaml
       - ${runtime_dir}/prompt_canonical.yaml
       - references/strategies/hook_engine.yaml
     output:
       - ${runtime_dir}/prompt_enhancer.yaml
 
   # =========================================
-  # 阶段 4：跨章节资产加载（⭐ 必须在 Asset Builder 之前）
-  # =========================================
-  - id: load_assets
-    agent: load_assets
-    description: 加载已有资产，输出可复用资产清单
-    input:
-      - ${memory_dir}/asset_registry.yaml
-      - ${runtime_dir}/prompt_ir.yaml
-    output:
-      - ${runtime_dir}/reusable_assets.yaml
-    # ⭐ 关键：Asset Builder 依赖此输出判断复用
-
-  # =========================================
-  # 阶段 5：Asset Builder（依赖 reusable_assets）
+  # 阶段 4：Asset Builder（⭐ 内含 load_assets 逻辑：先查再建）
   # =========================================
   - id: prompt_asset
     agent: prompt_asset_builder
-    description: 构建 prompt 资产库（支持跨章节复用）
+    description: 构建 prompt 资产库（先查询已有资产复用，再构建新资产）
     registry: ${memory_dir}/asset_registry.yaml
     input:
       - ${runtime_dir}/prompt_ir.yaml
-      - ${runtime_dir}/reusable_assets.yaml
+      - ${memory_dir}/asset_registry.yaml
     output:
       - ${runtime_dir}/prompt_asset.yaml
 
   # =========================================
-  # 阶段 6-7：Temporal → Consistency（修正顺序）
+  # 阶段 5-6：Consistency → Temporal（⭐ v0.5 修正顺序）
+  # Consistency 先修复 fingerprint/reference，
+  # Temporal 再做 drift detection（依赖修复后的 fingerprint）
   # =========================================
 
-  # Step 6: Temporal - 时序强制执行
-  - id: prompt_temporal
-    agent: prompt_temporal_enforcer
-    description: 时序一致性处理（状态推进、动作结果应用、身份连续性）
-    input:
-      - ${runtime_dir}/prompt_ir.yaml
-      - ${runtime_dir}/prompt_asset.yaml
-    output:
-      - ${runtime_dir}/prompt_temporal.yaml
-
-  # Step 7: Consistency - 一致性强制执行（含自动修复）
+  # Step 5: Consistency - 一致性校验 + 自动修复
   - id: prompt_consistency
     agent: prompt_consistency_enforcer
-    description: 一致性校验 + 自动修复（ID绑定、状态校验、fingerprint 补充）
+    description: 一致性校验 + 自动修复（ID绑定、fingerprint 补充、reference 注入）
     registry: ${memory_dir}/asset_registry.yaml
     input:
       - ${runtime_dir}/prompt_ir.yaml
       - ${runtime_dir}/prompt_asset.yaml
       - ${runtime_dir}/prompt_canonical.yaml
-      - ${runtime_dir}/prompt_temporal.yaml
       - ${memory_dir}/asset_registry.yaml
     output:
       - ${runtime_dir}/prompt_consistency.yaml
 
+  # Step 6: Temporal - 时序强制执行
+  - id: prompt_temporal
+    agent: prompt_temporal_enforcer
+    description: 时序一致性处理（状态推进、动作结果应用、身份连续性、漂移检测）
+    input:
+      - ${runtime_dir}/prompt_ir.yaml
+      - ${runtime_dir}/prompt_asset.yaml
+      - ${runtime_dir}/prompt_consistency.yaml
+    output:
+      - ${runtime_dir}/prompt_temporal.yaml
+
   # =========================================
   # 阶段 8：Prompt Resolver（⭐ 核心模块，替代 Fusion + Adapter）
   # =========================================
-  - id: select_target_platform
-    description: 选择目标平台
-    output: ${runtime_dir}/target_platform.yaml
-
   - id: prompt_resolver
     agent: prompt_resolver
-    description: 融合解析 + 平台适配（双产物输出）
+    description: 融合解析 + 平台适配（双产物输出，内含平台选择）
     input:
+      - ${runtime_dir}/prompt_ir.yaml
       - ${runtime_dir}/prompt_canonical.yaml
       - ${runtime_dir}/prompt_enhancer.yaml
       - ${runtime_dir}/prompt_asset.yaml
       - ${runtime_dir}/prompt_temporal.yaml
       - ${runtime_dir}/prompt_consistency.yaml
-      - ${runtime_dir}/reusable_assets.yaml
       - references/platform_mappings.yaml
+      # ⭐ prompt_ir.yaml 用于 dialogue 原样照搬到 resolved_shots
+      # 平台选择从 run.yaml 的 default_platform 读取
     output:
       - ${runtime_dir}/resolved_shots.yaml
       - ${runtime_dir}/final_prompts.yaml

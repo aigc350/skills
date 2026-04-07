@@ -124,12 +124,13 @@ FOR each shot in final_prompts.shots:
     # 剪辑元数据（从 resolved_shots 提取）
     edit_metadata:
       location_id: resolved[shot_id].continuity.location_bindings[0].location_id
-      sequence: 从 shot_id 解析序号
+                  # ⚠️ 使用 asset 层的 location_id（如 "banquet_hall"），不是 scene_id
+      sequence: 从 shot_id 提取数字部分（如 "C1-S3-shot20" → 20）
       duration: shot.request.duration
-      transition_in: 从 temporal_tags 推断
-      transition_out: 从 temporal_tags 推断
+      transition_in: infer_transition(shot, resolved[shot_id])
+      transition_out: infer_transition(shot, resolved[shot_id], look_ahead=true)
 
-    # 平台请求参数（直接传递）
+    # 平台请求参数（直接传递，包含 seed/aspect_ratio）
     request: shot.request
   }
 ```
@@ -137,17 +138,45 @@ FOR each shot in final_prompts.shots:
 ### 2.3 转场推断规则
 
 ```text
-# 从 temporal_tags 推断转场类型
-IF "hard_cut" in temporal_tags:
-  → transition_in = "cut"
-IF "smooth_transition" in temporal_tags:
-  → transition_in = "smooth"
-IF "match_cut" in temporal_tags:
-  → transition_in = "match"
-IF "dramatic_transition" in temporal_tags:
-  → transition_in = "dramatic"
-DEFAULT:
-  → transition_in = "cut"
+# ⭐ 基于 temporal_tags 和 dramatic context 推断，不依赖精确字符串匹配
+infer_transition(current_shot, resolved, look_ahead=false):
+
+  tags = resolved.continuity.temporal_tags
+  hook = resolved.dramatic_focus.hook_type
+
+  # 规则 1：场景切换（location 变化）
+  IF location_changed_from_previous_shot:
+    → "smooth"
+
+  # 规则 2：建立/氛围镜头
+  ELIF "establishing" IN tags OR "setting" IN tags:
+    → "smooth"
+
+  # 规则 3：高潮/冲突/反转
+  ELIF "climax" IN tags OR hook == "climax":
+    → "dramatic"
+  ELIF "conflict" IN tags OR hook == "confrontation":
+    → "dramatic"
+  ELIF "reveal" IN tags OR hook == "reveal":
+    → "dramatic"
+
+  # 规则 4：转场/过渡镜头
+  ELIF "transition" IN tags OR "power_exit" IN tags:
+    → "smooth"
+
+  # 规则 5：反应/爆发
+  ELIF "reaction" IN tags AND "chaos" IN tags:
+    → "cut"
+  ELIF "reaction" IN tags:
+    → "match"
+
+  # 规则 6：紧张对峙（枪战/凝视）
+  ELIF "locked_gaze" IN tags OR "aggression" IN tags:
+    → "dramatic"
+
+  # 默认
+  DEFAULT:
+    → "cut"
 ```
 
 ---
@@ -159,41 +188,94 @@ DEFAULT:
 ```text
 pending_images = []
 completed_images = []
+seen_asset_ids = SET()          # ⭐ 去重：避免同一资产被多次处理
 
-FOR each asset in resolved referenced_assets:
-  registry_entry = registry查找(asset.asset_id)
+FOR each shot in resolved.shots:
+  # ⭐ 从 continuity.character_bindings 提取（不是 referenced_assets）
+  FOR each char_binding in shot.continuity.character_bindings:
+    asset_id = char_binding.asset_id
+    IF asset_id NOT IN seen_asset_ids:
+      seen_asset_ids.add(asset_id)
+      registry_entry = registry查找(asset_id)
 
-  IF registry_entry 不存在:
-    → 跳过（资产可能未在 registry 中注册）
+      IF registry_entry 存在:
+        IF registry_entry.generation_status.image == "pending":
+          → 添加到 pending_images，priority = "critical"，type = "character"，final_prompt = registry_entry.final_prompt，negative_prompt = registry_entry.negative_prompt
+        ELIF registry_entry.generation_status.image == "approved":
+          → 添加到 completed_images
 
-  IF registry_entry.generation_status.image == "pending":
-    → 添加到 pending_images
-    → priority = asset.priority（critical > high > medium > low）
+  # ⭐ 从 continuity.location_bindings 提取
+  FOR each loc_binding in shot.continuity.location_bindings:
+    asset_id = loc_binding.asset_id
+    IF asset_id NOT IN seen_asset_ids:
+      seen_asset_ids.add(asset_id)
+      registry_entry = registry查找(asset_id)
 
-  ELIF registry_entry.generation_status.image == "approved":
-    → 添加到 completed_images
+      IF registry_entry 存在:
+        IF registry_entry.generation_status.image == "pending":
+          → 添加到 pending_images，priority = "high"，type = "location"，final_prompt = registry_entry.final_prompt，negative_prompt = registry_entry.negative_prompt
+        ELIF registry_entry.generation_status.image == "approved":
+          → 添加到 completed_images
+
+  # ⭐ 从 continuity.object_bindings 提取
+  FOR each obj_binding in shot.continuity.object_bindings:
+    asset_id = obj_binding.asset_id
+    IF asset_id NOT IN seen_asset_ids:
+      seen_asset_ids.add(asset_id)
+      registry_entry = registry查找(asset_id)
+
+      IF registry_entry 存在:
+        IF registry_entry.generation_status.image == "pending":
+          → 添加到 pending_images，priority = "medium"，type = "object"，final_prompt = registry_entry.final_prompt，negative_prompt = registry_entry.negative_prompt
+        ELIF registry_entry.generation_status.image == "approved":
+          → 添加到 completed_images
 ```
+
+**关键修复**：`referenced_assets` 在 resolved_shots 中为空，资产绑定实际在 `continuity.character_bindings`、`continuity.location_bindings`、`continuity.object_bindings` 中。必须从这些字段提取 asset_id。
 
 ### 3.2 构建图片请求
 
 ```text
 FOR each pending_asset in pending_images:
 
+  # 类型映射（修正不一致问题）
+  IF pending_asset.type == "location":
+    → mapped_type = "scene"
+  ELIF pending_asset.type == "crowd":
+    → mapped_type = "scene"           # crowd 映射为 scene（场景级参考图）
+  ELSE:
+    → mapped_type = pending_asset.type  # character / object 直接使用
+
   image_entry = {
     asset_id: pending_asset.asset_id
-    asset_type: pending_asset.type          # character / scene / object
-    final_prompt: registry_entry.final_prompt
-    purpose: determine_purpose(type)
+    asset_type: mapped_type           # 修正后的类型
+    final_prompt: pending_asset.final_prompt    # ⭐ 从 pending_asset 获取（Step 3.1 已提取）
+    negative_prompt: pending_asset.negative_prompt  # ⭐ 从 pending_asset 获取
+    purpose: determine_purpose(mapped_type)
     priority: pending_asset.priority
+
+    # ⭐ v0.6 新增：视角处理
+    required_views: determine_required_views(mapped_type)
+    views: determine_view_labels(mapped_type)
   }
 ```
 
-### 3.3 purpose 推断规则
+### 3.3 purpose + required_views 推断规则
 
 ```text
-character → "character_reference"     # 角色面部参考图
-scene     → "scene_reference"         # 场景参考图
-object    → "object_reference"        # 物品参考图
+# 类型 → purpose 映射
+character       → "character_reference"     # 角色面部参考图
+scene (location) → "scene_reference"       # 场景参考图
+scene (crowd)   → "scene_reference"       # crowd 也映射为 scene
+object          → "object_reference"        # 物品参考图
+
+# 类型 → required_views（需要生成的视角数量）
+character       → 1                         # 角色只需要 1 张全身图/肖像图
+scene           → 4                         # 场景需要 4 个视角（东南西北）
+object          → 1                         # 物品只需要 1 张
+
+# 视角标签（scene 专用）
+scene.views     → ["north", "south", "east", "west"]
 ```
 
 ---
@@ -207,27 +289,131 @@ voice_tasks = []
 
 FOR each shot in resolved.shots:
   # 从 prompt_ir 的 dialogue 中提取（如果存在）
-  dialogue = resolved[shot_id].dialogue  # 可能为空（无对白镜头）
+  # ⭐ 从 resolved.shots 数组中按 shot_id 查找
+  dialogue = resolved.shots.find(s → s.shot_id == shot_id).dialogue
 
   IF dialogue 存在:
     FOR each line in dialogue:
       voice_task = {
         shot_id: shot_id
-        character_id: line.character_id
+        character_id: line.speaker          # ⭐ 从 dialogue.speaker 映射
         dialogue: line.text
-        voice_style: line.voice_style      # 从 canonical 或 IR 提取
-        duration_estimate: 估算时长（字数 * 系数）
-        emotion_tags: line.emotion_tags     # 从 IR 或 canonical 提取
+        voice_style: infer_voice_style(line.type, line.emotion)  # 从 type+emotion 推断
+        duration_estimate: 估算时长（len(text) * 0.15，clamp 1.5~10s）
+        emotion_tags: [line.emotion]        # ⭐ 从 dialogue.emotion 提取
+        volume: infer_volume(line.type, line.emotion)     # ⭐ 音量级别
+        pace: infer_pace(line.type, line.emotion)          # ⭐ 语速
+        timing: infer_timing(shot_id, line, voice_tasks)   # ⭐ 时间同步
       }
       → 添加到 voice_tasks
 ```
 
-### 4.2 时长估算
+### 4.2 voice_style 推断规则
+
+```text
+infer_voice_style(type, emotion):
+  # 基于对白类型推断基调
+  base = {
+    spoken:        "natural"
+    voiceover:     "narrative, calm"
+    inner_thought: "soft, introspective"
+    crowd:         "ambient, layered"
+  }
+
+  # 叠加情绪修饰
+  emotion_modifiers = {
+    anger:         ", intense, sharp"
+    sadness:       ", slow, heavy"
+    fear:          ", tense, trembling"
+    joy:           ", bright, energetic"
+    surprise:      ", sharp, rising"
+    calm:          ", steady, composed"
+    default:       ""
+  }
+
+  voice_style = base[type] + emotion_modifiers[emotion]
+```
+
+### 4.3 时长估算
 
 ```text
 # 简单估算规则
 duration_estimate = len(dialogue) * 0.15   # 中文字符 * 0.15 秒/字
 # 最小值 1.5 秒，最大值 10 秒
+```
+
+### 4.4 音量推断规则
+
+```text
+infer_volume(type, emotion):
+  # 基于对白类型
+  base = {
+    voiceover:     "quiet"
+    inner_thought: "quiet"
+    crowd:         "loud"
+    spoken:        "normal"
+  }
+
+  # 情绪覆盖
+  emotion_override = {
+    anger:    "loud"
+    shout:    "shout"
+    whisper:  "whisper"
+    fear:     "quiet"
+    sadness:  "quiet"
+    surprise: "loud"
+    joy:      "loud"
+    calm:     "normal"
+  }
+
+  → 优先使用 emotion_override[emotion]，否则用 base[type]
+```
+
+### 4.5 语速推断规则
+
+```text
+infer_pace(type, emotion):
+  # 基于情绪推断
+  emotion_pace = {
+    anger:    "fast"
+    fear:     "fast"
+    surprise: "fast"
+    sadness:  "slow"
+    calm:     "normal"
+    joy:      "fast"
+    default:  "normal"
+  }
+
+  # 对白类型覆盖
+  IF type == "voiceover":
+    → "slow"
+  ELIF type == "inner_thought":
+    → "slow"
+
+  → 优先使用 emotion_pace[emotion]
+```
+
+### 4.6 时间同步推断规则
+
+```text
+infer_timing(shot_id, line, existing_voice_tasks):
+  timing = {
+    start_offset: 0.0              # 默认从镜头开始处
+    overlap_with_previous: false    # 默认不重叠
+  }
+
+  # 判断起始偏移
+  IF 对白是镜头第一条 AND shot 不是开场镜头:
+    → start_offset = 0.5          # 留出场景建立时间
+  ELIF 对白是镜头内的后续条目:
+    → start_offset = sum(前序 voice_tasks 的 duration_estimate) + 0.3  # 间隔 0.3s
+
+  # 判断是否与上一镜头重叠
+  previous_task = existing_voice_tasks 中最后一个
+  IF previous_task 存在:
+    prev_end = previous_task.timing.start_offset + previous_task.duration_estimate
+    IF prev_end > 当前镜头的 duration:
+      → overlap_with_previous = true
 ```
 
 ---
@@ -238,25 +424,86 @@ duration_estimate = len(dialogue) * 0.15   # 中文字符 * 0.15 秒/字
 
 ```text
 assets = { characters: [], locations: [], objects: [] }
+seen_asset_ids = SET()          # ⭐ 去重：避免同一资产被多次添加
 
-FOR each referenced_asset in all shots:
-  registry_entry = registry 查找(asset_id)
+FOR each shot in resolved.shots:
+  # ⭐ 从 continuity.character_bindings 提取
+  FOR each char_binding in shot.continuity.character_bindings:
+    asset_id = char_binding.asset_id
+    IF asset_id NOT IN seen_asset_ids:
+      seen_asset_ids.add(asset_id)
+      registry_entry = registry查找(asset_id)
 
-  manifest_entry = {
-    asset_id: asset_id
-    status: registry_entry.generation_status.image
-    reference_image: registry_entry.reference.face_image / scene_image / object_image
-    used_in_shots: 收集所有引用该资产的 shot_id
-  }
+      IF registry_entry 存在:
+        reference_images = [registry_entry.reference.face_image] IF registry_entry.reference.face_image ELSE []
+        status = "approved" IF registry_entry.reference.face_image ELSE "pending"
 
-  # 按资产类型分类
-  IF type == "character":
-    → assets.characters.append(manifest_entry)
-  ELIF type == "scene":
-    → assets.locations.append(manifest_entry)
-  ELIF type == "object":
-    → assets.objects.append(manifest_entry)
+        manifest_entry = {
+          asset_id: asset_id
+          status: status
+          reference_images: reference_images
+          used_in_shots: [shot.shot_id]   # ⭐ 后续会在 Step 5.2 合并
+        }
+        → assets.characters.append(manifest_entry)
+
+  # ⭐ 从 continuity.location_bindings 提取
+  FOR each loc_binding in shot.continuity.location_bindings:
+    asset_id = loc_binding.asset_id
+    IF asset_id NOT IN seen_asset_ids:
+      seen_asset_ids.add(asset_id)
+      registry_entry = registry查找(asset_id)
+
+      IF registry_entry 存在:
+        reference_images = [registry_entry.reference.scene_image] IF registry_entry.reference.scene_image ELSE []
+        status = "approved" IF registry_entry.reference.scene_image ELSE "pending"
+
+        manifest_entry = {
+          asset_id: asset_id
+          status: status
+          reference_images: reference_images
+          view_labels: ["north", "south", "east", "west"]  # 场景 4 视角
+          used_in_shots: [shot.shot_id]
+        }
+        → assets.locations.append(manifest_entry)
+
+  # ⭐ 从 continuity.object_bindings 提取
+  FOR each obj_binding in shot.continuity.object_bindings:
+    asset_id = obj_binding.asset_id
+    IF asset_id NOT IN seen_asset_ids:
+      seen_asset_ids.add(asset_id)
+      registry_entry = registry查找(asset_id)
+
+      IF registry_entry 存在:
+        reference_images = [registry_entry.reference.object_image] IF registry_entry.reference.object_image ELSE []
+        status = "approved" IF registry_entry.reference.object_image ELSE "pending"
+
+        manifest_entry = {
+          asset_id: asset_id
+          status: status
+          reference_images: reference_images
+          used_in_shots: [shot.shot_id]
+        }
+        → assets.objects.append(manifest_entry)
+
+# ⭐ 合并 used_in_shots（同一资产可能被多个 shot 引用）
+FOR each asset_list in [assets.characters, assets.locations, assets.objects]:
+  FOR each manifest_entry in asset_list:
+    # 收集所有引用该资产的 shot_id
+    all_shots = []
+    FOR each shot in resolved.shots:
+      FOR each char_binding in shot.continuity.character_bindings:
+        IF char_binding.asset_id == manifest_entry.asset_id:
+          → all_shots.append(shot.shot_id)
+      FOR each loc_binding in shot.continuity.location_bindings:
+        IF loc_binding.asset_id == manifest_entry.asset_id:
+          → all_shots.append(shot.shot_id)
+      FOR each obj_binding in shot.continuity.object_bindings:
+        IF obj_binding.asset_id == manifest_entry.asset_id:
+          → all_shots.append(shot.shot_id)
+    manifest_entry.used_in_shots = 去重后的 all_shots
 ```
+
+**关键修复**：`referenced_assets` 在 resolved_shots 中为空，必须从 `continuity.character_bindings`、`continuity.location_bindings`、`continuity.object_bindings` 中提取。
 
 ### 5.2 生成任务清单
 
@@ -274,7 +521,7 @@ FOR each pending in pending_images:
 
 # 配音生成任务（从 voice_tasks 提取）
 FOR each voice in voice_tasks:
-  # 查找该角色的 reference_image 是否已就绪
+  # 查找该角色的 reference_images 是否已就绪
   character_asset = registry.characters[voice.character_id]
   IF character_asset.generation_status.image == "approved":
     depends_on = []
@@ -317,25 +564,55 @@ FOR each task in generation_tasks:
 registry = 读取 asset_registry.yaml
 
 FOR each shot in resolved.shots:
-  FOR each referenced_asset in shot.referenced_assets:
-    asset_id = referenced_asset.asset_id
-    registry_entry = registry 查找(asset_id)
+  # ⭐ 从 continuity bindings 提取资产（不是 referenced_assets）
+  FOR each char_binding in shot.continuity.character_bindings:
+    asset_id = char_binding.asset_id
+    registry_entry = registry查找(asset_id)
 
     IF registry_entry 存在:
-      # 更新 used_in_chapters（去重）
-      IF chapter_id NOT IN registry_entry.used_in_chapters:
+      # 更新 usage.used_in_chapters（去重）
+      IF chapter_id NOT IN registry_entry.usage.used_in_chapters:
         → 追加 chapter_id
 
-      # 更新 used_in_shots（去重）
-      IF shot.shot_id NOT IN registry_entry.used_in_shots:
+      # 更新 usage.used_in_shots（去重）
+      IF shot.shot_id NOT IN registry_entry.usage.used_in_shots:
         → 追加 shot_id
 
-      # 更新 last_used
-      → registry_entry.generation_status.last_used = 当前日期
+      # 更新 usage.used_count
+      → registry_entry.usage.used_count += 1
+
+      # 更新 timestamps.updated_at
+      → registry_entry.timestamps.updated_at = 当前日期
+
+  FOR each loc_binding in shot.continuity.location_bindings:
+    asset_id = loc_binding.asset_id
+    registry_entry = registry查找(asset_id)
+
+    IF registry_entry 存在:
+      IF chapter_id NOT IN registry_entry.usage.used_in_chapters:
+        → 追加 chapter_id
+      IF shot.shot_id NOT IN registry_entry.usage.used_in_shots:
+        → 追加 shot_id
+      → registry_entry.usage.used_count += 1
+      → registry_entry.timestamps.updated_at = 当前日期
+
+  FOR each obj_binding in shot.continuity.object_bindings:
+    asset_id = obj_binding.asset_id
+    registry_entry = registry查找(asset_id)
+
+    IF registry_entry 存在:
+      IF chapter_id NOT IN registry_entry.usage.used_in_chapters:
+        → 追加 chapter_id
+      IF shot.shot_id NOT IN registry_entry.usage.used_in_shots:
+        → 追加 shot_id
+      → registry_entry.usage.used_count += 1
+      → registry_entry.timestamps.updated_at = 当前日期
 
 # 写回 registry
 写入 asset_registry.yaml
 ```
+
+**关键修复**：`referenced_assets` 为空，必须从 `continuity.character_bindings`、`continuity.location_bindings`、`continuity.object_bindings` 提取。
 
 ---
 
@@ -439,6 +716,11 @@ voice_tasks:
     emotion_tags:
       - "contained_anger"
       - "confidence"
+    volume: "normal"
+    pace: "slow"
+    timing:
+      start_offset: 0.5
+      overlap_with_previous: false
 ```
 
 ---
@@ -453,19 +735,19 @@ assets:
   characters:
     - asset_id: "shen_yan_v1"
       status: "approved"
-      reference_image: "assets/characters/shen_yan/face_v1.png"
+      reference_images: ["assets/characters/shen_yan/face_v1.png"]
       used_in_shots: ["C1-S3-shot20", "C1-S3-shot21"]
 
   locations:
     - asset_id: "banquet_hall_day_v1"
       status: "approved"
-      reference_image: "assets/scenes/banquet_hall/day_v1.png"
+      reference_images: ["assets/scenes/banquet_hall/day_v1.png"]
       used_in_shots: ["C1-S3-shot20"]
 
   objects:
     - asset_id: "ring_1_intact_v1"
       status: "pending"
-      reference_image: null
+      reference_images: []
       used_in_shots: ["C1-S3-shot20"]
 
 # 生成任务清单

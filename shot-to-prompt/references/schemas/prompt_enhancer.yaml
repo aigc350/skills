@@ -1,13 +1,30 @@
 type: object
 
 required:
-  - location_id
+  - chapter_id
+  - meta
   - shots
 
 properties:
 
-  location_id:
+  chapter_id:
     type: string
+    description: "章节 ID"
+
+  meta:
+    type: object
+    required: [enhanced, genre, intensity]
+    properties:
+      enhanced:
+        type: boolean
+      genre:
+        type: string
+        description: "从 canonical.style 揥取的风格类型"
+      intensity:
+        type: string
+        description: "从 canonical.style 揨 取的强度"
+      boost_factor:
+        type: number
 
   shots:
     type: array
@@ -25,50 +42,81 @@ properties:
         shot_id:
           type: string
 
-        # 🔥 完全复用 canonical
+        # 继承 canonical 的完整 prompt 结构（不修改）
         prompt:
           $ref: "common.schema.yaml#/Prompt"
 
-        # 🔥 Enhancer 专属
+        # 本阶段新增的增强数据
         enhancement:
           type: object
 
+          required: [style_tags]
+
           properties:
 
-            style:
+            style_tags:
+              type: array
+              items:
+                type: string
+              description: "增强关键词汇总"
+
+            hook:
               type: object
-
               properties:
-                applied:
-                  type: boolean
-
-                style_tags:
+                type:
+                  type: string
+                  description: "opening / middle / climax"
+                prefix:
+                  type: array
+                  items:
+                    type: string
+                suffix:
                   type: array
                   items:
                     type: string
 
-                intensity:
-                  type: string
-
-            hook:
+            emotion:
               type: object
-
               properties:
-                applied:
-                  type: boolean
+                keywords:
+                  type: array
+                  items:
+                    type: string
 
-                hook_type:
-                  type: string
-
-                hook_text:
-                  type: string
-
-            pacing:
+            camera:
               type: object
-
               properties:
-                rhythm:
-                  type: string
+                keywords:
+                  type: array
+                  items:
+                    type: string
 
-                speed:
-                  type: string
+            lighting:
+              type: object
+              properties:
+                keywords:
+                  type: array
+                  items:
+                    type: string
+
+            environment:
+              type: object
+              properties:
+                keywords:
+                  type: array
+                  items:
+                    type: string
+
+            # 爽点结构化（供 Resolver 使用）
+            hook_type:
+              type: string
+            opening_beat:
+              type: string
+            payoff_target:
+              type: array
+              items:
+                type: string
+            emphasis:
+              type: array
+              items:
+                type: string

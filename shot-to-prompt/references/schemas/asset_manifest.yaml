@@ -37,9 +37,11 @@ properties:
               type: string
               enum: [pending, generating, approved, failed]
               description: "参考图生成状态"
-            reference_image:
-              type: [string, "null"]
-              description: "参考图路径（null 表示待生成）"
+            reference_images:
+              type: array
+              description: "参考图路径列表（角色 1 张，null 表示待生成）"
+              items:
+                type: [string, "null"]
             used_in_shots:
               type: array
               description: "使用该资产的镜头列表"
@@ -60,8 +62,16 @@ properties:
             status:
               type: string
               enum: [pending, generating, approved, failed]
-            reference_image:
-              type: [string, "null"]
+            reference_images:
+              type: array
+              description: "参考图路径列表（场景可能有多张如东南西北，null 表示待生成）"
+              items:
+                type: [string, "null"]
+            view_labels:
+              type: array
+              description: "视角标签（如 [north, south, east, west]）"
+              items:
+                type: string
             used_in_shots:
               type: array
               items:
@@ -81,8 +91,11 @@ properties:
             status:
               type: string
               enum: [pending, generating, approved, failed]
-            reference_image:
-              type: [string, "null"]
+            reference_images:
+              type: array
+              description: "参考图路径列表（物品 1 张，null 表示待生成）"
+              items:
+                type: [string, "null"]
             used_in_shots:
               type: array
               items:

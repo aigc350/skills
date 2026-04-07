@@ -1,8 +1,10 @@
-# Prompt Enhancer Agent v1.1 (Structured Enhancement Engine)
+# Prompt Enhancer Agent v2.0 (Structured Enhancement Engine)
 
 > ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
 >
 > Stage: `enhancer` | Permission: semantic ⚠ LIMITED (style/intensity only), quality ✅, negative ✅
+>
+> ⭐ v0.5 修正：只读 canonical（不再直接读 IR），输出结构化 prompt + enhancement
 
 ---
 
@@ -10,11 +12,13 @@
 
 将输入：
 
-* canonical_prompt.yaml（scene级）
+* prompt_canonical.yaml（标准化语义层）
 
 输出：
 
-* enhanced_prompt.yaml（结构化增强版）
+* prompt_enhancer.yaml（结构化增强版）
+
+> ⭐ v0.5: Enhancer 只读取 canonical 层，不直接读取 IR（遵守 pipeline_validator Rule 3）
 
 ---
 
@@ -37,35 +41,29 @@
 
 ---
 
-## 1️⃣ IR Driven（必须）
+## 1️⃣ Canonical Driven（⭐ v0.5 修正）
 
 所有增强必须来自：
 
 ```yaml
-IR.style
-IR.weights
+canonical.style
+canonical.subject.emotion
+canonical.camera
+canonical.location
 ```
+
+> ❌ 不再直接读取 IR（pipeline_validator Rule 3: `Enhancer ❌ IR`）
 
 ---
 
 ## 2️⃣ Structured First（核心升级）
 
 ❗ 不允许直接拼字符串
-❗ 必须先生成“增强结构”，再统一拼装
+❗ 必须先生成”增强结构”，再输出结构化数据
 
 ---
 
-## 3️⃣ Single Assembly Point
-
-👉 所有字符串拼接只允许发生在：
-
-```text
-Enhancement Application
-```
-
----
-
-## 4️⃣ Non-Destructive
+## 3️⃣ Non-Destructive
 
 * 不删除原 prompt
 * 只做增强
@@ -78,8 +76,8 @@ Enhancement Application
 
 ```yaml
 input:
-  - prompt_canonical.yaml
-  - hook_engine.yaml
+  - prompt_canonical.yaml       # ⭐ 唯一数据来源（不再读 IR）
+  - hook_engine.yaml             # 爆点策略配置
 ```
 
 ---
@@ -99,11 +97,11 @@ output:
 
 ---
 
-## 提取：
+## 提取（从 canonical）：
 
 ```yaml
-genre = IR.style.genre
-intensity = IR.style.intensity
+genre = canonical.style.semantic.style
+intensity = canonical.style.semantic.intensity
 ```
 
 ---
@@ -172,9 +170,9 @@ enhancement:
 ### 输入：
 
 ```yaml
-IR.subject.emotion
-IR.style.intensity
-IR.weights.emotion
+canonical.subject.semantic.emotion
+canonical.style.semantic.intensity
+canonical.intent.emphasis  # 权重由 canonical 层提供
 ```
 
 ---
@@ -200,8 +198,8 @@ IF weights.emotion > 1.2:
 ### 输入：
 
 ```yaml
-IR.camera.shot_type
-IR.camera.movement
+canonical.camera.semantic.shot_type
+canonical.camera.semantic.movement
 ```
 
 ---
@@ -227,7 +225,7 @@ IF movement 存在:
 ### 输入：
 
 ```yaml
-IR.environment.lighting
+canonical.style.semantic.lighting
 genre
 ```
 
@@ -254,7 +252,7 @@ IF genre == romance:
 ### 输入：
 
 ```yaml
-IR.environment.description
+canonical.environment.semantic.location
 ```
 
 ---
@@ -445,17 +443,49 @@ intense dramatic opening, a man with a subtle smirk in a banquet hall, intense, 
 ---
 
 ```yaml
-location_id: string
+chapter_id: string
 
 meta:
   enhanced: true
+  genre: string
+  intensity: string
 
 shots:
 
   - shot_id: string
 
-    enhanced_prompt:
-      text: string
+    # 继承 canonical 的 prompt 结构（不修改）
+    prompt:
+      subject: {...}
+      action: {...}
+      location: {...}
+      camera: {...}
+      style: {...}
+      quality: {...}
+      negative: {...}
+
+    # 本阶段新增的增强数据
+    enhancement:
+      style_tags: string[]           # 增强关键词汇总
+      hook:
+        type: string                 # opening / middle / climax
+        prefix: string[]
+        suffix: string[]
+
+      emotion:
+        keywords: string[]
+      camera:
+        keywords: string[]
+      lighting:
+        keywords: string[]
+      environment:
+        keywords: string[]
+
+      # 爽点结构化（供 Resolver 的 dramatic_focus 使用）
+      hook_type: string
+      opening_beat: string
+      payoff_target: string[]
+      emphasis: string[]
 ```
 
 ---
@@ -468,7 +498,8 @@ shots:
 
 ❌ 不允许重复 hook 注入
 ❌ 不允许跳过结构层直接拼接
-❌ 不允许修改 IR
+❌ 不允许直接读取 IR（⭐ v0.5: 必须从 canonical 读取）
+❌ 输出简单字符串（必须输出结构化 prompt + enhancement）
 
 ---
 
@@ -479,15 +510,13 @@ shots:
 ---
 
 ```text
-prompt_ir.yaml
+prompt_canonical_builder
       ↓
-prompt_builder
+prompt_canonical.yaml
       ↓
-canonical_prompt.yaml
+prompt_enhancer v2.0
       ↓
-prompt_enhancer v1.1
-      ↓
-enhanced_prompt.yaml
+prompt_enhancer.yaml
 ```
 
 ---
@@ -498,8 +527,11 @@ enhanced_prompt.yaml
 
 ---
 
-> ❗ Enhancer v1.1 的本质是：
-
-👉 **结构化增强引擎（不是字符串优化器）**
-
----
+> ❗ Enhancer v2.0 的核心升级：
+>
+> 👉 **从"读 IR + 拼字符串"升级为"读 canonical + 结构化输出"**
+>
+> 1. 不再直接读取 IR（遵守 pipeline_validator Rule 3）
+> 2. 所有增强数据来自 canonical 的 semantic 层
+> 3. 输出结构化 prompt + enhancement（不再拼接字符串）
+> 4. 下游 Resolver 读取结构化 enhancement 构建 dramatic_focus

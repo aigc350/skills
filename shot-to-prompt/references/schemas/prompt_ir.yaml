@@ -90,8 +90,21 @@ properties:
                   variant_id:
                     type: string
 
+                  face_id:
+                    type: string
+                    description: "面部 ID（用于一致性匹配，来自 characters.yaml）"
+
                   appearance:
                     type: object
+                    properties:
+                      outfit:
+                        type: string
+                      hair:
+                        type: string
+                      accessories:
+                        type: array
+                        items:
+                          type: string
 
                   expression:
                     type: string
@@ -109,6 +122,11 @@ properties:
                     type: array
                     items:
                       type: string
+
+                  subject_state:
+                    type: string
+                    description: "人物状态（剧情事实）"
+                    enum: [clean, slightly_dirty, dirty, wet, damaged, bloody]
 
         # =========================
         # Intent（原样照搬 shot_spec.intent）
@@ -234,6 +252,31 @@ properties:
                   type: string
                 motion:
                   type: string
+
+        # =========================
+        # Dialogue（对白/画外音）
+        # =========================
+        dialogue:
+          type: array
+          description: "本镜头中的对白/画外音列表（可选，无对白则省略）"
+          items:
+            type: object
+            required: [speaker, text]
+            properties:
+              speaker:
+                type: string
+                description: "说话者 character_id（或 'narrator' / 'crowd'）"
+              text:
+                type: string
+                description: "对白/画外音文本"
+              type:
+                type: string
+                enum: [spoken, voiceover, inner_thought, crowd]
+                default: spoken
+                description: "对白类型"
+              emotion:
+                type: string
+                description: "说话时的情绪"
 
         meta:
           type: object

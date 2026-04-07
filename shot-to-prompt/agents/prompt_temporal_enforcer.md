@@ -10,16 +10,19 @@
 
 ## 🧠 Role
 
-在 Asset Builder 之后，对 shot prompt 进行时间一致性增强。
+在 Consistency Enforcer 之后，对 shot prompt 进行时间一致性增强。
 
 输入：
 
 * prompt_ir.yaml
 * prompt_asset.yaml
+* prompt_consistency.yaml（⭐ v0.5 新增：读取修复后的 fingerprint 做 drift detection）
 
 输出：
 
 * prompt_temporal.yaml
+
+> ⭐ v0.5 修正：Temporal 在 Consistency 之后执行，可使用修复后的 appearance_fingerprint 进行漂移检测
 
 ---
 
@@ -115,6 +118,7 @@ continuity_anchors:   必须继承的身份特征锚点
 ```yaml
 prompt_ir.yaml                # IR 层输出
 prompt_asset.yaml             # 资产层输出（含 reference, fingerprint）
+prompt_consistency.yaml       # ⭐ v0.5 新增：一致性修复结果（修复后的 fingerprint 用于 drift detection）
 ```
 
 ---
@@ -259,14 +263,16 @@ state evolution: [具体变化描述]
 
 ---
 
-### 5.4 ⭐ 追加 state_history（v0.4 新增）
+### 5.4 ⭐ 追加 object_state_updates（供 Output Splitter 更新 registry）
 
 ```text
-# 物品状态变化时追加历史记录
+# 物品状态变化时记录到 object_state_updates
 FOR each object with state change:
-  → 读取 registry.objects.{asset_id}.state_history
-  → 追加新条目: { chapter_id, state: new_state, shots: [shot_id] }
-  → 输出到 temporal 的 object_state_updates（供后续更新 registry）
+  → 读取 prompt_asset[shot_id].objects[].object_state   # 当前状态
+  → 读取上一镜头的 object_state                          # 上一状态
+  → 判断是否变化
+  → 输出 object_state_updates: { object_id, asset_id, previous_state, current_state, changed }
+# ⭐ 注意：registry 的 state_history 由 Output Splitter 根据 object_state_updates 更新
 ```
 
 ---
@@ -355,9 +361,12 @@ ELSE:
 
 ```text
 # 检测当前镜头与上一镜头的漂移程度
+# ⭐ v0.5: 优先使用 Consistency 修复后的 fingerprint（更准确）
 IF previous_shot 存在:
-  current_fingerprint = prompt_asset[shot_id].character.appearance_fingerprint
-  previous_fingerprint = prompt_asset[previous_shot_id].character.appearance_fingerprint
+  current_fingerprint = prompt_consistency[shot_id].character_bindings[].appearance_fingerprint
+                       ?? prompt_asset[shot_id].characters[].appearance_fingerprint  # ⭐ 遍历数组
+  previous_fingerprint = prompt_consistency[previous_shot_id].character_bindings[].appearance_fingerprint
+                        ?? prompt_asset[previous_shot_id].characters[].appearance_fingerprint  # ⭐ 遍历数组
 
   IF 两者都存在:
     drift_score = calculate_drift(current_fingerprint, previous_fingerprint)

@@ -3,7 +3,7 @@ name: shot-to-prompt
 description: "Convert shot_spec to AI video generation prompts. Use when user wants to generate video prompts for Sora, Runway, Pika, Kling, etc. Commands: run/status/export."
 ---
 
-# shot-to-prompt v0.4
+# shot-to-prompt v0.5
 
 将 shot_spec 转换为 AI 视频生成模型的 Prompt，建立机器可执行语言到人类可读 Prompt 的桥梁。
 
@@ -86,12 +86,11 @@ novels/{novel_id}/
 | Step ID | Agent | 输入 | 输出文件 |
 |---------|-------|------|---------|
 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml + mappings | prompt_canonical.yaml |
-| prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + styles + hook_engine | prompt_enhancer.yaml |
-| load_assets ⭐ | load_assets | asset_registry + prompt_ir | reusable_assets.yaml |
-| prompt_asset | prompt_asset_builder | prompt_ir + reusable_assets + asset_registry | prompt_asset.yaml |
-| prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml |
-| prompt_consistency | prompt_consistency_enforcer | prompt_ir + prompt_asset + prompt_canonical + prompt_temporal + asset_registry | prompt_consistency.yaml |
-| prompt_resolver ⭐ | prompt_resolver | canonical + enhanced + asset + temporal + consistency + reusable_assets + platform_mappings | resolved_shots.yaml + final_prompts.yaml |
+| prompt_enhancer | prompt_enhancer | prompt_canonical + styles + hook_engine | prompt_enhancer.yaml |
+| prompt_asset ⭐ | prompt_asset_builder | prompt_ir + asset_registry（内含复用查询） | prompt_asset.yaml |
+| prompt_consistency ⭐ | prompt_consistency_enforcer | prompt_ir + prompt_asset + prompt_canonical + asset_registry | prompt_consistency.yaml |
+| prompt_temporal ⭐ | prompt_temporal_enforcer | prompt_ir + prompt_asset + prompt_consistency | prompt_temporal.yaml |
+| prompt_resolver ⭐ | prompt_resolver | canonical + enhanced + asset + temporal + consistency + platform_mappings（内含平台选择） | resolved_shots.yaml + final_prompts.yaml |
 
 #### 阶段 9：多模态输出
 
@@ -111,12 +110,11 @@ novels/{novel_id}/
 ir_builder                  → agents/prompt_ir_builder.md
 prompt_canonical_builder    → agents/prompt_canonical_builder.md
 prompt_enhancer             → agents/prompt_enhancer.md
-load_assets                 → agents/load_assets.md                     ⭐ v0.4
-prompt_asset_builder        → agents/prompt_asset_builder.md
+prompt_asset_builder        → agents/prompt_asset_builder.md            ⭐ v0.5 合并 load_assets
 prompt_temporal_enforcer    → agents/prompt_temporal_enforcer.md
 prompt_consistency_enforcer → agents/prompt_consistency_enforcer.md
-prompt_resolver             → agents/prompt_resolver.md                 ⭐ v0.4 核心
-output_splitter             → agents/output_splitter.md                 ⭐ v0.4
+prompt_resolver             → agents/prompt_resolver.md                 ⭐ v0.5 合并平台选择
+output_splitter             → agents/output_splitter.md
 ```
 
 > ⭐ = v0.4 新增/重写模块
@@ -135,12 +133,11 @@ output_splitter             → agents/output_splitter.md                 ⭐ v0
 | 0 | detect_shot_specs | - | output_dir | pending_shot_specs.yaml | 检测章节是否已处理（全部 shot 一起处理） |
 | 1 | ir_builder | prompt_ir_builder | shot_spec + characters + scenes | prompt_ir.yaml | 编译为统一语义 IR |
 | 2 | prompt_canonical | prompt_canonical_builder | prompt_ir.yaml | prompt_canonical.yaml | 规范化 IR |
-| 3 | prompt_enhancer | prompt_enhancer | prompt_ir + prompt_canonical + hook_engine | prompt_enhancer.yaml | 策略增强 |
-| 4 | load_assets ⭐ | load_assets | asset_registry + prompt_ir | reusable_assets.yaml | 跨章节资产加载 |
-| 5 | prompt_asset | prompt_asset_builder | prompt_ir + reusable_assets + asset_registry | prompt_asset.yaml | 资产构建（支持复用） |
-| 6 | prompt_temporal | prompt_temporal_enforcer | prompt_ir + prompt_asset | prompt_temporal.yaml | 时序 + 身份连续性 |
-| 7 | prompt_consistency | prompt_consistency_enforcer | prompt_ir + prompt_asset + canonical + temporal + asset_registry | prompt_consistency.yaml | 一致性校验 + 自动修复 |
-| 8 | prompt_resolver ⭐ | prompt_resolver | canonical + enhanced + asset + temporal + consistency + reusable_assets + platform_mappings | resolved_shots.yaml + final_prompts.yaml | 融合解析 + 平台适配 |
+| 3 | prompt_enhancer | prompt_enhancer | prompt_canonical + hook_engine | prompt_enhancer.yaml | 策略增强 |
+| 4 | prompt_asset ⭐ | prompt_asset_builder | prompt_ir + asset_registry（内含复用查询） | prompt_asset.yaml | 资产构建（先查再建） |
+| 5 | prompt_consistency ⭐ | prompt_consistency_enforcer | prompt_ir + prompt_asset + canonical + asset_registry | prompt_consistency.yaml | 一致性校验 + 自动修复（先于 Temporal） |
+| 6 | prompt_temporal ⭐ | prompt_temporal_enforcer | prompt_ir + prompt_asset + consistency | prompt_temporal.yaml | 时序 + 身份连续性（依赖修复后 fingerprint） |
+| 7 | prompt_resolver ⭐ | prompt_resolver | canonical + enhanced + asset + temporal + consistency + platform_mappings（内含平台选择） | resolved_shots.yaml + final_prompts.yaml | 融合解析 + 平台适配 |
 | 9 | output_splitter ⭐ | output_splitter | resolved_shots + final_prompts + asset_registry | video/image/voice_prompts.yaml + asset_manifest.yaml | 多模态输出拆分 |
 | 10 | validate_prompts | - | final_prompts.yaml | - | 校验格式 |
 
@@ -172,13 +169,11 @@ novels/{novel_id}/
         ├── prompt_ir.yaml            # IR 层
         ├── prompt_canonical.yaml     # 规范化层
         ├── prompt_enhancer.yaml      # 增强层
-        ├── reusable_assets.yaml      # ⭐ 可复用资产清单
-        ├── prompt_asset.yaml         # 资产层
+        ├── prompt_asset.yaml         # 资产层（内含复用查询）
         ├── prompt_temporal.yaml      # 时序层
         ├── prompt_consistency.yaml   # 一致性层
         ├── resolved_shots.yaml       # ⭐ 平台无关真相层
-        ├── final_prompts.yaml        # ⭐ 平台请求层
-        └── target_platform.yaml
+        └── final_prompts.yaml        # ⭐ 平台请求层
 ```
 
 > **runtime_dir**: `novels/{novel_id}/prompt/runtime/{chapter_id}/`
@@ -204,14 +199,13 @@ novels/{novel_id}/
 | prompt_ir_builder | Builder | 将 shot_spec + characters + scenes 编译为统一语义 IR |
 | prompt_canonical_builder | Builder | 将 IR 规范化为结构化 Prompt（应用 mappings） |
 | prompt_enhancer | Enhancer | 注入爆点策略增强 |
-| load_assets ⭐ | Loader | 跨章节资产加载（必须先于 Asset Builder） |
-| prompt_asset_builder | Builder | 资产构建（支持跨章节复用：reused/derived/generated） |
-| prompt_temporal_enforcer | Enforcer | 时序一致性 + 身份连续性（种子继承、漂移检测） |
-| prompt_consistency_enforcer | Enforcer | 一致性校验 + 自动修复（fingerprint/reference 注入） |
+| prompt_asset_builder ⭐ | Builder | 资产构建（内含复用查询：先查再构建） |
+| prompt_consistency_enforcer ⭐ | Enforcer | 一致性校验 + 自动修复（fingerprint/reference 注入） |
+| prompt_temporal_enforcer ⭐ | Enforcer | 时序一致性 + 身份连续性（基于修复后 fingerprint） |
 | prompt_resolver ⭐ | Resolver | 融合解析 + 冲突裁决 + 平台适配（双产物输出） |
 | output_splitter ⭐ | Splitter | 多模态输出拆分 + 资产使用追踪更新 |
 
-> ⭐ = v0.4 核心模块
+> ⭐ = v0.4/v0.5 核心模块
 
 ### v0.4 架构流程
 
@@ -224,16 +218,14 @@ Canonical Builder ─────────────→ prompt_canonical.ya
     ↓
 Enhancer ──────────────────────→ prompt_enhancer.yaml
     ↓
-Load Assets ⭐ ────────────────→ reusable_assets.yaml
+Asset Builder ⭐ ─────────────→ prompt_asset.yaml（内含复用查询）
     ↓
-Asset Builder ─────────────────→ prompt_asset.yaml
+Consistency Enforcer ⭐ ───────→ prompt_consistency.yaml（先修复 fingerprint/reference）
     ↓
-Temporal Enforcer ─────────────→ prompt_temporal.yaml
-    ↓
-Consistency Enforcer ──────────→ prompt_consistency.yaml
+Temporal Enforcer ⭐ ──────────→ prompt_temporal.yaml（基于修复后 fingerprint 做漂移检测）
     ↓
 Prompt Resolver ⭐ ───────────→ resolved_shots.yaml (平台无关)
-                               → final_prompts.yaml (平台请求)
+                               → final_prompts.yaml (平台请求，内含平台选择)
     ↓
 Output Splitter ⭐ ───────────→ video_prompts.yaml
                                → image_prompts.yaml

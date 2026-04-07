@@ -20,6 +20,36 @@
 
 ---
 
+## 📤 Output Structure
+
+```yaml
+chapter_id: string
+
+meta:
+  total_shots: integer              # 镜头总数（required）
+  generated_at: string              # 生成时间戳
+  platform: string                  # 目标平台
+  scenes:                           # 场景分组
+    {scene_id}:
+      name: string
+      shot_count: integer
+      start_shot: string
+      end_shot: string
+
+shots:
+  - shot_id: string
+    subject: {...}
+    location: {...}
+    intent: {...}
+    visual_intent: {...}
+    camera: {...}
+    style: {...}
+    continuity: {...}
+    dialogue: [...]           # ⭐ 对白/画外音（可选，原样照搬 shot_spec.dialogue）
+```
+
+---
+
 ## 🎯 Core Objective
 
 构建一个支持：
@@ -143,8 +173,6 @@ characters:
 ```yaml
 subject:
 
-  type: character
-
   primary_character: string
 
   characters:
@@ -219,11 +247,13 @@ location:
   location_id: string           # 场景 ID
   variant_id: string            # 场景变体（day/night）
 
+  setting: string               # ⭐ 场景设定描述（如"废弃仓库"、"豪华宴会厅"）
+  atmosphere: string            # ⭐ 场景氛围（如"紧张压抑"、"温馨明亮"）
+
   # 弱一致：背景道具，观众不会特别注意
   props:
-    - chandelier
-    - round_tables
-    - background_crowd
+    - prop_id: string              # 道具 ID
+      variant_id: string           # 道具变体（可选）
 
   # 强一致：关键物品，需要资产追踪
   objects:
@@ -325,6 +355,31 @@ visual_intent:
   lighting: string
   atmosphere: string
   emotion: string
+```
+
+---
+
+---
+
+## 7️⃣ Dialogue（对白/画外音）
+
+---
+
+来源：shot_spec.dialogue
+
+规则：
+- **原样照搬**，不做转换
+- 无对白的镜头不输出 dialogue 字段
+- dialogue 数据最终用于 voice_prompts.yaml 的配音生成
+
+输出：
+
+```yaml
+dialogue:
+  - speaker: string         # 说话者 character_id（或 'narrator' / 'crowd'）
+    text: string            # 对白/画外音文本
+    type: string            # spoken / voiceover / inner_thought / crowd
+    emotion: string         # 说话时的情绪（可选）
 ```
 
 ---

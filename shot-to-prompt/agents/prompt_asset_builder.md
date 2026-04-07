@@ -1,10 +1,10 @@
-# Asset Prompt Builder v3.0 (Cross-Chapter Reuse Enabled)
+# Asset Prompt Builder v3.1 (Cross-Chapter Reuse Enabled)
 
 > ⚠️ **MUST READ**: [Common Rules](../references/rules/common.rule.md)
 >
 > Stage: `asset` | Generates: prompt_asset.yaml + updates asset_registry.yaml
 >
-> ⭐ v0.4 升级：新增跨章节复用判断逻辑（依赖 reusable_assets.yaml）
+> ⭐ v0.5 优化：合并 load_assets 逻辑（先查再建，一步完成）
 
 ---
 
@@ -121,10 +121,9 @@ context:
 # 📥 Input
 
 ```yaml
-prompt_ir.yaml                # IR 层输出
-prompt_canonical.yaml          # Canonical 层输出
-reusable_assets.yaml           # ⭐ v0.4 新增：来自 Load Assets 阶段
-asset_registry.yaml            # 全局资产注册表（memory 目录）
+prompt_ir.yaml                # IR 层输出（提供 character_id, variant_id, appearance）
+asset_registry.yaml           # 全局资产注册表（memory 目录）
+# ⭐ v0.5: 直接读取 registry，不再依赖 reusable_assets.yaml 中间文件
 ```
 
 ---
@@ -162,18 +161,32 @@ appearance:                   # 外观信息
 
 ---
 
-## Step 2️⃣ ⭐ 复用判断（v0.4 核心升级）
+## Step 2️⃣ ⭐ 复用判断（v0.5 内含 load_assets 逻辑）
+
+### 2.0 前置：读取 asset_registry
+
+```text
+读取: {memory_dir}/asset_registry.yaml
+
+IF 文件不存在:
+  → 首次运行，所有资产标记 source = "generated"
+  → 跳过复用判断
+
+IF 文件存在:
+  → 构建查询缓存（同原 load_assets 逻辑）
+  → 只有 generation_status.image == "approved" 且 locked == true 的才可复用
+```
 
 ### 2.1 角色复用判断
 
 ```text
 FOR each character in prompt_ir.subject.characters:
 
-  查找 reusable_assets.reusable.characters:
-    IF character_id + variant_id 都匹配:
+  查找 asset_registry 中已验证的资产:
+    IF character_id + variant_id 都匹配 AND generation_status.image == "approved":
       → source = "reused"
       → 复用 asset_id（不新建）
-      → 复用 reference_image（如有）
+      → 复用 reference_images（如有）
       → 复用 appearance_fingerprint（如有）
       → 跳过后续步骤，直接输出
 
@@ -194,14 +207,19 @@ FOR each character in prompt_ir.subject.characters:
 ```text
 FOR each location in prompt_ir.locations:
 
-  查找 reusable_assets.reusable.locations:
-    IF location_id + variant_id 匹配:
+  查找 asset_registry 中已验证的资产:
+    IF location_id + variant_id 匹配 AND generation_status.image == "approved":
       → source = "reused"
-      → 复用 asset_id + anchors + reference_image
+      → 复用 asset_id + anchors + reference_images + base_prompt + variant_prompt
+
+    ELSE IF location_id 匹配但 variant_id 不同:
+      → source = "derived"
+      → 继承 base_prompt（场景基础不变）
+      → 创建新 variant_prompt（如 day → night）
 
     ELSE:
       → source = "generated"
-      → 全新创建
+      → 全新创建 base_prompt（场景设定描述）+ variant_prompt（变体描述）
 ```
 
 ### 2.3 物品复用判断
@@ -209,7 +227,7 @@ FOR each location in prompt_ir.locations:
 ```text
 FOR each object in prompt_ir.locations[].objects:
 
-  查找 reusable_assets.reusable.objects:
+  查找 asset_registry 中已验证的资产:
     IF object_id 匹配 AND object_state 匹配:
       → source = "reused"
 
@@ -260,6 +278,8 @@ ELSE:
 
 ## Step 4️⃣ 构建 Base Prompt（仅 source != "reused" 时执行）
 
+### 角色 base_prompt
+
 来源：
 
 * appearance（face / hair）
@@ -274,15 +294,36 @@ ELSE:
 
 **derived 时**：继承已有 base_prompt，只更新 variant 部分。
 
+### 场景 base_prompt
+
+来源：
+
+* location.setting（场景设定，如 "modern office, clean layout"）
+* location.atmosphere（氛围描述）
+
+规则：
+
+* ❌ 去时间/光照（属于 variant）
+* ✔ 强化空间布局和核心元素
+
 ---
 
 ## Step 5️⃣ 构建 Variant Prompt（仅 source != "reused" 时执行）
+
+### 角色 variant_prompt
 
 来源：
 
 * outfit
 * accessories
 * variant_id 语义
+
+### 场景 variant_prompt
+
+来源：
+
+* variant_id 语义（day/night/sunset 等）
+* 时间相关光照描述
 
 ---
 
@@ -375,8 +416,10 @@ locations:
   - location_id: string
     asset_id: string
     variant_id: string
-    source: string
-    final_prompt: string
+    source: string              # "reused" / "derived" / "generated"
+    base_prompt: string          # 场景基础描述（如"现代办公室，简洁布局"）
+    variant_prompt: string       # 场景变体描述（如"白天，自然光照"）
+    final_prompt: string         # base + variant + cinematic
     anchors: string[]
 
 props:
@@ -387,7 +430,7 @@ props:
 objects:
   - object_id: string
     asset_id: string
-    state: string
+    object_state: string          # ⭐ 与 schema 对齐（原 state）
     holder: string | null
     source: string
 ```
@@ -400,11 +443,11 @@ objects:
 
 ---
 
-❌ 每次重复生成 asset（应该先查 reusable_assets.yaml）
+❌ 每次重复生成 asset（应该先查 asset_registry）
 ❌ variant 写进 base（身份和变体必须分离）
 ❌ 输出动作 / 镜头（这些由其他阶段处理）
 ❌ 修改已有 locked 资产的 base_prompt（身份不可变）
-❌ 忽略 reusable_assets.yaml 直接新建（破坏跨章节一致性）
+❌ 忽略 asset_registry 直接新建（破坏跨章节一致性）
 
 ---
 
@@ -414,11 +457,13 @@ objects:
 
 ---
 
-> Asset Builder v3.0 的核心升级：
+> Asset Builder v3.1 的核心升级：
 >
 > 👉 **从"每次新建"升级为"先查再建"**
 >
-> 通过 reusable_assets.yaml 实现跨章节资产复用，确保：
+> 通过直接查询 asset_registry 实现跨章节资产复用，确保：
 > - 第 1 章创建的角色，第 2 章能直接复用
 > - 角色 variant 变化时，身份（base）保持不变
 > - 物品状态变化时，创建新 variant 而非覆盖
+>
+> ⭐ v0.5：合并了原 load_assets 逻辑，减少 pipeline 步骤和中间文件

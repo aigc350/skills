@@ -1,12 +1,7 @@
 type: object
-
-required:
-  - characters
-  - locations
-  - props
+required: [characters, locations, props, objects]
 
 properties:
-
   characters:
     type: array
     items:
@@ -21,9 +16,37 @@ properties:
   locations:
     type: array
     items:
-      $ref: "common.schema.yaml#/AssetBase"
+      allOf:
+        - $ref: "common.schema.yaml#/AssetBase"
+        - type: object
+          required: [location_id]
+          properties:
+            location_id:
+              type: string
 
   props:
     type: array
     items:
-      $ref: "common.schema.yaml#/AssetBase"
+      allOf:
+        - $ref: "common.schema.yaml#/AssetBase"
+        - type: object
+          properties:
+            prop_id:
+              type: string
+
+  objects:
+    type: array
+    items:
+      allOf:
+        - $ref: "common.schema.yaml#/AssetBase"
+        - type: object
+          required: [object_id]
+          properties:
+            object_id:
+              type: string
+            object_state:
+              type: string
+            holder:
+              type: string
+            source:
+              type: string

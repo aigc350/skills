@@ -9,3 +9,7 @@ request:
   quality: "high"
 
   style_strength: 0.8
+
+  aspect_ratio: "9:16"
+
+  seed: null

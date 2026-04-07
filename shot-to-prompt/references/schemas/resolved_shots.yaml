@@ -78,8 +78,11 @@ properties:
                     type: string
                   asset_id:
                     type: string
-                  reference_image:
-                    type: string
+                  reference_images:
+                    type: array
+                    description: "参考图路径列表（角色可能有多张如不同角度）"
+                    items:
+                      type: string
                   must_keep:
                     type: array
                     items:
@@ -104,6 +107,16 @@ properties:
                     items:
                       type: string
                     description: "场景连续性锚点"
+                  reference_images:
+                    type: array
+                    description: "场景参考图路径列表（可能有多张如东南西北）"
+                    items:
+                      type: string
+                  view_labels:
+                    type: array
+                    description: "视角标签（如 [north, south, east, west]）"
+                    items:
+                      type: string
 
             # 物品绑定
             object_bindings:
@@ -115,7 +128,7 @@ properties:
                     type: string
                   asset_id:
                     type: string
-                  state:
+                  object_state:
                     type: string
                     description: "物品当前状态"
                   holder:
@@ -167,9 +180,13 @@ properties:
                 type: string
               type:
                 type: string
-                description: "资产类型（character/scene/object/character_variant）"
-              reference_image:
-                type: string
+                enum: [character, scene, object, character_variant]
+                description: "资产类型"
+              reference_images:
+                type: array
+                description: "参考图路径列表（角色/物品可能只有一张，场景可能有多张）"
+                items:
+                  type: string
               priority:
                 type: string
                 enum: [critical, high, medium, low]
@@ -177,6 +194,29 @@ properties:
               purpose:
                 type: string
                 description: "用途（face_identity/scene_anchor/key_prop/expression/pose）"
+
+        # ===== 对白/画外音（原样照搬 IR dialogue）=====
+        dialogue:
+          type: array
+          description: "本镜头中的对白/画外音列表（可选，无对白则省略）"
+          items:
+            type: object
+            required: [speaker, text]
+            properties:
+              speaker:
+                type: string
+                description: "说话者 character_id（或 'narrator' / 'crowd'）"
+              text:
+                type: string
+                description: "对白/画外音文本"
+              type:
+                type: string
+                enum: [spoken, voiceover, inner_thought, crowd]
+                default: spoken
+                description: "对白类型"
+              emotion:
+                type: string
+                description: "说话时的情绪"
 
         # ===== 处理链追踪（✅ 统一命名）=====
         resolver_trace:
@@ -202,6 +242,8 @@ properties:
                   field:
                     type: string
                   action:
+                    type: string
+                  value:
                     type: string
                   source:
                     type: string

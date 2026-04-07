@@ -15,12 +15,14 @@
 * prompt_ir.yaml（语义层）
 * prompt_asset.yaml（资产层）
 * prompt_canonical.yaml（标准化层）
-* prompt_temporal.yaml（时序层）
 * asset_registry.yaml（全局资产库）
 
 转化为：
 
 * prompt_consistency.yaml（一致性校验 + 自动修复结果）
+
+> ⭐ v0.5 修正：Consistency 在 Temporal 之前执行，不再读取 prompt_temporal.yaml
+> fingerprint/reference 修复先完成，Temporal 的 drift detection 才能基于正确的数据
 
 ---
 
@@ -107,9 +109,6 @@ input:
   # 标准化层（用于 text 级修复）
   - {runtime_dir}/prompt_canonical.yaml
 
-  # 时序层（用于状态校验）
-  - {runtime_dir}/prompt_temporal.yaml
-
   # 全局资产库（用于 fingerprint/reference 查询）
   - {memory_dir}/asset_registry.yaml
 ```
@@ -161,10 +160,10 @@ FOR each asset in prompt_asset.yaml:
 registry_cache:
 
   characters:
-    {asset_id} → { base_prompt, variant_prompt, reference, appearance_fingerprint, locked, generation_status }
+    {asset_id} → { base_prompt, variant_prompt, reference.face_image, appearance_fingerprint, locked, generation_status }
 
   locations:
-    {asset_id} → { final_prompt, reference.scene_image, anchors, locked }
+    {asset_id} → { final_prompt, reference.scene_images, reference.view_labels, anchors, locked }
 
   objects:
     {asset_id} → { final_prompt, reference.object_image, state_history, holder, locked }
@@ -252,12 +251,12 @@ FOR each character in shot:
       → 标记 issue = "missing_reference_image"
       → 该 asset 需要先生成参考图（pending 状态）
 
-# 情况 4：场景缺失 reference.scene_image
+# 情况 4：场景缺失 reference.scene_images
 FOR each location in shot:
 
-  IF location 有 asset_id 但 reference.scene_image 为空:
+  IF location 有 asset_id 但 reference.scene_images 为空或为空数组:
     → 从 registry_cache 查询
-    IF 存在:
+    IF registry 中存在 scene_images:
       → 自动注入
       → 标记 repair_action = "scene_reference_injected"
 ```
@@ -296,7 +295,7 @@ character_bindings:
     binding = {
       character_id: character.character_id
       asset_id: character.asset_id
-      reference_image: character.reference.face_image   # 修复后的值
+      reference_images: [character.reference.face_image]   # 修复后的值
       appearance_fingerprint: character.appearance_fingerprint  # 修复后的值
       must_keep: []                                     # 从 fingerprint 提取的关键锚点
       variant_locked: registry_entry.locked
@@ -322,7 +321,8 @@ location_bindings:
       location_id: location.location_id
       asset_id: location.asset_id
       anchors: location.anchors                         # 修复后的值
-      reference_image: location.reference.scene_image
+      reference_images: location.reference.scene_images  # ⭐ v0.6 改为数组
+      view_labels: location.reference.view_labels      # ⭐ v0.6 视角标签
     }
 
 # 物品绑定
@@ -332,9 +332,9 @@ object_bindings:
     binding = {
       object_id: object.object_id
       asset_id: object.asset_id
-      state: object.state                               # 从 temporal 层获取最新状态
+      object_state: object.object_state                   # ⭐ 与 prompt_asset 对齐
       holder: object.holder                             # 持有者
-      reference_image: object.reference.object_image
+      reference_images: [object.reference.object_image]     # 从 registry 查询
     }
 ```
 
@@ -349,9 +349,9 @@ spatial_tags:
   - 多角色同场景 → "multi_character_scene"
   - 物品位置变化 → "object_relocated"
 
-# 时序标签（从 temporal 层传递）
+# 时序标签（从 IR continuity 和 spatial 分析生成）
 temporal_tags:
-  - 继承 prompt_temporal.yaml 的 temporal_tags
+  - 从 prompt_ir[shot_id].continuity.temporal_intent 提取
   - 校验是否有新增一致性需求
 ```
 
@@ -369,7 +369,7 @@ shots:
     character_bindings:
       - character_id: "shen_yan"
         asset_id: "shen_yan_v1"
-        reference_image: "assets/characters/shen_yan/face_v1.png"
+        reference_images: ["assets/characters/shen_yan/face_v1.png"]
         appearance_fingerprint:
           - "short_black_hair"
           - "dark_suit"
@@ -390,15 +390,15 @@ shots:
           - "crystal_chandelier"
           - "white_round_tables"
           - "warm_gold_light"
-        reference_image: "assets/scenes/banquet_hall/day_v1.png"
+        reference_images: ["assets/scenes/banquet_hall/day_v1.png"]
 
     # ===== 物品绑定 =====
     object_bindings:
       - object_id: "ring_1"
         asset_id: "ring_1_intact_v1"
-        state: "intact"
+        object_state: "intact"
         holder: "shen_yan"
-        reference_image: null
+        reference_images: []
 
     # ===== 标签 =====
     spatial_tags: ["same_location", "multi_character_scene"]
@@ -409,7 +409,7 @@ shots:
       - field: "appearance_fingerprint"
         action: "fingerprint_added"
         source: "asset_registry.shen_yan_v1"
-      - field: "reference_image"
+      - field: "reference_images"
         action: "reference_injected"
         value: "assets/characters/shen_yan/face_v1.png"
 

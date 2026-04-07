@@ -44,9 +44,11 @@ properties:
                 type: string
               asset_id:
                 type: string
-              reference_image:
-                type: string
-                description: "角色面部参考图路径（自动注入）"
+              reference_images:
+                type: array
+                description: "角色面部参考图路径列表（自动注入）"
+                items:
+                  type: string
               appearance_fingerprint:
                 type: array
                 description: "外观特征指纹（自动补充）"
@@ -83,9 +85,11 @@ properties:
                 description: "场景连续性锚点（自动补充）"
                 items:
                   type: string
-              reference_image:
-                type: string
-                description: "场景参考图路径（自动注入）"
+              reference_images:
+                type: array
+                description: "场景参考图路径列表（自动注入）"
+                items:
+                  type: string
 
         # ===== 物品绑定 =====
         object_bindings:
@@ -98,14 +102,17 @@ properties:
                 type: string
               asset_id:
                 type: string
-              state:
+              object_state:
                 type: string
-                description: "物品当前状态（从 temporal 层获取）"
+                description: "物品当前状态（从 IR/asset 层获取）"
               holder:
                 type: string
                 description: "持有者 character_id"
-              reference_image:
-                type: string
+              reference_images:
+                type: array
+                description: "物品参考图路径列表（自动注入）"
+                items:
+                  type: string
 
         # ===== 标签 =====
         spatial_tags:

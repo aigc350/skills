@@ -202,68 +202,76 @@ style:
 ## 6. Output Example
 
 ```yaml
-prompt:
-  subject:
-    semantic:
-      actor: antagonist
-      target: protagonist
-      emotion: dominance
+chapter_id: "1"
 
-    text: ""
-    tokens: []    
+meta:
+  semantic_locked: false
 
-  action:
-    semantic:
-      type: approach
-      speed: slow
-      intensity: high
+shots:
+  - shot_id: "C1-S3-shot20"
 
-    text: ""
-    tokens: []    
+    prompt:
+      subject:
+        semantic:
+          actor: antagonist
+          target: protagonist
+          emotion: dominance
 
-  environment:
-    semantic:
-      location: alley      
+        text: ""
+        tokens: []
 
-    text: ""
-    tokens: []    
+      action:
+        semantic:
+          type: approach
+          speed: slow
+          intensity: high
 
-  camera:
-    semantic:      
-      shot_type: establishing
-      composition: symmetrical
-      angle: bird_eye
-      movement: crane
+        text: ""
+        tokens: []
 
-      lens: 24mm
-      aperture: f2.8
-      focus: deep
+      environment:
+        semantic:
+          location: alley
 
-    text: ""
-    tokens: []    
+        text: ""
+        tokens: []
 
-  style:
-    semantic:
-      lighting: low_key
-      style: cinematic
-      atmosphere: dark
-      atmosphere_intensity: high
+      camera:
+        semantic:
+          shot_type: establishing
+          composition: symmetrical
+          angle: bird_eye
+          movement: crane
 
-    text: ""
-    tokens: []    
+          lens: 24mm
+          aperture: f2.8
+          focus: deep
 
-  quality:
-    semantic: {}
-    text: ""
-    tokens: []    
+        text: ""
+        tokens: []
 
-  negative:
-    semantic: {}
-    text: ""
-    tokens: []      
+      style:
+        semantic:
+          lighting: low_key
+          style: cinematic
+          atmosphere: dark
+          atmosphere_intensity: high
 
-  final:
-    text: ""
+        text: ""
+        tokens: []
+
+      quality:
+        semantic: {}
+        text: ""
+        tokens: []
+
+      negative:
+        semantic: {}
+        text: ""
+        tokens: []
+
+      final:
+        text: ""
 ```
 
 ---
@@ -292,7 +300,7 @@ prompt:
 * Enhancer: LIMITED refinement (style/intensity only)
 * Consistency: READ-ONLY
 * Temporal: READ-ONLY
-* Adapter: TEXT generation only
+* Resolver: TEXT generation only
 
 ---
 

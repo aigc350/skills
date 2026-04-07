@@ -21,6 +21,7 @@ properties:
       required:
         - shot_id
         - previous_shot_id
+        - temporal_prompt
         - temporal_tags
         - continuity_score
 

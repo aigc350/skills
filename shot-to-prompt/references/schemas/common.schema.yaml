@@ -86,15 +86,22 @@ AssetBase:
         face_image:
           type: string
           description: "角色面部参考图路径"
-        scene_image:
-          type: string
-          description: "场景参考图路径"
+        scene_images:
+          type: array
+          description: "场景参考图路径列表（可能有多张如东南西北）"
+          items:
+            type: string
         object_image:
           type: string
           description: "物品参考图路径"
         seed:
           type: integer
           description: "生成种子值（保证一致性）"
+        view_labels:
+          type: array
+          description: "视角标签（如 [north, south, east, west]）"
+          items:
+            type: string
 
     # ===== v0.4 新增：外观指纹 =====
 
