@@ -175,6 +175,29 @@ properties:
               description: "叙事功能"
             emphasis:
               type: string
+
+        # ===== 对白/画外音 =====
+        dialogue:
+          type: array
+          description: "本镜头中的对白/画外音列表（可选，无对白则省略）"
+          items:
+            type: object
+            required: [speaker, text]
+            properties:
+              speaker:
+                type: string
+                description: "说话者 character_id（或 'narrator' / 'crowd'）"
+              text:
+                type: string
+                description: "对白/画外音文本"
+              type:
+                type: string
+                enum: [spoken, voiceover, inner_thought, crowd]
+                default: spoken
+                description: "对白类型：spoken=对白, voiceover=画外音, inner_thought=内心独白, crowd=群杂"
+              emotion:
+                type: string
+                description: "说话时的情绪（可选）"
         visual_intent:
           type: object
           required:

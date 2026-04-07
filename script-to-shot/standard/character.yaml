@@ -71,6 +71,26 @@ characters:
       - "loud"
       - "unctuous"
 
+  - character_id: "wen_fu"
+    base:
+      gender: "male"
+      age_range: "50-60"
+    face_id: "face_wenfu_v1"
+    default_outfit: "wenfu_suit_v1"
+    traits:
+      - "authoritative"
+      - "anxious"
+      - "traditional"
+    outfits:
+      - outfit_id: "wenfu_suit_v1"
+        type: "formal"
+        color: "dark_navy"
+        description: "dark navy suit, distinguished appearance"
+    visual_keywords:
+      - "dignified"
+      - "aging"
+      - "concerned"
+
   - character_id: "chen_guanjia"
     base:
       gender: "male"

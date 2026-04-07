@@ -1,0 +1,37 @@
+# Review Log Template
+# 质量审查历史记录
+
+# ─────────────────────────────────────────
+# 限制策略
+# ─────────────────────────────────────────
+limits:
+  max_entries: 100
+  archive_threshold: 80
+
+last_processed:
+  chapter_id: null
+  timestamp: null
+
+# 审查历史
+review_history: []
+
+# 审查记录结构
+# - chapter_id: 章节ID
+#   timestamp: 处理时间
+#   total_score: 总分
+#   passed: 是否通过
+#   dimensions:
+#     technical_completeness: 技术完整性分数
+#     character_consistency: 角色一致性分数
+#     scene_consistency: 场景一致性分数
+#     format_compliance: 格式合规分数
+#   issues: 问题列表
+#   revision_count: 重写次数
+
+# 统计摘要
+statistics:
+  total_processed: 0
+  total_passed: 0
+  total_failed: 0
+  average_score: 0.0
+  pass_rate: 0.0

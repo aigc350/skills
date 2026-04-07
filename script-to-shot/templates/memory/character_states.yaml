@@ -1,0 +1,26 @@
+# Character States Memory Template
+# 追踪角色视觉状态变化
+
+# ─────────────────────────────────────────
+# 限制策略（防止无限增长）
+# ─────────────────────────────────────────
+limits:
+  max_characters_tracked: 20
+  max_states_per_character: 30
+
+last_processed:
+  chapter_id: null
+  timestamp: null
+
+# 角色状态历史
+character_states: {}
+
+# 状态快照结构
+# - chapter_id: 章节ID
+#   shot_id: 镜头ID
+#   outfit_id: 当前服装
+#   hair: 发型
+#   accessories: 配饰列表
+#   expression: 当前表情
+#   emotion: 当前情绪
+#   location_id: 当前位置/场景
