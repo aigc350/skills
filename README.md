@@ -1,49 +1,46 @@
-# Claude Skills 技能集合
+# Claude & Codex 通用 Skill 集合
 
-本目录包含项目自定义的 Claude Code 技能。
+日常工作沉淀的 Claude / Codex 通用 Skill，按场景归档即用即取。
 
-## 技能列表
+> 使用中遇到问题，欢迎微信交流：**aigc350**
 
-### novel-creator (小说创作系统)
+## 目录速览
 
-AI 驱动的长篇小说自动创作系统，支持 1000+ 章节的持续创作。
+| 板块 | 适用场景 |
+|---|---|
+| **[novel-pipeline/](novel-pipeline/)** | 把一个小说想法，一路推到 AI 视频生成的 Prompt |
+| **[dev-tools/](dev-tools/)** | 提交代码、远程控制 Claude、复盘对话 |
+| **[commerce/](commerce/)** | 电商运营与商品数据处理（建设中） |
 
-**主要功能：**
-- 稳定长篇写作 - 多级记忆机制避免 AI 遗忘剧情
-- 角色一致性 - 角色行为约束，防止角色崩坏
-- 世界观一致 - 严格遵守 canon 设定
-- 自动剧情管理 - 伏笔追踪、支线管理、节奏控制
+## novel-pipeline · 小说到视频
 
-**命令：**
-- `/novel-creator init` - 初始化小说项目
-- `/novel-creator run [n]` - 生成 n 章
-- `/novel-creator status` - 查看状态
-- `/novel-creator plan` - 规划章节
-- `/novel-creator revise <章节号>` - 修订章节
-- `/novel-creator validate` - 校验一致性
+```
+novel-creator → novel-to-script → script-to-shot → shot-to-prompt
+                                              ↓
+                                       视频生成 (Sora/Runway/Kling)
+                                              ↓
+                                       whisper-batch 转字幕
+```
+
+- **novel-creator** — 想稳定写 1000 章长篇不烂尾
+- **novel-to-script** — 想把已有小说改成可拍的剧本
+- **script-to-shot** — 想把剧本拆成镜头表交给剧组
+- **shot-to-prompt** — 想让 Sora / Runway / Kling / 可灵直接出片
+- **whisper-batch** — 想把成片或素材批量转字幕稿
+
+## dev-tools · 日常开发
+
+- **auto-git** — 写完代码不想手动 `add` 一堆命令、还想让 commit message 写得漂亮
+- **feishu-bot** — 通勤路上用飞书消息，让家里电脑上的 Claude Code 继续搬砖
+- **record** — 一次对话很有价值，想归档成可复习的笔记或课程
+
+## commerce · 跨境电商与 TikTok Shop
+
+- **commerce_selection** — 想系统化做跨境选品判断，不想只凭榜单和直觉拍脑袋
+- **kalodata** — 想快速查 TikTok Shop 商品 / 达人 / 店铺 / 视频的销量和趋势
+
+> 选品思路：`kalodata` 拉数据 → `commerce_selection` 套用 SOP 输出候选商品与下一步验证动作。
 
 ---
 
-### auto-git (自动化 Git 工作流)
-
-自动化 Git 操作，简化日常开发流程。
-
-**主要功能：**
-- 自动分析代码改动
-- 生成简洁中文提交信息
-- 执行 add → commit → push 完整流程
-- 检查远程状态，避免冲突
-- 配置文件 git-config.md 保存仓库配置
-
-**命令：**
-- `/auto-git` - 执行自动提交流程
-- `/auto-git --no-push` - 只提交，不推送
-
-**配置：**
-首次使用时会引导配置：
-- Git 仓库路径
-- user.name
-- user.email
-- remote origin
-
-配置会保存到 `git-config.md` 文件。
+详细命令与使用方式见各子目录 `README.md`。
