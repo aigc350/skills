@@ -1,6 +1,6 @@
 # Novel-to-Script
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 将小说章节转换为剧本，支持连载、三层记忆系统和质量闭环。
 

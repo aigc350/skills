@@ -3,7 +3,7 @@ name: whisper-batch
 description: "Batch audio/video transcription tool using faster-whisper. Converts speech to SRT subtitles and plain text. Supports mp4/mkv/avi/mov/mp3/wav/flac/m4a/webm. Commands: run/status."
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # Whisper Batch - 批量语音转录
 

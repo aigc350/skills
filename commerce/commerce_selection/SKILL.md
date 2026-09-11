@@ -3,7 +3,7 @@ name: cross-border-product-selection-sop
 description: 跨境电商选品 SOP。用于结合 KaloData 或其他商品数据源，对 TikTok Shop 市场进行候选商品筛选、增长判断、竞争集中度分析、内容可复制性评估、跨境履约风险判断，并输出候选商品、评分、淘汰原因和下一步验证动作。适用于马来西亚等 TikTok Shop 市场，也可迁移到其他站点。
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # 跨境电商选品 SOP Skill
 

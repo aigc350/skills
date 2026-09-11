@@ -3,7 +3,7 @@ name: novel-to-script
 description: "Convert novel chapters to screenplays with three-layer memory system. Use when user wants to adapt novels to scripts, create screenplays from fiction, transform story content to drama format, or use commands like run/status/export."
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # Novel-to-Script
 

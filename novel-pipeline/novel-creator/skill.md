@@ -3,7 +3,7 @@ name: "novel-creator"
 description: "AI-powered novel writing system for long-form fiction (1000+ chapters). Invoke when user wants to create novels, initialize novel projects, write chapters, manage story continuity, or use commands like init/run/status/plan/test."
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # AI 自动小说创作系统
 

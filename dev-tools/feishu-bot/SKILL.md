@@ -3,7 +3,7 @@ name: feishu-bot
 description: 飞书 Claude Code 远程控制机器人。通过飞书消息远程调用 Claude Code 进行编程操作。支持两种启动方式：Claude Code 内部启动和 CMD 命令行启动。当用户提到"飞书机器人"、"feishu-bot"、"飞书远程编程"等相关内容时触发此技能。
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # Feishu Claude Code Bot
 

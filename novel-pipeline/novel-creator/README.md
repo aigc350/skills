@@ -1,6 +1,6 @@
 # Novel Creator
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 AI 自动小说创作系统 - 支持长篇小说（1000+ 章节）持续创作。
 

@@ -3,7 +3,7 @@ name: "auto-git"
 description: "自动化 Git 工作流 - 自动分析代码改动、生成简洁中文提交信息、执行 add → commit → push 完整流程。支持检查远程状态、避免冲突。需要手动触发 /auto-git 命令。"
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # Auto-Git 自动化 Git 工作流
 

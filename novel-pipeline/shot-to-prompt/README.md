@@ -1,6 +1,6 @@
 # shot-to-prompt
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 将 shot_spec 转换为 AI 视频生成模型的 Prompt。
 

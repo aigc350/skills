@@ -3,7 +3,7 @@ name: shot-to-prompt
 description: "Convert shot_spec to AI video generation prompts. Use when user wants to generate video prompts for Sora, Runway, Pika, Kling, etc. Commands: run/status/export."
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # shot-to-prompt v0.5
 

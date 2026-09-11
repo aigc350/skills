@@ -1,6 +1,6 @@
 # Cross-border Product Selection SOP Skill
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 用于 Codex 的跨境电商选品 SOP Skill。
 

@@ -1,6 +1,6 @@
 # Feishu Claude Code Bot
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 通过飞书消息远程控制 Claude Code 进行编程操作。
 

@@ -1,6 +1,6 @@
 # dev-tools / 开发与协作工具
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 辅助日常开发与协作的 Skill 集合。
 

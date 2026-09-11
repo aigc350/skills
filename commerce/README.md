@@ -1,6 +1,6 @@
 # Commerce 电商板块
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 电商运营、商品数据、选品分析等场景的 Skill 集合。
 

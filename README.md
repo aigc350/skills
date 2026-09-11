@@ -2,7 +2,13 @@
 
 日常工作沉淀的 Claude / Codex 通用 Skill，按场景归档即用即取。
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
+>
+> 常用工具:
+> - [runninghub.ai](https://www.runninghub.ai/) — 各家 AI 模型 API 聚合调用（部分 Skill 依赖）
+> - [video.quantv.com](https://video.quantv.com/) — 跨境电商 AI 工具
+>
+> 如有问题或合作: WeChat `aigc350`
 
 ## 目录速览
 

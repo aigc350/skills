@@ -1,6 +1,6 @@
 # novel-pipeline / 创作流水线
 
-> 使用中遇到问题，欢迎微信交流：**aigc350**
+> 作者主页: [github.com/aigc350/skills](https://github.com/aigc350/skills)
 
 把小说想法一路推到 AI 视频生成 Prompt 的完整工作流。
 

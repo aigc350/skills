@@ -3,7 +3,7 @@ name: script-to-shot
 description: "Convert structured scene data and screenplay to shot specifications. Use when user wants to generate shot_spec, shot character/scene definitions from novel-to-script output. Commands: run/status/export."
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # script-to-shot v0.1
 

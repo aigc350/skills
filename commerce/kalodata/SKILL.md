@@ -8,7 +8,7 @@ description: >
   shops, revenue of a specific product/shop/creator — even if they never mention "kalodata".
 ---
 
-> 作者微信：aigc350
+> 作者：aigc350
 
 # KaloData TikTok Shop analytics (`kalo`)
 
